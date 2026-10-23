@@ -27,7 +27,7 @@ Cloud sync, accounts, and general media-management features are out of scope unl
 
 **Planning complete for Phase 1. Application code is not implemented yet.**
 
-Next authorized engineering step: Milestone **M0** (WinUI tooling smoke build), executed by Claude Code under [docs/CLAUDE_CODE_BRIEF_M0.md](docs/CLAUDE_CODE_BRIEF_M0.md).
+**M0 closed** (blank WinUI app builds and launches via `winapp run`). Next: namespace rename brief, then **M1** format/governance docs — [docs/CLAUDE_CODE_BRIEF_M1.md](docs/CLAUDE_CODE_BRIEF_M1.md).
 
 Live progress: [docs/STATUS.md](docs/STATUS.md)
 
@@ -77,7 +77,9 @@ The normative specification will live in `docs/ERAF_FORMAT_SPEC.md` (Milestone M
 | [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) | Audit report + Windows Phase 1 plan |
 | [docs/STATUS.md](docs/STATUS.md) | Milestone status and evidence log |
 | [docs/ROLES.md](docs/ROLES.md) | Cursor (supervisor) vs Claude Code (implementer) |
-| [docs/CLAUDE_CODE_BRIEF_M0.md](docs/CLAUDE_CODE_BRIEF_M0.md) | Current implementer brief for M0 |
+| [docs/CLAUDE_CODE_BRIEF_M0.md](docs/CLAUDE_CODE_BRIEF_M0.md) | M0 brief (closed) |
+| [docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md](docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md) | Pre-M1: rename `Eraf_Windows` → `Eraf.Windows` |
+| [docs/CLAUDE_CODE_BRIEF_M1.md](docs/CLAUDE_CODE_BRIEF_M1.md) | Current implementer brief for M1 |
 
 Planned after M1: `ERAF_FORMAT_SPEC.md`, `ARCHITECTURE.md`, `TESTING.md`, `SECURITY.md`, `DECISIONS.md`, and a user guide.
 
