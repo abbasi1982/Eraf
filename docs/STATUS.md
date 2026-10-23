@@ -1,6 +1,6 @@
 # ERAF Project Status
 
-**Last updated:** 2026-10-23 (M0 executed; awaiting Cursor review)
+**Last updated:** 2026-10-23 (M0 launch verified; awaiting Cursor close-out)
 
 ## Roles
 
@@ -24,7 +24,7 @@ Phase 1 — Windows (planning → ready for M0 handoff). Phase 2 — Android is 
 
 ## In progress
 
-M0 executed by Claude Code; awaiting Cursor review of the evidence below.
+M0 build and launch evidence recorded below; awaiting Cursor to close M0. Follow-up: rename `RootNamespace` `Eraf_Windows` to `Eraf.Windows` (approved by Cursor).
 
 ## Next
 
@@ -37,7 +37,7 @@ M0 executed by Claude Code; awaiting Cursor review of the evidence below.
 
 | ID | Status |
 |---|---|
-| M0 Tooling smoke | Built OK; launch blocked (see M0 evidence) — awaiting Cursor review |
+| M0 Tooling smoke | Build + launch verified (see M0 evidence) — awaiting Cursor close-out |
 | M1 Format spec + docs | Pending |
 | M2 Eraf.Format library + tests | Pending |
 | M3 Image import/capture | Pending |
@@ -91,3 +91,19 @@ The unpackaged exe and `dotnet run` both fail activating a Windows App SDK class
 - NuGet fetches were slow with transient SSL/timeouts.
 - WASDK 2.x is a newer major line than the plan's "1.6+" expectation; Cursor should confirm it is acceptable before M1.
 - `RootNamespace` is the template's `Eraf_Windows`; confirm whether to rename to `Eraf.Windows`.
+
+### M0 launch retry (after Developer Mode enabled)
+
+Cursor decisions: WASDK 2.5.1 accepted; `TargetPlatformMinVersion` 10.0.17763.0 OK; rename `RootNamespace` in a follow-up.
+
+| Command | Result |
+|---|---|
+| `AppModelUnlock\AllowDevelopmentWithoutDevLicense` | 1 (Developer Mode on) |
+| `dotnet run --project src/Eraf.Windows/Eraf.Windows.csproj` | FAIL: same `REGDB_E_CLASSNOTREG`. Dev Mode alone did not fix it. The `Microsoft.Windows.SDK.BuildTools.WinApp` run hook never activated (no `[WinAppRunSupport]` messages in `-v:n` output), so `dotnet run` started the bare exe without package identity. Root cause of the inactive hook not determined. |
+| `winapp.exe run src\Eraf.Windows\Eraf.Windows.csproj --detach --arch x64` (from `~/.nuget/packages/microsoft.windows.sdk.buildtools.winapp/0.7.1/tools/win-x64/`) | PASS: build 0 warnings / 0 errors, debug package registered, app launched (PID 15352) |
+
+Observed: process `Eraf.Windows` running and responding, main window titled `Eraf.Windows`, screenshot shows an empty WinUI window. Process was then killed. The dev package stays registered on this machine (package name `90DA0760-F0D9-4200-A4DB-1BDF858BEB2B`, dev mode, loose layout under `bin\x64\Debug\...\AppX`; `Remove-AppxPackage` to remove).
+
+**Working launch command for this machine:** `winapp run src\Eraf.Windows\Eraf.Windows.csproj --arch x64` using the winapp.exe above. Plain `dotnet run` does not work yet.
+
+Unpackaged fallback (`WindowsPackageType=None`) was not needed.
