@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{93F43BCC-3D03-4757-9EF6-646445FEBD8B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eraf.Windows", "src\Eraf.Windows\Eraf.Windows.csproj", "{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}.Debug|Any CPU.Build.0 = Debug|x86
+		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}.Release|Any CPU.ActiveCfg = Release|x86
+		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}.Release|Any CPU.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA} = {93F43BCC-3D03-4757-9EF6-646445FEBD8B}
+	EndGlobalSection
+EndGlobal

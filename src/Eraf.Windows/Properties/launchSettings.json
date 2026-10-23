@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Eraf.Windows (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Eraf.Windows (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
