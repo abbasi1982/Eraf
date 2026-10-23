@@ -4,14 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-Planning only: there is no application code, solution, or build/test tooling yet. The tracked files are `README.md` and `docs/` (`IMPLEMENTATION_PLAN.md`, `ROLES.md`, `STATUS.md`, `CLAUDE_CODE_BRIEF_M0.md`). Build/lint/test commands will be added after Milestone M0 proves WinUI tooling works, so don't invent them. `docs/STATUS.md` is the live source of truth for what is done.
+M0 (blank WinUI 3 shell) and M1 (spec and governance docs) are done; there is no feature code and no test project yet. `docs/STATUS.md` is the live source of truth, and each milestone has a brief at `docs/CLAUDE_CODE_BRIEF_*.md`.
+
+Commands (project-level only; redirect output to a file if a command hangs, since piped output and solution-level restore hung in this shell):
+
+- Build: `dotnet build src\Eraf.Windows\Eraf.Windows.csproj -p:Platform=x64`
+- Launch: `winapp run src\Eraf.Windows\Eraf.Windows.csproj --arch x64`, using `winapp.exe` from `%USERPROFILE%\.nuget\packages\microsoft.windows.sdk.buildtools.winapp\0.7.1\tools\win-x64\`. Plain `dotnet run` does not register package identity here (Developer Mode must be on).
+- Pinned: Windows App SDK 2.5.1, target `net8.0-windows10.0.26100.0`. Don't unpin or upgrade without a `docs/DECISIONS.md` entry.
 
 ## Workflow rules (from docs/ROLES.md)
 
 Work is split between **Cursor** (supervisor/reviewer) and **Claude Code** (implementer, i.e. you):
 
 - Read `docs/IMPLEMENTATION_PLAN.md`, `docs/STATUS.md`, `docs/ROLES.md` and the current milestone brief before editing.
-- Implement only the currently authorized milestone (currently M0, per `docs/CLAUDE_CODE_BRIEF_M0.md`: a blank packaged .NET 8 WinUI 3 app at `src/Eraf.Windows/` plus `Eraf.sln`; no format library, camera, or audio).
+- Implement only the currently authorized milestone (check `docs/STATUS.md` and the newest brief; after M1 the next one is M2, `Eraf.Format`).
 - Do not change the public ERAF format without an updated spec reviewed by Cursor, expand product scope, or start Android before the Windows release gate (M9).
 - Do not commit or push unless the user explicitly asks.
 - Report real evidence: record commands actually run and their pass/fail results in `docs/STATUS.md`. Never claim a test passed unless it was executed and inspected.
@@ -23,11 +29,12 @@ Milestones: M0 tooling smoke → M1 format spec + docs → M2 `Eraf.Format` libr
 
 ERAF (`.eraf`) is a versioned binary container (not a renamed JPEG/WAV/ZIP) holding exactly one JPEG and one AAC-LC M4A voice recording. It must open and play identically on Windows and Android.
 
-v1 sketch (the normative spec will be `docs/ERAF_FORMAT_SPEC.md` in M1; until then `docs/IMPLEMENTATION_PLAN.md` is authoritative):
+v1 summary (`docs/ERAF_FORMAT_SPEC.md` is normative and its clarifications C1–C4 await supervisor approval; read it before touching format code):
 
 - Fixed little-endian 64-byte header, magic `ERAF`, optional SHA-256 integrity block, then raw JPEG and M4A payloads.
 - CRC-32 over the header core; SHA-256 is corruption detection only, not authentication.
 - Default limits: 256 MiB file, 64 MiB per payload, 10 min recording.
+- Validation is an ordered list with named error codes (spec §9). Tests assert the exact code, and expected values come from `fixtures/eraf/RECIPES.md`, never from the code under test.
 - Cloud sync, accounts, and general media management are out of scope.
 
 ## Planned architecture

@@ -25,9 +25,9 @@ Cloud sync, accounts, and general media-management features are out of scope unl
 
 ## Repository status
 
-**Planning complete for Phase 1. Application code is not implemented yet.**
+**Application features are not implemented yet.**
 
-**M0 closed** (blank WinUI app builds and launches via `winapp run`). Next: namespace rename brief, then **M1** format/governance docs — [docs/CLAUDE_CODE_BRIEF_M1.md](docs/CLAUDE_CODE_BRIEF_M1.md).
+**M0 and M1 closed.** Next: **M2** — [docs/CLAUDE_CODE_BRIEF_M2.md](docs/CLAUDE_CODE_BRIEF_M2.md).
 
 Live progress: [docs/STATUS.md](docs/STATUS.md)
 
@@ -68,20 +68,27 @@ Fixed little-endian **64-byte header**, optional SHA-256 integrity block, then r
 - CRC-32 over the header core; optional SHA-256 over payloads (corruption detection only — not authentication)
 - Default limits: 256 MiB total file; 64 MiB per payload; 10 minutes max recording
 
-The normative specification will live in `docs/ERAF_FORMAT_SPEC.md` (Milestone M1). Until then, the approved sketch is in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+The normative specification is [docs/ERAF_FORMAT_SPEC.md](docs/ERAF_FORMAT_SPEC.md). It adds precision to the approved sketch in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) §5; where they differ, the spec wins.
 
 ## Documentation
 
 | Document | Purpose |
 |---|---|
 | [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) | Audit report + Windows Phase 1 plan |
+| [docs/ERAF_FORMAT_SPEC.md](docs/ERAF_FORMAT_SPEC.md) | Normative v1 format specification |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module boundaries and workflow design |
+| [docs/TESTING.md](docs/TESTING.md) | Test strategy and fixture policy |
+| [docs/SECURITY.md](docs/SECURITY.md) | Threat model, untrusted-input rules, dependency inventory |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | Decision log (ADRs) |
+| [fixtures/eraf/README.md](fixtures/eraf/README.md) | Golden fixtures: naming and use; byte recipes in `RECIPES.md` |
 | [docs/STATUS.md](docs/STATUS.md) | Milestone status and evidence log |
 | [docs/ROLES.md](docs/ROLES.md) | Cursor (supervisor) vs Claude Code (implementer) |
 | [docs/CLAUDE_CODE_BRIEF_M0.md](docs/CLAUDE_CODE_BRIEF_M0.md) | M0 brief (closed) |
-| [docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md](docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md) | Pre-M1: rename `Eraf_Windows` → `Eraf.Windows` |
-| [docs/CLAUDE_CODE_BRIEF_M1.md](docs/CLAUDE_CODE_BRIEF_M1.md) | Current implementer brief for M1 |
+| [docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md](docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md) | Namespace rename (done) |
+| [docs/CLAUDE_CODE_BRIEF_M1.md](docs/CLAUDE_CODE_BRIEF_M1.md) | M1 brief (closed) |
+| [docs/CLAUDE_CODE_BRIEF_M2.md](docs/CLAUDE_CODE_BRIEF_M2.md) | Current implementer brief for M2 |
 
-Planned after M1: `ERAF_FORMAT_SPEC.md`, `ARCHITECTURE.md`, `TESTING.md`, `SECURITY.md`, `DECISIONS.md`, and a user guide.
+A user guide is planned for late Phase 1.
 
 ## Delivery model
 
@@ -92,12 +99,19 @@ Planned after M1: `ERAF_FORMAT_SPEC.md`, `ARCHITECTURE.md`, `TESTING.md`, `SECUR
 
 Windows milestones run M0 → M9. Android does not start until Cursor and the product owner approve the Windows release gate.
 
-## Building (not available yet)
+## Building and running (Windows, development machine)
 
-Build and run instructions will be added after M0 proves a blank WinUI 3 app builds on the development machine. Until then:
+Requires .NET SDK 8, the matching Windows App Runtime (2.5.1), and Developer Mode on.
 
-1. Read [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
-2. Do not treat WinUI tooling as available without completing M0 evidence in [docs/STATUS.md](docs/STATUS.md)
+```powershell
+# Build
+dotnet build src\Eraf.Windows\Eraf.Windows.csproj -p:Platform=x64
+
+# Launch (registers a debug package, then starts the app)
+& "$env:USERPROFILE\.nuget\packages\microsoft.windows.sdk.buildtools.winapp\0.7.1\tools\win-x64\winapp.exe" run src\Eraf.Windows\Eraf.Windows.csproj --arch x64
+```
+
+Plain `dotnet run` does not work on this machine (no package identity); see [docs/DECISIONS.md](docs/DECISIONS.md) ADR-005. There are no tests yet; they arrive in M2.
 
 ## License
 
