@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N05-bad-header-length.eraf",
+  "valid": false,
+  "error": "BadHeaderLength"
+}

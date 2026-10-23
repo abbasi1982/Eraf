@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N10-unsupported-media-type.eraf",
+  "valid": false,
+  "error": "UnsupportedMediaType"
+}

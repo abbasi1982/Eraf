@@ -1,0 +1,22 @@
+namespace Eraf.Format.Tests;
+
+/// <summary>
+/// Byte sequences copied from fixtures/eraf/RECIPES.md. They are the independent source of truth:
+/// nothing here is computed by the code under test.
+/// </summary>
+internal static class Recipes
+{
+    public static readonly byte[] Image = Convert.FromHexString("FFD8FFE00002FFD9");
+
+    public static readonly byte[] Audio = Convert.FromHexString("00000014667479704D344120" + "00000000" + "4D344120");
+
+    public const string ImageSha256 = "499af7b940c9579b2062696bdabd7b849ac18c9246e6f5abf6c5a52d4de43850";
+
+    public const string AudioSha256 = "f2b4fd7e42d3d8fea2eb46afd725fc51964c6ba7834d0585ca78c6547fd239b2";
+
+    public static readonly byte[] ValidMinimal = Convert.FromHexString(
+        "455241460100400000000000010001000100000008000000000000001400000000000000000000000000000000000000000000007FD12A8C0000000000000000FFD8FFE00002FFD900000014667479704D344120000000004D344120");
+
+    public static readonly byte[] ValidHashes = Convert.FromHexString(
+        "455241460100400003000000010001000100000008000000000000001400000000000000DC050000000000000068E5CF8B010000BE7D5C5C0000000000000000499AF7B940C9579B2062696BDABD7B849AC18C9246E6F5ABF6C5A52D4DE43850F2B4FD7E42D3D8FEA2EB46AFD725FC51964C6BA7834D0585CA78C6547FD239B2FFD8FFE00002FFD900000014667479704D344120000000004D344120");
+}

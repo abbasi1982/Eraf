@@ -1,0 +1,12 @@
+{
+  "fixture": "valid/valid-hashes.eraf",
+  "valid": true,
+  "imageLength": 8,
+  "audioLength": 20,
+  "audioDurationMs": 1500,
+  "createdUtcUnixMs": 1700000000000,
+  "hasImageSha256": true,
+  "hasAudioSha256": true,
+  "imageSha256": "499af7b940c9579b2062696bdabd7b849ac18c9246e6f5abf6c5a52d4de43850",
+  "audioSha256": "f2b4fd7e42d3d8fea2eb46afd725fc51964c6ba7834d0585ca78c6547fd239b2"
+}

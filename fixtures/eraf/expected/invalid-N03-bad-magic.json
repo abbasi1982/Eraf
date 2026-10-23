@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N03-bad-magic.eraf",
+  "valid": false,
+  "error": "BadMagic"
+}

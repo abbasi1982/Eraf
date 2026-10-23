@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N11-unsupported-codec.eraf",
+  "valid": false,
+  "error": "UnsupportedCodec"
+}

@@ -7,6 +7,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{93F43BCC-3D0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eraf.Windows", "src\Eraf.Windows\Eraf.Windows.csproj", "{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eraf.Format", "src\Eraf.Format\Eraf.Format.csproj", "{4A96FFCA-D67C-4176-8713-FC94562CE448}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0F6A7490-1FD2-40E4-85E2-1C0AD0AE49A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eraf.Format.Tests", "tests\Eraf.Format.Tests\Eraf.Format.Tests.csproj", "{96E06875-DC47-4DFD-833C-8CF16CD3234E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +26,18 @@ Global
 		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}.Debug|Any CPU.Build.0 = Debug|x86
 		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}.Release|Any CPU.ActiveCfg = Release|x86
 		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA}.Release|Any CPU.Build.0 = Release|x86
+		{4A96FFCA-D67C-4176-8713-FC94562CE448}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A96FFCA-D67C-4176-8713-FC94562CE448}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A96FFCA-D67C-4176-8713-FC94562CE448}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A96FFCA-D67C-4176-8713-FC94562CE448}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96E06875-DC47-4DFD-833C-8CF16CD3234E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96E06875-DC47-4DFD-833C-8CF16CD3234E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96E06875-DC47-4DFD-833C-8CF16CD3234E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96E06875-DC47-4DFD-833C-8CF16CD3234E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{31AC2FF0-1DAE-48A3-BCC8-5B5F448476EA} = {93F43BCC-3D03-4757-9EF6-646445FEBD8B}
+		{4A96FFCA-D67C-4176-8713-FC94562CE448} = {93F43BCC-3D03-4757-9EF6-646445FEBD8B}
+		{96E06875-DC47-4DFD-833C-8CF16CD3234E} = {0F6A7490-1FD2-40E4-85E2-1C0AD0AE49A7}
 	EndGlobalSection
 EndGlobal

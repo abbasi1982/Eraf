@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N12-empty-payload.eraf",
+  "valid": false,
+  "error": "EmptyPayload"
+}

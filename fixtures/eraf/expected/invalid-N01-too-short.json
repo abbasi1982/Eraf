@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N01-too-short.eraf",
+  "valid": false,
+  "error": "TooShort"
+}

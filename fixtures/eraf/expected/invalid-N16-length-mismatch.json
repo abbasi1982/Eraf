@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N16-length-mismatch.eraf",
+  "valid": false,
+  "error": "LengthMismatch"
+}

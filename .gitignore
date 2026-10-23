@@ -1,0 +1,6 @@
+# Build output (src/Eraf.Windows/.gitignore carries the fuller Visual Studio list for that project)
+[Bb]in/
+[Oo]bj/
+TestResults/
+*.user
+.vs/

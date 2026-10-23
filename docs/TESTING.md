@@ -24,7 +24,13 @@ Complements [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) §9. Evidence rule:
 
 ## Running tests
 
-Not available yet: there is no test project until M2. When it exists, the commands go here and in [STATUS.md](STATUS.md). Constraint from M0: in this environment, restore projects individually with output redirected to a file; piped output and solution-level restore have hung.
+From the repo root:
+
+```powershell
+dotnet test tests\Eraf.Format.Tests\Eraf.Format.Tests.csproj
+```
+
+Constraint from M0: in this environment, run project-level commands with output redirected to a file; piped output and solution-level restore have hung. Last recorded result (M2): 48 passed, 0 failed ([STATUS.md](STATUS.md)). The tests locate `fixtures/eraf` by walking up from the build output to `Eraf.sln`, so run them from inside the repo.
 
 ## Not tested automatically (state this, do not imply otherwise)
 

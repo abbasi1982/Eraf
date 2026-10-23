@@ -99,6 +99,8 @@ FileLength = HeaderLength + IntegrityBlockLength + ImagePayloadLength + AudioPay
 
 A shorter file is truncated; a longer file has trailing data. Both are rejected.
 
+When the input is a seekable stream rather than a discrete file, **FileLength** is the number of bytes from the stream's current position to its end (`Length - Position`). Readers MUST NOT treat bytes before the current position as part of the ERAF file.
+
 ## 7. Limits (v1)
 
 | Limit | Value | Constant |

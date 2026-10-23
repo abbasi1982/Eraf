@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N21-hash-mismatch.eraf",
+  "valid": false,
+  "error": "HashMismatch"
+}

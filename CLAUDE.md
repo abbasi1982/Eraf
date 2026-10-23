@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-M0 (blank WinUI 3 shell) and M1 (spec and governance docs) are done; there is no feature code and no test project yet. `docs/STATUS.md` is the live source of truth, and each milestone has a brief at `docs/CLAUDE_CODE_BRIEF_*.md`.
+M0 (blank WinUI 3 shell), M1 (spec and governance docs) and M2 (`Eraf.Format` + tests) are done or in review; the WinUI app is still a blank shell. `docs/STATUS.md` is the live source of truth, and each milestone has a brief at `docs/CLAUDE_CODE_BRIEF_*.md`.
 
 Commands (project-level only; redirect output to a file if a command hangs, since piped output and solution-level restore hung in this shell):
 
+- Test format library: `dotnet test tests\Eraf.Format.Tests\Eraf.Format.Tests.csproj`; one test: add `--filter "FullyQualifiedName~ConformanceTests"` (or any test class/method name)
 - Build: `dotnet build src\Eraf.Windows\Eraf.Windows.csproj -p:Platform=x64`
 - Launch: `winapp run src\Eraf.Windows\Eraf.Windows.csproj --arch x64`, using `winapp.exe` from `%USERPROFILE%\.nuget\packages\microsoft.windows.sdk.buildtools.winapp\0.7.1\tools\win-x64\`. Plain `dotnet run` does not register package identity here (Developer Mode must be on).
 - Pinned: Windows App SDK 2.5.1, target `net8.0-windows10.0.26100.0`. Don't unpin or upgrade without a `docs/DECISIONS.md` entry.
@@ -17,7 +18,7 @@ Commands (project-level only; redirect output to a file if a command hangs, sinc
 Work is split between **Cursor** (supervisor/reviewer) and **Claude Code** (implementer, i.e. you):
 
 - Read `docs/IMPLEMENTATION_PLAN.md`, `docs/STATUS.md`, `docs/ROLES.md` and the current milestone brief before editing.
-- Implement only the currently authorized milestone (check `docs/STATUS.md` and the newest brief; after M1 the next one is M2, `Eraf.Format`).
+- Implement only the currently authorized milestone (check `docs/STATUS.md` and the newest brief; check for the newest brief).
 - Do not change the public ERAF format without an updated spec reviewed by Cursor, expand product scope, or start Android before the Windows release gate (M9).
 - Do not commit or push unless the user explicitly asks.
 - Report real evidence: record commands actually run and their pass/fail results in `docs/STATUS.md`. Never claim a test passed unless it was executed and inspected.

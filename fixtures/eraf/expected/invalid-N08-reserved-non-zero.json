@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N08-reserved-non-zero.eraf",
+  "valid": false,
+  "error": "ReservedNonZero"
+}

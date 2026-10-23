@@ -27,7 +27,7 @@ Cloud sync, accounts, and general media-management features are out of scope unl
 
 **Application features are not implemented yet.**
 
-**M0 and M1 closed.** Next: **M2** — [docs/CLAUDE_CODE_BRIEF_M2.md](docs/CLAUDE_CODE_BRIEF_M2.md).
+**M0–M2 closed** (`Eraf.Format` + 48 tests). Next: **M3** — [docs/CLAUDE_CODE_BRIEF_M3.md](docs/CLAUDE_CODE_BRIEF_M3.md).
 
 Live progress: [docs/STATUS.md](docs/STATUS.md)
 
@@ -86,7 +86,8 @@ The normative specification is [docs/ERAF_FORMAT_SPEC.md](docs/ERAF_FORMAT_SPEC.
 | [docs/CLAUDE_CODE_BRIEF_M0.md](docs/CLAUDE_CODE_BRIEF_M0.md) | M0 brief (closed) |
 | [docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md](docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md) | Namespace rename (done) |
 | [docs/CLAUDE_CODE_BRIEF_M1.md](docs/CLAUDE_CODE_BRIEF_M1.md) | M1 brief (closed) |
-| [docs/CLAUDE_CODE_BRIEF_M2.md](docs/CLAUDE_CODE_BRIEF_M2.md) | Current implementer brief for M2 |
+| [docs/CLAUDE_CODE_BRIEF_M2.md](docs/CLAUDE_CODE_BRIEF_M2.md) | M2 brief (closed) |
+| [docs/CLAUDE_CODE_BRIEF_M3.md](docs/CLAUDE_CODE_BRIEF_M3.md) | Current implementer brief for M3 |
 
 A user guide is planned for late Phase 1.
 
@@ -111,7 +112,9 @@ dotnet build src\Eraf.Windows\Eraf.Windows.csproj -p:Platform=x64
 & "$env:USERPROFILE\.nuget\packages\microsoft.windows.sdk.buildtools.winapp\0.7.1\tools\win-x64\winapp.exe" run src\Eraf.Windows\Eraf.Windows.csproj --arch x64
 ```
 
-Plain `dotnet run` does not work on this machine (no package identity); see [docs/DECISIONS.md](docs/DECISIONS.md) ADR-005. There are no tests yet; they arrive in M2.
+Plain `dotnet run` does not work on this machine (no package identity); see [docs/DECISIONS.md](docs/DECISIONS.md) ADR-005. 
+
+Tests (format library): `dotnet test tests\Eraf.Format.Tests\Eraf.Format.Tests.csproj`.
 
 ## License
 

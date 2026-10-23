@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N04-unsupported-version.eraf",
+  "valid": false,
+  "error": "UnsupportedVersion"
+}

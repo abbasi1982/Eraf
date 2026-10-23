@@ -1,6 +1,6 @@
 # ERAF Project Status
 
-**Last updated:** 2026-10-23 (M1 closed by Cursor)
+**Last updated:** 2026-10-23 (M2 closed by Cursor)
 
 ## Roles
 
@@ -9,7 +9,7 @@
 
 ## Current phase
 
-Phase 1 — Windows. **M0 and M1 closed.** Next: **M2** (`Eraf.Format`).
+Phase 1 — Windows. **M0–M2 closed.** Next: **M3** (image import/preview).
 
 Phase 2 — Android remains blocked until the Windows release gate.
 
@@ -17,56 +17,60 @@ Phase 2 — Android remains blocked until the Windows release gate.
 
 | Item | Notes |
 |---|---|
-| M0 Tooling smoke | Closed — `winapp run` launch verified |
-| M0 namespace rename | `Eraf.Windows` |
-| **M1 Format spec + docs** | Closed by Cursor 2026-10-23 — C1–C4 approved (ADR-006) |
+| M0 Tooling smoke | Closed |
+| M0 namespace rename | Closed |
+| M1 Format spec + docs | Closed — C1–C4 / ADR-006 |
+| **M2 Eraf.Format + tests** | Closed by Cursor 2026-10-23 — 48/48 tests verified |
 
 ## In progress
 
-Claude Code executes [CLAUDE_CODE_BRIEF_M2.md](CLAUDE_CODE_BRIEF_M2.md).
+None until Claude Code starts [CLAUDE_CODE_BRIEF_M3.md](CLAUDE_CODE_BRIEF_M3.md) after committing M2.
 
 ## Next
 
-1. **Authorized:** Commit uncommitted M1 docs/fixtures (and this STATUS / ADR-006 / M2 brief update), then push when asked
-2. Implement M2; report evidence for Cursor review
+1. **Authorized:** Commit M2 (library, tests, fixtures, docs) including Cursor’s stream-length spec sentence and this close-out
+2. Push when product owner asks
+3. Execute M3
 
 ## Milestones
 
 | ID | Status |
 |---|---|
-| M0 Tooling smoke | **Closed** |
-| M0 follow-up namespace rename | **Closed** |
-| M1 Format spec + docs | **Closed** — C1–C4 approved |
-| M2 Eraf.Format library + tests | **Authorized** — [CLAUDE_CODE_BRIEF_M2.md](CLAUDE_CODE_BRIEF_M2.md) |
-| M3–M9 | Pending |
+| M0–M1 | **Closed** |
+| M2 Eraf.Format library + tests | **Closed** |
+| M3 Image import/capture | **Authorized** — [CLAUDE_CODE_BRIEF_M3.md](CLAUDE_CODE_BRIEF_M3.md) |
+| M4–M9 | Pending |
 
-## M1 close-out (Cursor)
+## M2 close-out (Cursor)
 
 **Verdict:** Pass.
 
 | Criterion | Result |
 |---|---|
-| Normative `ERAF_FORMAT_SPEC.md` | Pass — header matches plan; C1–C4 approved |
-| Architecture / testing / security / decisions | Pass |
-| Fixture recipes + negative matrix | Pass — independent Python check reported by implementer (script not in repo) |
-| No `Eraf.Format` / `src` feature creep | Pass |
-| Dependency license identifiers | Deferred to before M9 (noted in SECURITY.md) |
+| `net8.0` library, no UI refs | Pass (`TreatWarningsAsErrors`) |
+| Ordered §9 validation + exact error names | Pass |
+| Writer refusals + recipe hex match | Pass (per tests + STATUS) |
+| N01–N21 + valid fixtures | Pass |
+| Hostile claimed length / no huge alloc | Pass (HostileInputTests) |
+| `dotnet test` re-run by Cursor | **48 passed, 0 failed** |
 
-**C1–C4:** All **approved** (ADR-006).
+**Accepted known limitations (not blocking):**
 
-**Commit authorization:** Claude Code **may commit** the M1 documentation set and related STATUS/README/CLAUDE updates. Push when the product owner requests (several commits remain ahead of `origin/master`).
+- Negative fixtures not rebuilt from recipes in-test (checked-in binaries + sidecars + prior Python generation)
+- `MaxFileBytes` unreachable as deciding check in v1 (defensive)
+- Full dual-payload max (~128 MiB) allocation on read — acceptable for v1; app must not open many huge files concurrently
 
-### M1 evidence (implementer, 2026-10-23)
+**Spec clarification approved:** seekable streams define `FileLength` as `Length - Position` (added to `ERAF_FORMAT_SPEC.md` §6). No wire-format change.
 
-Docs and fixture policy only; no format library code.
+**Commit authorization:** Claude Code **may commit** the full M2 working tree now, then await push instruction.
 
-Files: `ERAF_FORMAT_SPEC.md`, `ARCHITECTURE.md`, `TESTING.md`, `SECURITY.md`, `DECISIONS.md`, `fixtures/eraf/README.md`, `RECIPES.md`, `.gitattributes`; README/STATUS/CLAUDE updates.
+### M2 evidence (implementer summary)
 
-Independent recipe validation (throwaway Python, not committed): both valid files OK; N01–N21 matched expected errors; CRC check value `0xCBF43926` reproduced. No `.eraf` binaries in repo yet (M2 may check them in).
+See prior STATUS section content in git history if needed. Summary: `ErafReader` / `ErafWriter` / validator; fixtures under `fixtures/eraf/{valid,invalid,expected}`; 48 tests; root `.gitignore`.
 
 ## Known limitations carried forward
 
 - Plain `dotnet run` does not register package identity; use `winapp run`.
 - Prefer project-level restore; avoid piping NuGet/dotnet output when it hangs.
-- `MaxFileBytes` is defensive in v1 (per-payload caps dominate).
 - SECURITY.md license identifiers unverified until nearer M9.
+- Negative fixture recipe rebuild in C# tests still optional follow-up.

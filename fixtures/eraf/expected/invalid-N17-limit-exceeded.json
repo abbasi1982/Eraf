@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N17-limit-exceeded.eraf",
+  "valid": false,
+  "error": "LimitExceeded"
+}

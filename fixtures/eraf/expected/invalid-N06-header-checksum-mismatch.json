@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N06-header-checksum-mismatch.eraf",
+  "valid": false,
+  "error": "HeaderChecksumMismatch"
+}

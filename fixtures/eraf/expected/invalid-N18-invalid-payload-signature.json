@@ -1,0 +1,5 @@
+{
+  "fixture": "invalid/invalid-N18-invalid-payload-signature.eraf",
+  "valid": false,
+  "error": "InvalidPayloadSignature"
+}

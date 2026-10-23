@@ -2,14 +2,14 @@
 
 Shared by every ERAF implementation (C# now, Kotlin in Phase 2). A fixture is the **specification made executable**: if an implementation and a fixture disagree, the spec ([../../docs/ERAF_FORMAT_SPEC.md](../../docs/ERAF_FORMAT_SPEC.md)) decides, and the loser is fixed.
 
-Byte-level definitions are in [RECIPES.md](RECIPES.md). M1 provides the recipes; the binary files are added in M2.
+Byte-level definitions are in [RECIPES.md](RECIPES.md). The binary files and sidecars are checked in and consumed by `tests/Eraf.Format.Tests`.
 
 ## Status
 
 | Item | State |
 |---|---|
 | Recipes for 2 valid + 21 negative cases | Done (M1) |
-| Binary `.eraf` files | M2 |
+| Binary `.eraf` files + `expected/` sidecars (2 valid, 21 invalid) | Done (M2) |
 | Decodable JPEG/M4A payload fixtures | M2/M3 |
 
 ## Naming

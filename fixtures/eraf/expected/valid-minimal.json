@@ -1,0 +1,10 @@
+{
+  "fixture": "valid/valid-minimal.eraf",
+  "valid": true,
+  "imageLength": 8,
+  "audioLength": 20,
+  "audioDurationMs": 0,
+  "createdUtcUnixMs": 0,
+  "hasImageSha256": false,
+  "hasAudioSha256": false
+}
