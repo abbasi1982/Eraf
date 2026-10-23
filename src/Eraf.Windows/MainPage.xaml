@@ -8,11 +8,103 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <!--
-        This is the main content area of your application.
-        Add your UI elements here — for example, controls, layouts, and data-bound views.
-        Use 'dotnet new winui-page' to create additional pages and navigate to them via
-        the Frame in MainWindow (RootFrame).
-    -->
-    <Grid />
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <InfoBar
+            x:Name="MessageBar"
+            Grid.Row="0"
+            IsOpen="False"
+            IsClosable="True"
+            Severity="Error" />
+
+        <!-- Idle: nothing chosen yet. -->
+        <StackPanel
+            x:Name="IdlePanel"
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="16">
+            <TextBlock
+                Text="Choose a photo"
+                Style="{StaticResource TitleTextBlockStyle}"
+                HorizontalAlignment="Center" />
+            <TextBlock
+                Text="Import an existing image, or take one with the camera."
+                HorizontalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                <Button
+                    x:Name="ImportButton"
+                    Content="Import image"
+                    AutomationProperties.AutomationId="ImportButton"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Click="OnImportClick" />
+                <Button
+                    x:Name="CaptureButton"
+                    Content="Use camera"
+                    AutomationProperties.AutomationId="CameraButton"
+                    Click="OnCameraClick" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Live camera preview. -->
+        <Grid x:Name="CameraPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <MediaPlayerElement
+                x:Name="CameraPreview"
+                Grid.Row="0"
+                Stretch="Uniform"
+                AutoPlay="True"
+                AreTransportControlsEnabled="False" />
+            <StackPanel
+                Grid.Row="1"
+                Orientation="Horizontal"
+                Spacing="12"
+                HorizontalAlignment="Center">
+                <Button
+                    x:Name="TakePhotoButton"
+                    Content="Take photo"
+                    AutomationProperties.AutomationId="TakePhotoButton"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Click="OnTakePhotoClick" />
+                <Button
+                    x:Name="CancelCameraButton"
+                    Content="Cancel"
+                    AutomationProperties.AutomationId="CancelCameraButton"
+                    Click="OnCancelCameraClick" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Photo preview of exactly the bytes held in the session. -->
+        <Grid x:Name="PhotoPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Image
+                x:Name="PhotoImage"
+                Grid.Row="0"
+                Stretch="Uniform"
+                AutomationProperties.Name="Photo preview" />
+            <TextBlock
+                x:Name="PhotoInfo"
+                Grid.Row="1"
+                HorizontalAlignment="Center"
+                AutomationProperties.AutomationId="PhotoInfo" />
+            <Button
+                x:Name="DiscardButton"
+                Grid.Row="2"
+                Content="Discard photo"
+                HorizontalAlignment="Center"
+                AutomationProperties.AutomationId="DiscardButton"
+                Click="OnDiscardClick" />
+        </Grid>
+    </Grid>
 </Page>

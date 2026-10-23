@@ -38,7 +38,7 @@ Services (UI-adjacent, each behind an interface so the workflow can be tested wi
 | Service | Role |
 |---|---|
 | `CameraService` | `MediaCapture` preview and JPEG still capture |
-| `ImageImportService` | `FileOpenPicker` import; convert-on-import for non-JPEG per DECISIONS when approved |
+| `ImageImportService` | Windows App SDK `FileOpenPicker` import; JPEG kept as is, others converted once (ADR-007); rules from `ErafMedia` in `Eraf.Format` |
 | `AudioService` | AAC-LC M4A recording via `MediaEncodingProfile.CreateM4a`; enforces the 10-minute limit |
 | `PlaybackService` | `MediaPlayer` playback of the audio payload (extracted to an app-controlled temp file) |
 | `FileService` | Pickers and **atomic save** (spec §11), export of original payloads |

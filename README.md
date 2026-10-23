@@ -27,7 +27,7 @@ Cloud sync, accounts, and general media-management features are out of scope unl
 
 **Application features are not implemented yet.**
 
-**M0–M2 closed** (`Eraf.Format` + 48 tests). Next: **M3** — [docs/CLAUDE_CODE_BRIEF_M3.md](docs/CLAUDE_CODE_BRIEF_M3.md).
+**M0–M2 closed** (`Eraf.Format` + 48 tests). **M3** (image import with preview, and camera capture) is implemented and awaiting review. Next: M4 (audio).
 
 Live progress: [docs/STATUS.md](docs/STATUS.md)
 

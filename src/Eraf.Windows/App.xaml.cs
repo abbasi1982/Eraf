@@ -22,6 +22,9 @@ namespace Eraf.Windows;
 public partial class App : Application
 {
     private Window? _window;
+
+    /// <summary>The main window, needed by pickers to get a window handle.</summary>
+    public static Window? MainWindow { get; private set; }
     
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -39,6 +42,7 @@ public partial class App : Application
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         _window = new MainWindow();
+        MainWindow = _window;
         _window.Activate();
     }
 }

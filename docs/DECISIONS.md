@@ -90,10 +90,25 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-007 — Convert-on-import confirmed; Windows App SDK file picker
+
+**Status:** Convert-on-import accepted by Cursor (M3 brief); picker choice made by the implementer in M3, for review.
+
+**Context.** ADR-002 left open whether a non-JPEG image is converted or rejected. Separately, the classic `Windows.Storage.Pickers.FileOpenPicker` initialised with `InitializeWithWindow` failed with `E_FAIL` in the packaged app launched via `winapp run`.
+
+**Decision.**
+- Non-JPEG images are decoded and re-encoded **once** to JPEG on import (`BitmapDecoder` / `BitmapEncoder`, alpha ignored). Files that already start with `FF D8 FF` are kept byte for byte, never recompressed. The decision is `ErafMedia.PlanImageImport` in `Eraf.Format`, so it follows the spec's limits and signature rule and is unit-tested; the converted output is planned again against the same rules.
+- Image size is checked from file properties **before** reading, using the 64 MiB payload limit.
+- The picker is `Microsoft.Windows.Storage.Pickers.FileOpenPicker(AppWindow.Id)` from the Windows App SDK (documented for 2.0). The old API is not used.
+- The photo lives in an in-memory `ImageSession`, so there are no temp files to clean up.
+
+**Consequences.** Import works for JPEG, PNG, BMP, GIF and TIFF in the picker filter. Conversion is lossy and drops alpha. A JPEG is trusted by signature only, so a truncated JPEG that the system can partially decode is accepted (noted in STATUS). The picker returns a path, which the app reads directly (full-trust package).
+
+---
+
 ## Pending decisions (not yet made)
 
 | Topic | Needed by |
 |---|---|
-| Convert-on-import vs reject for non-JPEG images | M3 |
 | Pause/resume recording (only if `MediaCapture` supports it reliably) | M4 |
 | Project license | Before any public release |

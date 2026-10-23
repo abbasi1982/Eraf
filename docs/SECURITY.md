@@ -35,7 +35,7 @@ None. The app does not use the network, send telemetry, check for updates, or em
 
 ## Permissions
 
-Declare only what is needed: webcam and microphone capabilities in the package manifest. A denial or missing device must produce an actionable message and leave image import available.
+Declare only what is needed: webcam and microphone capabilities in the package manifest. As of M3 the manifest declares `webcam` only (the camera UI ships); `microphone` arrives with audio in M4. A denial or missing device must produce an actionable message and leave image import available.
 
 ## Dependencies and license inventory
 
