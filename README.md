@@ -27,7 +27,7 @@ Cloud sync, accounts, and general media-management features are out of scope unl
 
 **Application features are not implemented yet.**
 
-**M0–M2 closed** (`Eraf.Format` + 48 tests). **M3** (image import with preview, and camera capture) is implemented and awaiting review. Next: M4 (audio).
+**M0–M3 closed.** Next: **M4** — [docs/CLAUDE_CODE_BRIEF_M4.md](docs/CLAUDE_CODE_BRIEF_M4.md).
 
 Live progress: [docs/STATUS.md](docs/STATUS.md)
 
@@ -87,7 +87,8 @@ The normative specification is [docs/ERAF_FORMAT_SPEC.md](docs/ERAF_FORMAT_SPEC.
 | [docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md](docs/CLAUDE_CODE_BRIEF_M0_FOLLOWUP_NAMESPACE.md) | Namespace rename (done) |
 | [docs/CLAUDE_CODE_BRIEF_M1.md](docs/CLAUDE_CODE_BRIEF_M1.md) | M1 brief (closed) |
 | [docs/CLAUDE_CODE_BRIEF_M2.md](docs/CLAUDE_CODE_BRIEF_M2.md) | M2 brief (closed) |
-| [docs/CLAUDE_CODE_BRIEF_M3.md](docs/CLAUDE_CODE_BRIEF_M3.md) | Current implementer brief for M3 |
+| [docs/CLAUDE_CODE_BRIEF_M3.md](docs/CLAUDE_CODE_BRIEF_M3.md) | M3 brief (closed) |
+| [docs/CLAUDE_CODE_BRIEF_M4.md](docs/CLAUDE_CODE_BRIEF_M4.md) | Current implementer brief for M4 |
 
 A user guide is planned for late Phase 1.
 

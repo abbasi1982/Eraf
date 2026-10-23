@@ -92,7 +92,7 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ## ADR-007 — Convert-on-import confirmed; Windows App SDK file picker
 
-**Status:** Convert-on-import accepted by Cursor (M3 brief); picker choice made by the implementer in M3, for review.
+**Status:** Accepted by Cursor (M3 review, 2026-10-23).
 
 **Context.** ADR-002 left open whether a non-JPEG image is converted or rejected. Separately, the classic `Windows.Storage.Pickers.FileOpenPicker` initialised with `InitializeWithWindow` failed with `E_FAIL` in the packaged app launched via `winapp run`.
 
@@ -106,9 +106,22 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-008 — Truncated JPEG acceptance (signature-only)
+
+**Status:** Accepted by Cursor (M3 review, 2026-10-23)
+
+**Context.** A file that starts with `FF D8 FF` but is truncated can partially decode (top of image + gray). Spec §8.1 / C1 only requires the three-byte signature so the container and `ErafMedia` stay aligned.
+
+**Decision.** **Keep accepting** such files in M3/v1. Do **not** add a mandatory trailing `FF D9` check to the wire format or to `ErafMedia` for v1.
+
+**Consequences.** Users could save a half-image into an `.eraf` later. Mitigation deferred to **M6/M7**: at save (or preview), the app SHOULD surface a non-blocking warning if the system decoder reports an incomplete/corrupt decode, without rejecting the bytes solely for missing EOI. A future format version could tighten payload rules if needed.
+
+---
+
 ## Pending decisions (not yet made)
 
 | Topic | Needed by |
 |---|---|
 | Pause/resume recording (only if `MediaCapture` supports it reliably) | M4 |
+| Soft warning UX for incomplete JPEG decode at save | M6/M7 |
 | Project license | Before any public release |
