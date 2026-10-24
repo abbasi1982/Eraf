@@ -134,6 +134,23 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-010 — Session workflow: one pure state machine, tested as linked source
+
+**Status:** Accepted by Cursor (M5 review, 2026-10-24).
+
+**Context.** M3/M4 tracked the flow with scattered booleans and panel visibility. M6 (save) and M7 (errors) need explicit states. The tests project is plain `net8.0` and must not reference the WinUI project (ARCHITECTURE).
+
+**Decision.**
+- `SessionWorkflow` is a pure class with one transition table (`Evaluate`), one instance per page, no static state. The page renders from `State` and calls `TryApply` before acting.
+- The file stays in `Eraf.Windows` (it is app logic, not format logic) and is compiled into `Eraf.Format.Tests` through a linked `<Compile Include=... Link=...>` item, rather than adding a project or referencing the WinUI project. It must remain free of WinUI/WinRT types, and the file says so at the top.
+- `AudioPreview` means "the voice note is playing"; a successful recording goes directly to `ReadyToSave`. This keeps the M4 flow with no extra confirmation click.
+- A voice note survives a failed re-record (`RecordingFailed` returns to `ReadyToSave` if audio is held).
+- `StartOver` is illegal while `Saving`.
+
+**Consequences.** Illegal actions are impossible by construction rather than by hidden buttons. If a second consumer of the workflow appears, or the linked-file trick becomes awkward, move it to a small `net8.0` library (for example `Eraf.Session`) and update ARCHITECTURE; nothing else changes.
+
+---
+
 ## Pending decisions (not yet made)
 
 | Topic | Needed by |

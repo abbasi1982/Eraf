@@ -42,15 +42,16 @@ Services (UI-adjacent, each behind an interface so the workflow can be tested wi
 | `AudioRecorder` | AAC-LC M4A recording via `MediaEncodingProfile.CreateM4a` into memory; the page enforces the 10-minute cap; checks results with `ErafMedia.CheckAudio` (ADR-009) |
 | `ClipPlayer` | `MediaPlayer` playback of the in-session M4A straight from memory (no temp file) |
 | `FileService` | Pickers and **atomic save** (spec §11), export of original payloads |
-| `SessionWorkflow` | State machine, below |
+| `SessionWorkflow` | Pure state machine in `SessionWorkflow.cs` (ADR-010); the page renders from it |
 
 Session state machine (one session object, not a global singleton):
 
 ```
-Idle → CapturingPhoto → PhotoPreview → RecordingAudio → AudioPreview → ReadyToSave → Saving → Saved | Error
+Idle → CapturingPhoto → PhotoPreview → RecordingAudio → ReadyToSave → Saving → Saved | Error
+                                         AudioPreview (while the note plays) ⇄ ReadyToSave
 ```
 
-with explicit `Cancel`/`Discard` edges that clean temp media. Incomplete audio is never reported as saved. Camera preview and microphone recording are not required to run at the same time: after the photo is taken the session holds the JPEG bytes and records audio afterward.
+The legal transitions are tabled in [STATUS.md](STATUS.md) (M5 evidence) and in the `SessionWorkflow` source; every other (state, event) pair is rejected. `StartOver` and `DiscardAudio` clear the held media, `StartOver` is refused while `Saving`, and incomplete audio is never reported as saved. Camera preview and microphone recording are not required to run at the same time: after the photo is taken the session holds the JPEG bytes and records audio afterward.
 
 Camera absence or denial never blocks the app: image import stays available.
 

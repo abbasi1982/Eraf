@@ -8,35 +8,68 @@ using Windows.Storage.Streams;
 namespace Eraf.Windows;
 
 /// <summary>
-/// M3-M4 screen: obtain a JPEG (import or camera), preview it, and record, play, replace or discard a
-/// voice note. Both live in a <see cref="CaptureSession"/> owned by this page. Saving comes in M6 and the
-/// full session state machine in M5.
+/// Capture screen. What is shown always follows <see cref="SessionWorkflow.State"/>, and every action first
+/// asks the workflow whether it is legal. The photo and voice note live in a <see cref="CaptureSession"/>
+/// owned by this page. Saving is wired in M6.
 /// </summary>
 public sealed partial class MainPage : Page
 {
+    private readonly SessionWorkflow _workflow = new();
     private CaptureSession? _session;
     private CameraService? _camera;
     private AudioRecorder? _recorder;
     private ClipPlayer? _player;
-    private bool _playing;
     private readonly DispatcherTimer _recordTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
 
     public MainPage()
     {
         InitializeComponent();
+        _workflow.Changed += (_, _) => Render();
         _recordTimer.Tick += OnRecordTimerTick;
-        Unloaded += (_, _) =>
-        {
-            StopCamera();
-            DiscardEverything();
-        };
-        ShowIdle();
+        Unloaded += (_, _) => ReleaseEverything();
+        Render();
     }
+
+    // ---------------------------------------------------------------- rendering
+
+    /// <summary>Maps the workflow state onto the panels and buttons. No decisions are made here.</summary>
+    private void Render()
+    {
+        SessionState state = _workflow.State;
+        bool recording = state == SessionState.RecordingAudio;
+
+        IdlePanel.Visibility = Show(state == SessionState.Idle);
+        CameraPanel.Visibility = Show(state == SessionState.CapturingPhoto);
+        PhotoPanel.Visibility = Show(state != SessionState.Idle && state != SessionState.CapturingPhoto);
+
+        RecordButton.Visibility = Show(!recording && !_workflow.HasAudio);
+        RecordingPanel.Visibility = Show(recording);
+        VoicePanel.Visibility = Show(!recording && _workflow.HasAudio);
+        PlayButton.Content = state == SessionState.AudioPreview ? "Stop" : "Play";
+        SaveButton.IsEnabled = _workflow.CanSave;
+
+        if (recording)
+        {
+            RecordingStatus.Text = $"● Recording  {Format(_recorder?.ElapsedMs ?? 0)} of {Format(ErafLimits.MaxAudioDurationMs)}";
+        }
+
+        if (_session?.Audio is { } clip)
+        {
+            VoiceInfo.Text = $"Voice note {Format(clip.DurationMs)} (AAC M4A, {clip.M4aBytes.Length / 1024.0:N0} KB)";
+        }
+    }
+
+    private static Visibility Show(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
 
     // ---------------------------------------------------------------- photo
 
     private async void OnImportClick(object sender, RoutedEventArgs e)
     {
+        if (!_workflow.CanApply(SessionEvent.PhotoReady))
+        {
+            return;
+        }
+
         ClearMessage();
         SetBusy(true);
         try
@@ -59,6 +92,11 @@ public sealed partial class MainPage : Page
 
     private async void OnCameraClick(object sender, RoutedEventArgs e)
     {
+        if (!_workflow.CanApply(SessionEvent.StartCamera))
+        {
+            return;
+        }
+
         ClearMessage();
         SetBusy(true);
         try
@@ -72,9 +110,7 @@ public sealed partial class MainPage : Page
 
             _camera = result.Camera;
             CameraPreview.SetMediaPlayer(_camera.Preview);
-            IdlePanel.Visibility = Visibility.Collapsed;
-            PhotoPanel.Visibility = Visibility.Collapsed;
-            CameraPanel.Visibility = Visibility.Visible;
+            _workflow.TryApply(SessionEvent.StartCamera);
         }
         finally
         {
@@ -84,7 +120,7 @@ public sealed partial class MainPage : Page
 
     private async void OnTakePhotoClick(object sender, RoutedEventArgs e)
     {
-        if (_camera is null)
+        if (_camera is null || _workflow.State != SessionState.CapturingPhoto)
         {
             return;
         }
@@ -100,7 +136,7 @@ public sealed partial class MainPage : Page
         catch (Exception ex)
         {
             StopCamera();
-            ShowIdle();
+            _workflow.TryApply(SessionEvent.CancelCamera);
             ShowError($"The photo could not be taken ({ex.Message}). Try again, or import a photo instead.");
         }
         finally
@@ -112,14 +148,20 @@ public sealed partial class MainPage : Page
     private void OnCancelCameraClick(object sender, RoutedEventArgs e)
     {
         StopCamera();
-        ShowIdle();
+        _workflow.TryApply(SessionEvent.CancelCamera);
     }
 
+    /// <summary>Start over: drops the photo and voice note and returns to idle (refused while a save is running).</summary>
     private void OnDiscardClick(object sender, RoutedEventArgs e)
     {
+        if (!_workflow.CanApply(SessionEvent.StartOver))
+        {
+            return;
+        }
+
         ClearMessage();
-        DiscardEverything();
-        ShowIdle();
+        ReleaseEverything();
+        _workflow.TryApply(SessionEvent.StartOver);
     }
 
     /// <summary>Previews the session's own bytes, so what is shown is what a later save would store.</summary>
@@ -143,22 +185,22 @@ public sealed partial class MainPage : Page
         {
             // The bytes looked like a JPEG but could not be displayed, so they are not kept.
             photo.Clear();
-            ShowIdle();
+            _workflow.TryApply(SessionEvent.CancelCamera); // only legal if the camera was live; otherwise stays Idle
             ShowError(photo.SourceName is null
                 ? "The photo could not be displayed. Try again."
                 : $"\"{photo.SourceName}\" looks like a JPEG but could not be opened. It may be damaged.");
             return;
         }
 
-        // A new photo starts a new session: any earlier photo and voice note are dropped.
-        DropRecordingAndPlayback();
-        _session?.Clear();
         _session = new CaptureSession(photo);
         PhotoInfo.Text = Describe(photo);
-        IdlePanel.Visibility = Visibility.Collapsed;
-        CameraPanel.Visibility = Visibility.Collapsed;
-        PhotoPanel.Visibility = Visibility.Visible;
-        ShowVoiceState();
+        if (!_workflow.TryApply(SessionEvent.PhotoReady))
+        {
+            // Not legal in this state (for example a photo arriving while one is already held): drop it.
+            _session.Clear();
+            _session = null;
+            PhotoImage.Source = null;
+        }
     }
 
     private static string Describe(ImageSession session)
@@ -176,13 +218,13 @@ public sealed partial class MainPage : Page
 
     private async void OnRecordClick(object sender, RoutedEventArgs e)
     {
-        if (_session is null || _recorder is not null)
+        if (_recorder is not null || !_workflow.CanApply(SessionEvent.StartRecording))
         {
             return;
         }
 
         ClearMessage();
-        StopPlayback();
+        EndPlayback();
         RecordButton.IsEnabled = false;
         RerecordButton.IsEnabled = false;
         try
@@ -196,13 +238,19 @@ public sealed partial class MainPage : Page
 
             // An earlier clip (if any) is kept until this recording succeeds.
             _recorder = result.Recorder;
+            if (!_workflow.TryApply(SessionEvent.StartRecording))
+            {
+                _recorder.Dispose();
+                _recorder = null;
+                return;
+            }
+
             _recordTimer.Start();
         }
         finally
         {
             RecordButton.IsEnabled = true;
             RerecordButton.IsEnabled = true;
-            ShowVoiceState();
         }
     }
 
@@ -210,7 +258,7 @@ public sealed partial class MainPage : Page
 
     private async void OnRecordTimerTick(object? sender, object e)
     {
-        if (_recorder is null)
+        if (_recorder is null || _workflow.State != SessionState.RecordingAudio)
         {
             return;
         }
@@ -239,35 +287,42 @@ public sealed partial class MainPage : Page
         try
         {
             RecorderStopResult result = await recorder.StopAsync();
-            if (result.Clip is not null && _session is not null)
+            if (_workflow.State != SessionState.RecordingAudio || _session is null)
+            {
+                return; // the session was abandoned while stopping: nothing to keep
+            }
+
+            if (result.Clip is not null)
             {
                 _player?.Dispose();
                 _player = null;
-                _session.SetAudio(result.Clip);            }
+                _session.SetAudio(result.Clip);
+                _workflow.TryApply(SessionEvent.RecordingSucceeded);
+            }
             else
             {
                 ShowError(result.Error ?? "The recording failed. Try again.");
+                _workflow.TryApply(SessionEvent.RecordingFailed);
             }
         }
         finally
         {
             recorder.Dispose();
             StopRecordButton.IsEnabled = true;
-            ShowVoiceState();
         }
     }
 
     private async void OnPlayClick(object sender, RoutedEventArgs e)
     {
-        AudioClip? clip = _session?.Audio;
-        if (clip is null)
+        if (_workflow.State == SessionState.AudioPreview)
         {
+            EndPlayback();
             return;
         }
 
-        if (_playing)
+        AudioClip? clip = _session?.Audio;
+        if (clip is null || !_workflow.CanApply(SessionEvent.PlaybackStarted))
         {
-            StopPlayback();
             return;
         }
 
@@ -277,75 +332,54 @@ public sealed partial class MainPage : Page
             {
                 _player = await ClipPlayer.CreateAsync(clip);
                 DispatcherQueue queue = DispatcherQueue;
-                _player.Ended += () => queue.TryEnqueue(StopPlayback);
+                _player.Ended += () => queue.TryEnqueue(EndPlayback);
                 _player.Failed += message => queue.TryEnqueue(() =>
                 {
-                    StopPlayback();
+                    EndPlayback();
                     ShowError($"The voice note could not be played ({message}).");
                 });
             }
 
-            _player.Play();
-            _playing = true;
-            PlayButton.Content = "Stop";
+            if (_workflow.TryApply(SessionEvent.PlaybackStarted))
+            {
+                _player.Play();
+            }
+            else
+            {
+                DropPlayer(); // the session changed while the player was loading
+            }
         }
         catch (Exception ex)
         {
-            StopPlayback();
+            EndPlayback();
             ShowError($"The voice note could not be played ({ex.Message}).");
         }
     }
 
     private void OnDeleteVoiceClick(object sender, RoutedEventArgs e)
     {
+        if (!_workflow.CanApply(SessionEvent.DiscardAudio))
+        {
+            return;
+        }
+
         ClearMessage();
-        DropPlayback();
+        DropPlayer();
         _session?.ClearAudio();
-        ShowVoiceState();
+        _workflow.TryApply(SessionEvent.DiscardAudio);
     }
 
-    private void StopPlayback()
+    /// <summary>Stops the player and, if the workflow was previewing the note, leaves that state.</summary>
+    private void EndPlayback()
     {
         _player?.Stop();
-        _playing = false;
-        PlayButton.Content = "Play";
+        _workflow.TryApply(SessionEvent.PlaybackStopped);
     }
 
-    private void DropPlayback()
+    private void DropPlayer()
     {
         _player?.Dispose();
         _player = null;
-        _playing = false;
-        PlayButton.Content = "Play";
-    }
-
-    /// <summary>Abandons a recording in progress (nothing is kept) and releases the player.</summary>
-    private void DropRecordingAndPlayback()
-    {
-        _recordTimer.Stop();
-        _recorder?.Dispose();
-        _recorder = null;
-        DropPlayback();
-    }
-
-    private void ShowVoiceState()
-    {
-        bool recording = _recorder is not null;
-        AudioClip? clip = _session?.Audio;
-
-        RecordButton.Visibility = !recording && clip is null ? Visibility.Visible : Visibility.Collapsed;
-        RecordingPanel.Visibility = recording ? Visibility.Visible : Visibility.Collapsed;
-        VoicePanel.Visibility = !recording && clip is not null ? Visibility.Visible : Visibility.Collapsed;
-
-        if (recording)
-        {
-            RecordingStatus.Text = $"● Recording  {Format(0)} of {Format(ErafLimits.MaxAudioDurationMs)}";
-        }
-
-        if (clip is not null)
-        {
-            VoiceInfo.Text = $"Voice note {Format(clip.DurationMs)} (AAC M4A, {clip.M4aBytes.Length / 1024.0:N0} KB)";
-        }
     }
 
     private static string Format(ulong ms)
@@ -354,16 +388,29 @@ public sealed partial class MainPage : Page
         return $"{(int)t.TotalMinutes}:{t.Seconds:00}";
     }
 
+    // ---------------------------------------------------------------- save (M6)
+
+    private void OnSaveClick(object sender, RoutedEventArgs e)
+    {
+        // Only reachable in ReadyToSave. The actual write, and the Saving/Saved/Error states, come in M6.
+        ShowInfo("Saving .eraf files arrives in a later update. Your photo and voice note are ready.");
+    }
+
     // ---------------------------------------------------------------- shared
 
-    private void DiscardEverything()
+    /// <summary>Releases every device and drops all media. Does not touch the workflow state.</summary>
+    private void ReleaseEverything()
     {
-        DropRecordingAndPlayback();
+        _recordTimer.Stop();
+        _recorder?.Dispose();
+        _recorder = null;
+        DropPlayer();
+        StopCamera();
         _session?.Clear();
         _session = null;
         PhotoImage.Source = null;
         PhotoInfo.Text = string.Empty;
-        ShowVoiceState();
+        VoiceInfo.Text = string.Empty;
     }
 
     private void StopCamera()
@@ -373,15 +420,13 @@ public sealed partial class MainPage : Page
         _camera = null;
     }
 
-    private void ShowIdle()
-    {
-        IdlePanel.Visibility = Visibility.Visible;
-        CameraPanel.Visibility = Visibility.Collapsed;
-        PhotoPanel.Visibility = Visibility.Collapsed;
-    }
+    private void ShowError(string message) => ShowMessage(message, InfoBarSeverity.Error);
 
-    private void ShowError(string message)
+    private void ShowInfo(string message) => ShowMessage(message, InfoBarSeverity.Informational);
+
+    private void ShowMessage(string message, InfoBarSeverity severity)
     {
+        MessageBar.Severity = severity;
         MessageBar.Message = message;
         MessageBar.IsOpen = true;
     }

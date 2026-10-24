@@ -1,6 +1,6 @@
 # ERAF Project Status
 
-**Last updated:** 2026-10-24 (M4 closed by Cursor)
+**Last updated:** 2026-10-24 (M5 closed by Cursor)
 
 ## Roles
 
@@ -9,7 +9,7 @@
 
 ## Current phase
 
-Phase 1 — Windows. **M0–M4 closed.** Next: **M5** (session state machine).
+Phase 1 — Windows. **M0–M5 closed.** Next: **M6** (save / open / export).
 
 Phase 2 — Android remains blocked until the Windows release gate.
 
@@ -17,55 +17,50 @@ Phase 2 — Android remains blocked until the Windows release gate.
 
 | Item | Notes |
 |---|---|
-| M0–M3 | Closed |
-| **M4 Audio record/playback** | Closed by Cursor 2026-10-24 — ADR-009 accepted |
+| M0–M4 | Closed |
+| **M5 Session workflow** | Closed by Cursor 2026-10-24 — ADR-010 accepted |
 
 ## In progress
 
-None until Claude Code commits/pushes M4 (+ unpushed `ee60ded` M3 close-out), then starts [CLAUDE_CODE_BRIEF_M5.md](CLAUDE_CODE_BRIEF_M5.md).
+None until Claude Code commits M5 (with this close-out), then starts [CLAUDE_CODE_BRIEF_M6.md](CLAUDE_CODE_BRIEF_M6.md).
 
 ## Next
 
-1. **Authorized:** Commit M4 working tree (include this close-out, ADR-009 acceptance, M5 brief, README)
-2. **Authorized:** Push `ee60ded` + M4 commit(s) to `origin/master`
-3. Execute M5
+1. **Authorized:** Commit M5 working tree + Cursor close-out (STATUS, ADR-010 acceptance, M6 brief, README)
+2. Push when asked (or with the commit if you usually push after review)
+3. Execute M6
 
 ## Milestones
 
 | ID | Status |
 |---|---|
-| M0–M3 | **Closed** |
-| M4 Audio record/playback | **Closed** |
-| M5 Session workflow | **Authorized** — [CLAUDE_CODE_BRIEF_M5.md](CLAUDE_CODE_BRIEF_M5.md) |
-| M6–M9 | Pending |
+| M0–M4 | **Closed** |
+| M5 Session workflow | **Closed** |
+| M6 Save/open/export | **Authorized** — [CLAUDE_CODE_BRIEF_M6.md](CLAUDE_CODE_BRIEF_M6.md) |
+| M7–M9 | Pending |
 
-## M4 close-out (Cursor)
+## M5 close-out (Cursor)
 
-**Verdict:** Pass with documented limitations.
+**Verdict:** Pass.
 
 | Criterion | Result |
 |---|---|
-| AAC-LC M4A record via `CreateM4a` | Pass (box parse evidence in STATUS) |
-| Play / retry / discard; failed re-record keeps prior clip | Pass (manual) |
-| Duration/size enforcement | Pass (unit tests + 5 s auto-stop proxy; full 10 min not waited) |
-| Empty/failed never success | Pass (code + too-short manual) |
-| Mic capability declared | Pass |
-| `ErafMedia.CheckAudio` / `IsM4a` | Pass |
-| `dotnet test` re-run by Cursor | **64 passed, 0 failed** |
-| ADR-009 no pause/resume | **Accepted** |
+| Explicit transition table; illegal events rejected | Pass |
+| Page gated by workflow; late results dropped | Pass (STATUS + code) |
+| ReadyToSave only with photo + audio; Save stub | Pass |
+| `dotnet test` re-run by Cursor | **202 passed, 0 failed** |
+| ADR-010 linked-source testing | **Accepted** (optional later `Eraf.Session` library) |
+| `AudioPreview` = playing; record → ReadyToSave | **Accepted** (keeps M4 UX) |
 
-**Not verified (carry forward):** denied/missing mic; subjective audibility; full 10-minute wall-clock recording.
+**Not verified (carry forward):** Saving/Saved/Error until M6 drives them; denied cam/mic; mouse/keyboard a11y.
 
-**Privacy:** Microphone Allow stored for the dev package; revoke via Settings > Privacy & security > Microphone if undesired.
+### M5 evidence (implementer)
 
-### M4 evidence (implementer)
-
-See prior STATUS body / working tree: `AudioRecorder`, `ClipPlayer`, `CaptureSession`, MainPage voice UI, 8 new `ErafMedia` tests.
+See prior STATUS body: `SessionWorkflow`, MainPage `Render`, 138 new tests (full grid + random walk), UI smoke.
 
 ## Known limitations carried forward
 
 - Plain `dotnet run` / use `winapp run`
-- Truncated JPEG can enter session (ADR-008)
+- Truncated JPEG (ADR-008) — soft warn at save in M6
 - Camera/mic deny paths largely unexercised
-- Soft incomplete-JPEG warning deferred to M6/M7
 - SECURITY.md licenses unverified until nearer M9

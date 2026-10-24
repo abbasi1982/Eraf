@@ -151,13 +151,25 @@
                 </StackPanel>
             </StackPanel>
 
-            <Button
-                x:Name="DiscardButton"
+            <StackPanel
                 Grid.Row="3"
-                Content="Start over"
-                HorizontalAlignment="Center"
-                AutomationProperties.AutomationId="DiscardButton"
-                Click="OnDiscardClick" />
+                Orientation="Horizontal"
+                Spacing="12"
+                HorizontalAlignment="Center">
+                <!-- Enabled only in ReadyToSave (photo + valid voice note). Saving itself arrives in M6. -->
+                <Button
+                    x:Name="SaveButton"
+                    Content="Save ERAF file"
+                    IsEnabled="False"
+                    AutomationProperties.AutomationId="SaveButton"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Click="OnSaveClick" />
+                <Button
+                    x:Name="DiscardButton"
+                    Content="Start over"
+                    AutomationProperties.AutomationId="DiscardButton"
+                    Click="OnDiscardClick" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Page>

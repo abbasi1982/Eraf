@@ -20,6 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The session state machine is pure C# inside the WinUI project; compile it here so it can be
+         unit-tested without referencing Eraf.Windows (ADR-010). It must stay free of WinUI types. -->
+    <Compile Include="..\..\src\Eraf.Windows\SessionWorkflow.cs" Link="Linked\SessionWorkflow.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

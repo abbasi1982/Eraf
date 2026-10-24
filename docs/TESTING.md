@@ -10,7 +10,7 @@ Complements [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) §9. Evidence rule:
 | Format negative | same | Every negative recipe N01–N21 in `fixtures/eraf/RECIPES.md`, plus empty, random bytes, truncated at every header offset | M2 |
 | Format round-trip | same | Writer → reader returns byte-identical payloads; with and without hashes; limit boundaries (exact max passes, max+1 fails) built in memory | M2 |
 | Fixture conformance | same, reading `fixtures/eraf` | Reader result equals the sidecar for every fixture; writer output equals valid fixtures byte for byte | M2 |
-| Workflow | app tests or a UI-free workflow assembly | State-machine transitions, cancel/discard cleanup, "incomplete audio is never saved" | M5 |
+| Workflow | `tests/Eraf.Format.Tests` (compiles `SessionWorkflow.cs` as linked source, ADR-010) | Every (state, event) pair against an independent expected table, named rules, a seeded random walk of invariants | M5 (done) |
 | Save/open integration | tests with real temp files | Atomic replace leaves the original intact when the write fails; export returns the original payload bytes | M6 |
 | Manual UI | checklist in STATUS evidence | Capture/import, record/replay/discard, open, denied mic, missing camera, corrupt file, unsaved-work prompt, keyboard use | M3–M8 |
 
@@ -30,7 +30,7 @@ From the repo root:
 dotnet test tests\Eraf.Format.Tests\Eraf.Format.Tests.csproj
 ```
 
-Constraint from M0: in this environment, run project-level commands with output redirected to a file; piped output and solution-level restore have hung. Last recorded result (M2): 48 passed, 0 failed ([STATUS.md](STATUS.md)). The tests locate `fixtures/eraf` by walking up from the build output to `Eraf.sln`, so run them from inside the repo.
+Constraint from M0: in this environment, run project-level commands with output redirected to a file; piped output and solution-level restore have hung. Last recorded result (M5): 202 passed, 0 failed ([STATUS.md](STATUS.md)). The tests locate `fixtures/eraf` by walking up from the build output to `Eraf.sln`, so run them from inside the repo.
 
 ## Not tested automatically (state this, do not imply otherwise)
 
