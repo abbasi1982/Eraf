@@ -30,6 +30,7 @@
     <Compile Include="..\..\src\Eraf.Windows\MicrophoneChoice.cs" Link="Linked\MicrophoneChoice.cs" />
     <Compile Include="..\..\src\Eraf.Windows\TrimRange.cs" Link="Linked\TrimRange.cs" />
     <Compile Include="..\..\src\Eraf.Windows\FileBrowsing.cs" Link="Linked\FileBrowsing.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\BatchPlanning.cs" Link="Linked\BatchPlanning.cs" />
   </ItemGroup>
 
   <ItemGroup>

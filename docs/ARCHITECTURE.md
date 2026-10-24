@@ -60,6 +60,10 @@ Camera absence or denial never blocks the app: image import stays available.
 
 `MainPage` hosts, from the top: the top bar, then the folder tree (`PlacesBlade`) and a content area. The content area shows the file list (`FileListPane`) while the workflow is `Idle`, and the camera or photo panels in every other state. Pure logic (`FileBrowsing.cs`: classification, sort, filter, history, folder reading; `TrimRange.cs`; `MicrophoneChoice.cs`) is linked into the test project; WinUI types stay in the panes, `TrimDialog` and the page. See ADR-014.
 
+## Menu, Settings and batches (post-gate)
+
+`MainPage` also hosts a `MenuBar` (same handlers as the buttons) and a `SettingsPane` overlay. Pure, tested logic: `AppOptions` (options and defaults), `PhotoScanner` (finding photos in files and folders), `BatchTargets` (output names and existing-file rules), `BatchSummary`, all in `BatchPlanning.cs`. WinUI/WinRT parts: `BatchRunner` (one photo at a time through `ImageImportService`, `SessionFile.Build` and `AtomicFile`), `BatchDialogs` (confirm, progress with Stop, summary, About, theming of dialogs) and `MainPage.Batch.cs` (starting and running a batch inside the existing workflow). See ADR-015.
+
 ## Build and launch (this machine)
 
 - Build: `dotnet build src\Eraf.Windows\Eraf.Windows.csproj -p:Platform=x64`

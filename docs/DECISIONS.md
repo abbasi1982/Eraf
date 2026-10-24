@@ -171,6 +171,23 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-015 — Many photos with one voice note, folder scanning, Settings, menu bar and themes (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review.
+
+**Context.** The product owner asked to select several files and folders and make an ERAF for each photo using one shared audio file, to scan folders for photos, to have a Settings page (folder and subfolder scanning among others), a menu or ribbon, and a user-selectable theme.
+
+**Decision.**
+- **Selection and batch.** The file list is multi-select. **Make ERAF** with one photo or one `.eraf` behaves as before; with several items, or any folder, it starts a *batch*. `PhotoScanner` (pure) collects photos from the selection: files as given, folders searched for photos (and subfolders only if the option is on); hidden/system items and folder links skipped, duplicates removed, at most 2000 photos. The first readable photo is shown, and the existing editor is used to record, attach or trim **one** voice note. The Save button becomes "Make N ERAF files". The workflow is unchanged: the batch is `BeginSave` to `SaveSucceeded` or `SaveFailed`, so unsaved-work prompts still apply.
+- **Running.** A confirmation box states the count and asks what to do when a name already exists (skip, replace, keep both with a number), defaulting to the Settings choice. `BatchTargets.Plan` (pure) works out every output name; two photos wanting the same name in one batch always get numbers. `BatchRunner` reads one photo at a time, converts it with the usual import rules, builds the file with the same shared audio bytes, writes it with `AtomicFile` (verified, replace only when chosen) and carries on after a failure. A progress box has Stop (finishes the current photo). A summary lists made, replaced, skipped and failed photos with plain reasons. Output goes beside each photo, or into one chosen folder (Settings).
+- **Settings.** `AppOptions` (pure; unknown or damaged values fall back to defaults) stored in `LocalSettings`: theme, search subfolders (default off), default existing-file choice (default skip), output location. The Settings page (`SettingsPane`) is shown inside the main window over the content; changes apply and save at once; "Reset all settings".
+- **Menu bar.** `MenuBar` with File, Voice note, View, Tools and Help, using the same handlers as the buttons, with keyboard shortcuts (Ctrl+O, I, S, R, T, M; Alt+Left/Right/Up; F5) and enabled states mirroring the buttons. A ribbon was not used.
+- **Theme.** System, Light or Dark through `RequestedTheme` on the window root; dialogs copy it (`BatchDialogs.Themed`). Changeable from View > Theme or Settings.
+
+**Consequences.** Audio is attached once per batch; every file in a run carries identical audio bytes. A re-run with "Replace" re-makes the files. Photos that are not readable are reported, not skipped silently. Ctrl+A is not a menu shortcut (it would clash with text boxes); the list handles it itself.
+
+---
+
 ## ADR-014 — File-manager shell and trimming (requested 2026-10-24)
 
 **Status:** Implemented at the product owner's request; awaiting Cursor review.

@@ -31,6 +31,24 @@ public static class FilePickers
         }
     }
 
+    /// <summary>Asks for a folder. Returns the path, or null if cancelled; failures come back as a message.</summary>
+    public static async Task<(string? Path, string? Error)> PickFolderAsync(Window window)
+    {
+        try
+        {
+            var picker = new FolderPicker(window.AppWindow.Id)
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+            };
+            PickFolderResult? picked = await picker.PickSingleFolderAsync();
+            return (picked?.Path, null);
+        }
+        catch (Exception ex)
+        {
+            return (null, $"The folder picker could not be opened ({ex.GetType().Name}: {ex.Message}).");
+        }
+    }
+
     /// <summary>
     /// Asks where to save. The system dialog itself asks before overwriting an existing file
     /// (<c>ShowOverwritePrompt</c>); the caller then replaces atomically.

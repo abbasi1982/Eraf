@@ -17,6 +17,14 @@ You can only save when the photo and a voice note are both there.
 
 The app appears in the Start menu as **ERAF**. To keep it handy, right-click it and choose **Pin to Start** or **Pin to taskbar**.
 
+## One voice note for many photos
+
+Select several photos (Ctrl or Shift while clicking, or Ctrl+A), or select one or more folders, then press **Make ERAF** (also Tools > Make ERAF from selection, or Ctrl+M). The app finds the photos, shows the first one, and lets you record or attach **one** voice note (and trim it). Then press **Make N ERAF files**: it asks what to do if an ERAF file with the same name already exists (skip, replace, or keep both with a number), shows progress with a Stop button, and finishes with a summary. Each file is saved next to its photo with the photo's name, or in one folder you choose in Settings. By default only photos directly inside a selected folder are used; turn on **Search subfolders too** in Settings to include the folders below it.
+
+## Settings, menus and themes
+
+Use the menu bar at the top (File, Voice note, View, Tools, Help). **Tools > Settings** opens the Settings page: theme (Windows setting, Light or Dark), whether folders are searched with their subfolders, what to do when a file already exists, and where batch files are saved. Changes take effect immediately. The theme can also be changed from **View > Theme**.
+
 ## Open an ERAF file
 
 Double-click an ERAF file in the list (or select it and press Enter), or use the folder icon in the top bar to choose one from anywhere. The photo is shown and you can play its voice note. If the file is damaged, incomplete, or not an ERAF file, the app says so in plain words and nothing is changed.

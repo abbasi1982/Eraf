@@ -11,12 +11,78 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <MenuBar x:Name="MainMenu" Grid.Row="0" AutomationProperties.Name="Main menu" AutomationProperties.AutomationId="MainMenu">
+            <MenuBarItem Title="File" AutomationProperties.AutomationId="MenuFile">
+                <MenuFlyoutItem x:Name="MenuOpenEraf" Text="Open ERAF file..." Click="OnOpenFileClick" AutomationProperties.AutomationId="MenuOpenEraf">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="O" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuImport" Text="Import image..." Click="OnImportClick" AutomationProperties.AutomationId="MenuImport">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="I" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuCamera" Text="Use camera" Click="OnCameraClick" AutomationProperties.AutomationId="MenuCamera" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MenuSave" Text="Save ERAF file" Click="OnSaveClick" AutomationProperties.AutomationId="MenuSave">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="S" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuExportPhoto" Text="Export photo..." Click="OnExportPhotoClick" AutomationProperties.AutomationId="MenuExportPhoto" />
+                <MenuFlyoutItem x:Name="MenuExportAudio" Text="Export voice note..." Click="OnExportAudioClick" AutomationProperties.AutomationId="MenuExportAudio" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MenuBackToFiles" Text="Back to files" Click="OnDiscardClick" AutomationProperties.AutomationId="MenuBackToFiles" />
+                <MenuFlyoutItem x:Name="MenuExit" Text="Exit" Click="OnMenuExitClick" AutomationProperties.AutomationId="MenuExit" />
+            </MenuBarItem>
+            <MenuBarItem Title="Voice note" AutomationProperties.AutomationId="MenuVoice">
+                <MenuFlyoutItem x:Name="MenuRecord" Text="Record voice note" Click="OnRecordClick" AutomationProperties.AutomationId="MenuRecord">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="R" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuStop" Text="Stop recording" Click="OnStopRecordClick" AutomationProperties.AutomationId="MenuStop" />
+                <MenuFlyoutItem x:Name="MenuPlay" Text="Play or stop voice note" Click="OnPlayClick" AutomationProperties.AutomationId="MenuPlay" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MenuAttach" Text="Attach audio file..." Click="OnAttachAudioClick" AutomationProperties.AutomationId="MenuAttach" />
+                <MenuFlyoutItem x:Name="MenuTrim" Text="Trim voice note..." Click="OnTrimClick" AutomationProperties.AutomationId="MenuTrim">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="T" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuDiscardVoice" Text="Discard voice note" Click="OnDeleteVoiceClick" AutomationProperties.AutomationId="MenuDiscardVoice" />
+            </MenuBarItem>
+            <MenuBarItem Title="View" AutomationProperties.AutomationId="MenuView">
+                <MenuFlyoutItem x:Name="MenuBack" Text="Back" Click="OnBackNavClick" AutomationProperties.AutomationId="MenuBack" KeyboardAcceleratorTextOverride="Alt+Left">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Menu" Key="Left" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuForward" Text="Forward" Click="OnForwardNavClick" AutomationProperties.AutomationId="MenuForward" KeyboardAcceleratorTextOverride="Alt+Right">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Menu" Key="Right" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuUp" Text="Up one folder" Click="OnUpNavClick" AutomationProperties.AutomationId="MenuUp" KeyboardAcceleratorTextOverride="Alt+Up">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Menu" Key="Up" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuRefresh" Text="Refresh" Click="OnRefreshNavClick" AutomationProperties.AutomationId="MenuRefresh">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Key="F5" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuSelectAll" Text="Select all" Click="OnMenuSelectAllClick" AutomationProperties.AutomationId="MenuSelectAll" KeyboardAcceleratorTextOverride="Ctrl+A" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutSubItem Text="Theme" AutomationProperties.AutomationId="MenuTheme">
+                    <RadioMenuFlyoutItem x:Name="MenuThemeSystem" Text="Use my Windows setting" GroupName="Theme" Tag="System" Click="OnMenuThemeClick" AutomationProperties.AutomationId="MenuThemeSystem" />
+                    <RadioMenuFlyoutItem x:Name="MenuThemeLight" Text="Light" GroupName="Theme" Tag="Light" Click="OnMenuThemeClick" AutomationProperties.AutomationId="MenuThemeLight" />
+                    <RadioMenuFlyoutItem x:Name="MenuThemeDark" Text="Dark" GroupName="Theme" Tag="Dark" Click="OnMenuThemeClick" AutomationProperties.AutomationId="MenuThemeDark" />
+                </MenuFlyoutSubItem>
+            </MenuBarItem>
+            <MenuBarItem Title="Tools" AutomationProperties.AutomationId="MenuTools">
+                <MenuFlyoutItem x:Name="MenuMakeEraf" Text="Make ERAF from selection" Click="OnMakeErafClick" AutomationProperties.AutomationId="MenuMakeEraf">
+                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="M" /></MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MenuSettings" Text="Settings..." Click="OnMenuSettingsClick" AutomationProperties.AutomationId="MenuSettings" />
+            </MenuBarItem>
+            <MenuBarItem Title="Help" AutomationProperties.AutomationId="MenuHelp">
+                <MenuFlyoutItem x:Name="MenuAbout" Text="About ERAF" Click="OnMenuAboutClick" AutomationProperties.AutomationId="MenuAbout" />
+            </MenuBarItem>
+        </MenuBar>
+
         <!-- Top bar: folder navigation on the left, the address, a name filter, then the ways to start an ERAF file. -->
         <Grid
-            Grid.Row="0"
+            Grid.Row="1"
             Padding="12,8"
             ColumnSpacing="6"
             Background="{ThemeResource LayerFillColorDefaultBrush}">
@@ -127,7 +193,7 @@
             </Button>
         </Grid>
 
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280" />
                 <ColumnDefinition Width="*" />
@@ -377,6 +443,9 @@
                     Click="OnDiscardClick" />
             </StackPanel>
         </Grid>
+
+                <!-- Settings page: covers the file list and the editor while it is open. -->
+                <local:SettingsPane x:Name="SettingsView" Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" />
             </Grid>
         </Grid>
     </Grid>

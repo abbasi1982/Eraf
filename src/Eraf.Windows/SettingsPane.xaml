@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Eraf.Windows.SettingsPane"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Eraf.Windows">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="24" MaxWidth="760" HorizontalAlignment="Left" Padding="4,0,16,24">
+
+            <Grid>
+                <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+                <Button
+                    x:Name="DoneButton"
+                    Content="Done"
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Click="OnDoneClick"
+                    AutomationProperties.AutomationId="SettingsDoneButton"
+                    AutomationProperties.Name="Close settings"
+                    AutomationProperties.HelpText="Go back to your files. Changes are already saved." />
+            </Grid>
+
+            <StackPanel Spacing="10">
+                <TextBlock Text="Appearance" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <RadioButtons
+                    x:Name="ThemeChoices"
+                    Header="Theme"
+                    SelectionChanged="OnThemeChanged"
+                    AutomationProperties.AutomationId="ThemeChoices"
+                    AutomationProperties.Name="Theme">
+                    <x:String>Use my Windows setting</x:String>
+                    <x:String>Light</x:String>
+                    <x:String>Dark</x:String>
+                </RadioButtons>
+            </StackPanel>
+
+            <StackPanel Spacing="10">
+                <TextBlock Text="Choosing folders" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock
+                    Text="When you select one or more folders and press Make ERAF, the app looks for photos inside them."
+                    TextWrapping="Wrap"
+                    Opacity="0.8" />
+                <ToggleSwitch
+                    x:Name="SubfoldersSwitch"
+                    Header="Search subfolders too"
+                    OnContent="Photos in subfolders are included"
+                    OffContent="Only photos directly inside the folder"
+                    Toggled="OnSubfoldersToggled"
+                    AutomationProperties.AutomationId="SubfoldersSwitch"
+                    AutomationProperties.Name="Search subfolders too" />
+            </StackPanel>
+
+            <StackPanel Spacing="10">
+                <TextBlock Text="Making many ERAF files at once" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <RadioButtons
+                    x:Name="ExistingChoices"
+                    Header="When an ERAF file with the same name already exists (you are asked each time too)"
+                    SelectionChanged="OnExistingChanged"
+                    AutomationProperties.AutomationId="ExistingChoices"
+                    AutomationProperties.Name="When the file already exists">
+                    <x:String>Skip that photo</x:String>
+                    <x:String>Replace the existing file</x:String>
+                    <x:String>Keep both (add a number to the new name)</x:String>
+                </RadioButtons>
+                <RadioButtons
+                    x:Name="OutputChoices"
+                    Header="Where to save them"
+                    SelectionChanged="OnOutputChanged"
+                    AutomationProperties.AutomationId="OutputChoices"
+                    AutomationProperties.Name="Where to save ERAF files made from many photos">
+                    <x:String>Next to each photo</x:String>
+                    <x:String>All in one folder</x:String>
+                </RadioButtons>
+                <StackPanel x:Name="OutputFolderRow" Orientation="Horizontal" Spacing="8">
+                    <TextBox
+                        x:Name="OutputFolderBox"
+                        Width="440"
+                        IsReadOnly="True"
+                        PlaceholderText="No folder chosen yet"
+                        AutomationProperties.AutomationId="OutputFolderBox"
+                        AutomationProperties.Name="Output folder" />
+                    <Button
+                        Content="Choose folder..."
+                        Click="OnChooseFolderClick"
+                        AutomationProperties.AutomationId="ChooseOutputFolderButton"
+                        AutomationProperties.Name="Choose output folder" />
+                    <Button
+                        Content="Clear"
+                        Click="OnClearFolderClick"
+                        AutomationProperties.AutomationId="ClearOutputFolderButton"
+                        AutomationProperties.Name="Clear output folder" />
+                </StackPanel>
+            </StackPanel>
+
+            <Button
+                Content="Reset all settings"
+                Click="OnResetClick"
+                AutomationProperties.AutomationId="ResetSettingsButton"
+                AutomationProperties.Name="Reset all settings"
+                AutomationProperties.HelpText="Put every option back to how it was when the app was installed." />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

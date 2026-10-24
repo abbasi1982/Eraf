@@ -1,0 +1,253 @@
+using Eraf.Windows;
+
+namespace Eraf.Format.Tests;
+
+/// <summary>Options, folder scanning and output naming for "one voice note for many photos".</summary>
+public sealed class BatchPlanningTests : IDisposable
+{
+    private readonly string _dir = Directory.CreateDirectory(
+        Path.Combine(Path.GetTempPath(), "eraf-batch-" + Guid.NewGuid().ToString("N"))).FullName;
+
+    public void Dispose()
+    {
+        try
+        {
+            foreach (string f in Directory.GetFiles(_dir, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(f, FileAttributes.Normal);
+            }
+
+            Directory.Delete(_dir, recursive: true);
+        }
+        catch (IOException)
+        {
+        }
+    }
+
+    private string Make(string relative, int size = 3)
+    {
+        string path = Path.Combine(_dir, relative);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, new byte[size]);
+        return path;
+    }
+
+    private string[] Names(IEnumerable<string> paths) =>
+        paths.Select(p => Path.GetRelativePath(_dir, p).Replace('\\', '/')).ToArray();
+
+    // ---------------------------------------------------------------- options
+
+    [Fact]
+    public void DefaultsAreSafe()
+    {
+        AppOptions d = AppOptions.Default;
+
+        Assert.Equal(ThemeChoice.System, d.Theme);
+        Assert.False(d.ScanSubfolders);
+        Assert.Equal(ExistingFilePolicy.Skip, d.ExistingFiles);
+        Assert.Equal(OutputMode.NextToPhoto, d.Output);
+        Assert.Null(d.OutputFolder);
+    }
+
+    [Fact]
+    public void OptionsSurviveASaveAndLoad()
+    {
+        var store = new Dictionary<string, string?>();
+        var chosen = new AppOptions(ThemeChoice.Dark, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out");
+
+        chosen.Save((k, v) => store[k] = v);
+        AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
+
+        Assert.Equal(chosen, loaded);
+    }
+
+    [Fact]
+    public void MissingOrDamagedSettingsFallBackToDefaults()
+    {
+        var store = new Dictionary<string, string?>
+        {
+            ["Theme"] = "Purple",
+            ["ExistingFiles"] = "99",
+            ["Output"] = "",
+            ["ScanSubfolders"] = "maybe",
+            ["OutputFolder"] = "  ",
+        };
+
+        AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
+
+        Assert.Equal(ThemeChoice.System, loaded.Theme);
+        Assert.Equal(ExistingFilePolicy.Skip, loaded.ExistingFiles);
+        Assert.Equal(OutputMode.NextToPhoto, loaded.Output);
+        Assert.False(loaded.ScanSubfolders);
+        Assert.Null(loaded.OutputFolder);
+        Assert.Equal(AppOptions.Default, AppOptions.Load(_ => null));
+    }
+
+    [Fact]
+    public void AClearedOutputFolderIsRemoved()
+    {
+        var store = new Dictionary<string, string?> { ["OutputFolder"] = @"D:\Old" };
+        AppOptions.Default.Save((k, v) => store[k] = v);
+
+        Assert.Null(store["OutputFolder"]);
+    }
+
+    // ---------------------------------------------------------------- scanning
+
+    [Fact]
+    public void AFolderGivesItsPhotosOnlyAndNotItsSubfoldersByDefault()
+    {
+        Make("a.jpg"); Make("b.PNG"); Make("notes.txt"); Make("made.eraf"); Make(@"sub\c.jpg");
+
+        ScanResult result = PhotoScanner.Scan(new[] { _dir }, includeSubfolders: false, PhotoScanner.DefaultMaxPhotos);
+
+        Assert.Equal(new[] { "a.jpg", "b.PNG" }, Names(result.Photos));
+        Assert.False(result.Truncated);
+    }
+
+    [Fact]
+    public void SubfoldersAreIncludedWhenAsked()
+    {
+        Make("a.jpg"); Make(@"sub\c.jpg"); Make(@"sub\deeper\d.tif");
+
+        ScanResult result = PhotoScanner.Scan(new[] { _dir }, includeSubfolders: true, PhotoScanner.DefaultMaxPhotos);
+
+        Assert.Equal(new[] { "a.jpg", "sub/c.jpg", "sub/deeper/d.tif" }, Names(result.Photos));
+        Assert.Equal(3, result.FoldersScanned);
+    }
+
+    [Fact]
+    public void FilesAndFoldersMixAndDuplicatesAreRemoved()
+    {
+        string a = Make("one" + Path.DirectorySeparatorChar + "a.jpg");
+        Make(@"one\b.jpg");
+        string loose = Make(@"two\z.png");
+        Make(@"two\notaphoto.txt");
+
+        ScanResult result = PhotoScanner.Scan(
+            new[] { Path.Combine(_dir, "one"), a, loose, Path.Combine(_dir, "two", "notaphoto.txt") },
+            includeSubfolders: false, PhotoScanner.DefaultMaxPhotos);
+
+        Assert.Equal(new[] { "one/a.jpg", "one/b.jpg", "two/z.png" }, Names(result.Photos));
+    }
+
+    [Fact]
+    public void HiddenItemsMissingPathsAndUnreadableFoldersAreIgnored()
+    {
+        string hidden = Make("hidden.jpg");
+        File.SetAttributes(hidden, FileAttributes.Hidden);
+        Make("seen.jpg");
+        string hiddenFolder = Directory.CreateDirectory(Path.Combine(_dir, "secret")).FullName;
+        File.WriteAllBytes(Path.Combine(hiddenFolder, "inside.jpg"), new byte[1]);
+        File.SetAttributes(hiddenFolder, FileAttributes.Hidden | FileAttributes.Directory);
+
+        ScanResult result = PhotoScanner.Scan(
+            new[] { _dir, Path.Combine(_dir, "does-not-exist") }, includeSubfolders: true, PhotoScanner.DefaultMaxPhotos);
+
+        Assert.Equal(new[] { "seen.jpg" }, Names(result.Photos));
+    }
+
+    [Fact]
+    public void TheCountIsCappedAndSaidSo()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            Make($"p{i:00}.jpg");
+        }
+
+        ScanResult result = PhotoScanner.Scan(new[] { _dir }, includeSubfolders: false, maxPhotos: 4);
+
+        Assert.Equal(4, result.Photos.Count);
+        Assert.True(result.Truncated);
+        Assert.False(PhotoScanner.Scan(new[] { _dir }, false, 10).Truncated);
+    }
+
+    [Fact]
+    public void ACancelledScanThrows()
+    {
+        Make("a.jpg");
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        Assert.Throws<OperationCanceledException>(() => PhotoScanner.Scan(new[] { _dir }, true, 10, cts.Token));
+    }
+
+    // ---------------------------------------------------------------- output names
+
+    private static readonly Func<string, bool> Nothing = _ => false;
+
+    [Fact]
+    public void ErafFilesGoBesideEachPhotoNamedAfterIt()
+    {
+        var plan = BatchTargets.Plan(
+            new[] { @"C:\p\a.jpg", @"C:\q\b.png" }, OutputMode.NextToPhoto, null, ExistingFilePolicy.Skip, Nothing);
+
+        Assert.Equal(new[] { @"C:\p\a.eraf", @"C:\q\b.eraf" }, plan.Select(t => t.Target));
+        Assert.All(plan, t => Assert.Equal(BatchAction.Create, t.Action));
+    }
+
+    [Fact]
+    public void OneFolderModePutsEverythingInThatFolder()
+    {
+        var plan = BatchTargets.Plan(
+            new[] { @"C:\p\a.jpg", @"C:\q\b.png" }, OutputMode.OneFolder, @"D:\out", ExistingFilePolicy.Skip, Nothing);
+
+        Assert.Equal(new[] { @"D:\out\a.eraf", @"D:\out\b.eraf" }, plan.Select(t => t.Target));
+    }
+
+    [Fact]
+    public void OneFolderModeWithoutAFolderFallsBackToBesideThePhoto()
+    {
+        var plan = BatchTargets.Plan(new[] { @"C:\p\a.jpg" }, OutputMode.OneFolder, "  ", ExistingFilePolicy.Skip, Nothing);
+
+        Assert.Equal(@"C:\p\a.eraf", plan[0].Target);
+    }
+
+    [Theory]
+    [InlineData(ExistingFilePolicy.Skip, BatchAction.Skip, @"C:\p\a.eraf")]
+    [InlineData(ExistingFilePolicy.Replace, BatchAction.Replace, @"C:\p\a.eraf")]
+    [InlineData(ExistingFilePolicy.KeepBoth, BatchAction.Create, @"C:\p\a (2).eraf")]
+    public void AnExistingFileIsHandledByThePolicy(ExistingFilePolicy policy, BatchAction action, string target)
+    {
+        var plan = BatchTargets.Plan(
+            new[] { @"C:\p\a.jpg" }, OutputMode.NextToPhoto, null, policy, p => p == @"C:\p\a.eraf");
+
+        Assert.Equal(action, plan[0].Action);
+        Assert.Equal(target, plan[0].Target);
+    }
+
+    [Fact]
+    public void KeepBothSkipsNumbersThatAreAlreadyTaken()
+    {
+        var taken = new HashSet<string> { @"C:\p\a.eraf", @"C:\p\a (2).eraf", @"C:\p\a (3).eraf" };
+
+        var plan = BatchTargets.Plan(new[] { @"C:\p\a.jpg" }, OutputMode.NextToPhoto, null, ExistingFilePolicy.KeepBoth, taken.Contains);
+
+        Assert.Equal(@"C:\p\a (4).eraf", plan[0].Target);
+    }
+
+    [Theory]
+    [InlineData(ExistingFilePolicy.Skip)]
+    [InlineData(ExistingFilePolicy.Replace)]
+    [InlineData(ExistingFilePolicy.KeepBoth)]
+    public void TwoPhotosWantingTheSameNameInOneBatchNeverOverwriteEachOther(ExistingFilePolicy policy)
+    {
+        var plan = BatchTargets.Plan(
+            new[] { @"C:\p\a.jpg", @"C:\p\a.png", @"C:\q\a.jpg" }, OutputMode.OneFolder, @"D:\out", policy, Nothing);
+
+        Assert.Equal(new[] { @"D:\out\a.eraf", @"D:\out\a (2).eraf", @"D:\out\a (3).eraf" }, plan.Select(t => t.Target));
+        Assert.Equal(3, plan.Select(t => t.Target).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    // ---------------------------------------------------------------- summary
+
+    [Fact]
+    public void TheHeadlineSaysWhatHappened()
+    {
+        Assert.Equal("1 ERAF file made.", new BatchSummary(1, 0, 0, Array.Empty<(string, string)>(), false).Headline);
+        Assert.Equal(
+            "5 ERAF files made, 2 replaced, 3 skipped because the file already existed, 1 could not be made.",
+            new BatchSummary(3, 2, 3, new[] { ("x.jpg", "unreadable") }, false).Headline);
+        Assert.StartsWith("Stopped early: ", new BatchSummary(1, 0, 0, Array.Empty<(string, string)>(), true).Headline);
+    }
+}

@@ -33,11 +33,23 @@ public sealed partial class MainPage : Page
         Unloaded += (_, _) => ReleaseEverything();
         Blade.FolderChosen += async path => await GoToFolderAsync(path);
         FileList.EntryActivated += async entry => await OpenEntryAsync(entry);
-        FileList.EntrySelected += entry =>
+        FileList.SelectionChanged += selection =>
         {
-            _selectedEntry = entry;
+            _selection = selection;
             Render();
         };
+        SettingsView.Closed += () =>
+        {
+            _showingSettings = false;
+            Render();
+            FocusNextControl();
+        };
+        AppSettings.OptionsChanged += options =>
+        {
+            (App.MainWindow as MainWindow)?.ApplyTheme(options.Theme);
+            ShowThemeInMenu(options.Theme);
+        };
+        ShowThemeInMenu(AppSettings.Options.Theme);
         Loaded += async (_, _) =>
         {
             await RefreshMicrophonesAsync();
@@ -71,7 +83,7 @@ public sealed partial class MainPage : Page
         _dialogOpen = true;
         try
         {
-            var dialog = new ContentDialog
+            ContentDialog dialog = BatchDialogs.Themed(new ContentDialog
             {
                 XamlRoot = XamlRoot,
                 Title = "Discard unsaved work?",
@@ -79,7 +91,7 @@ public sealed partial class MainPage : Page
                 PrimaryButtonText = "Discard",
                 CloseButtonText = "Keep working",
                 DefaultButton = ContentDialogButton.Close,
-            };
+            });
             return await dialog.ShowAsync() == ContentDialogResult.Primary;
         }
         finally
@@ -97,9 +109,11 @@ public sealed partial class MainPage : Page
         bool recording = state == SessionState.RecordingAudio;
         bool busy = state == SessionState.Saving || _attachingAudio;
 
-        FileList.Visibility = Show(state == SessionState.Idle);
-        CameraPanel.Visibility = Show(state == SessionState.CapturingPhoto);
-        PhotoPanel.Visibility = Show(state != SessionState.Idle && state != SessionState.CapturingPhoto);
+        bool settings = _showingSettings;
+        SettingsView.Visibility = Show(settings);
+        FileList.Visibility = Show(state == SessionState.Idle && !settings);
+        CameraPanel.Visibility = Show(state == SessionState.CapturingPhoto && !settings);
+        PhotoPanel.Visibility = Show(state != SessionState.Idle && state != SessionState.CapturingPhoto && !settings);
 
         RecordButton.Visibility = Show(!recording && !_workflow.HasAudio);
         AttachAudioButton.Visibility = Show(!recording && !_workflow.HasAudio);
@@ -111,11 +125,11 @@ public sealed partial class MainPage : Page
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PlayButton, state == SessionState.AudioPreview ? "Stop voice note" : "Play voice note");
 
         // Starting a photo is only possible from the file list; navigation is blocked while something is being written or converted.
-        bool startable = state == SessionState.Idle && !_importBusy;
+        bool startable = state == SessionState.Idle && !_importBusy && !_showingSettings;
         ImportButton.IsEnabled = startable;
         CaptureButton.IsEnabled = startable;
         OpenFileButton.IsEnabled = startable;
-        MakeErafButton.IsEnabled = startable && _selectedEntry is { Kind: EntryKind.Photo or EntryKind.Eraf };
+        MakeErafButton.IsEnabled = startable && CanMake(_selection);
         bool navigable = !busy && !_importBusy;
         BackNavButton.IsEnabled = navigable && _history.CanBack;
         ForwardNavButton.IsEnabled = navigable && _history.CanForward;
@@ -124,8 +138,12 @@ public sealed partial class MainPage : Page
         AddressBox.IsEnabled = navigable;
         Blade.IsEnabled = navigable;
         SaveButton.IsEnabled = _workflow.CanSave && !_attachingAudio;
+        string saveLabel = _batch is { } info ? $"Make {info.Photos.Count} ERAF files" : "Save ERAF file";
+        SaveButton.Content = saveLabel;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(SaveButton, saveLabel);
+        RenderMenu(state, recording, busy);
         DismissErrorButton.Visibility = Show(state == SessionState.Error);
-        ExportPhotoButton.IsEnabled = !busy && !recording && _session is not null;
+        ExportPhotoButton.IsEnabled = !busy && !recording && _session is not null && _batch is null;
         ExportAudioButton.IsEnabled = !busy && !recording && _workflow.HasAudio;
         foreach (Button b in new[] { RecordButton, RerecordButton, AttachAudioButton, ReplaceAudioFileButton, TrimButton, PlayButton, DeleteVoiceButton, DiscardButton })
         {
@@ -470,6 +488,12 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        if (_batch is not null)
+        {
+            await SaveBatchAsync();
+            return;
+        }
+
         ClearMessage();
 
         // Choose the target first, while still in ReadyToSave: cancelling the dialog is not a failure.
@@ -621,10 +645,67 @@ public sealed partial class MainPage : Page
         }
     }
 
+    // ---------------------------------------------------------------- menu and settings
+
+    /// <summary>Greys out menu commands that cannot be used right now. The handlers re-check, so this is only a hint for the user.</summary>
+    private void RenderMenu(SessionState state, bool recording, bool busy)
+    {
+        bool inEditor = state != SessionState.Idle && state != SessionState.CapturingPhoto;
+        bool free = inEditor && !recording && !busy;
+        MenuOpenEraf.IsEnabled = OpenFileButton.IsEnabled;
+        MenuImport.IsEnabled = ImportButton.IsEnabled;
+        MenuCamera.IsEnabled = CaptureButton.IsEnabled;
+        MenuSave.IsEnabled = SaveButton.IsEnabled;
+        MenuExportPhoto.IsEnabled = ExportPhotoButton.IsEnabled && inEditor;
+        MenuExportAudio.IsEnabled = ExportAudioButton.IsEnabled && inEditor;
+        MenuBackToFiles.IsEnabled = state != SessionState.Idle && !busy;
+        MenuRecord.IsEnabled = free;
+        MenuStop.IsEnabled = recording;
+        MenuPlay.IsEnabled = free && _workflow.HasAudio;
+        MenuAttach.IsEnabled = free;
+        MenuTrim.IsEnabled = free && _workflow.HasAudio;
+        MenuDiscardVoice.IsEnabled = free && _workflow.HasAudio;
+        MenuBack.IsEnabled = BackNavButton.IsEnabled;
+        MenuForward.IsEnabled = ForwardNavButton.IsEnabled;
+        MenuUp.IsEnabled = UpNavButton.IsEnabled;
+        MenuRefresh.IsEnabled = RefreshNavButton.IsEnabled;
+        MenuSelectAll.IsEnabled = state == SessionState.Idle && !_showingSettings;
+        MenuMakeEraf.IsEnabled = MakeErafButton.IsEnabled;
+    }
+
+    private void ShowThemeInMenu(ThemeChoice theme)
+    {
+        MenuThemeSystem.IsChecked = theme == ThemeChoice.System;
+        MenuThemeLight.IsChecked = theme == ThemeChoice.Light;
+        MenuThemeDark.IsChecked = theme == ThemeChoice.Dark;
+    }
+
+    private void OnMenuThemeClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioMenuFlyoutItem { Tag: string tag } && Enum.TryParse(tag, out ThemeChoice theme))
+        {
+            AppSettings.Options = AppSettings.Options with { Theme = theme };
+        }
+    }
+
+    private void OnMenuSettingsClick(object sender, RoutedEventArgs e)
+    {
+        _showingSettings = true;
+        Render();
+        SettingsView.Focus(FocusState.Programmatic);
+    }
+
+    private async void OnMenuAboutClick(object sender, RoutedEventArgs e) => await BatchDialogs.ShowAboutAsync(XamlRoot);
+
+    private void OnMenuSelectAllClick(object sender, RoutedEventArgs e) => FileList.SelectAll();
+
+    private void OnMenuExitClick(object sender, RoutedEventArgs e) => App.MainWindow?.Close();
+
     // ---------------------------------------------------------------- file browser
 
     private readonly FolderHistory _history = new();
-    private BrowserEntry? _selectedEntry;
+    private IReadOnlyList<BrowserEntry> _selection = Array.Empty<BrowserEntry>();
+    private bool _showingSettings;
     private string? _sessionFolder;
 
     /// <summary>The last folder used, if it still exists, otherwise Pictures, otherwise the user's home folder.</summary>
@@ -720,18 +801,6 @@ public sealed partial class MainPage : Page
         finally
         {
             SetBusy(false);
-        }
-    }
-
-    private async void OnMakeErafClick(object sender, RoutedEventArgs e)
-    {
-        if (_selectedEntry is { Kind: EntryKind.Photo or EntryKind.Eraf } entry)
-        {
-            await OpenEntryAsync(entry);
-        }
-        else
-        {
-            ShowInfo("Select a photo in the list first.");
         }
     }
 
@@ -1088,6 +1157,7 @@ public sealed partial class MainPage : Page
         StopCamera();
         _session?.Clear();
         _session = null;
+        _batch = null;
         PhotoImage.Source = null;
         PhotoInfo.Text = string.Empty;
         VoiceInfo.Text = string.Empty;

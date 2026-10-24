@@ -34,10 +34,17 @@ public sealed partial class FileListPane : UserControl
     /// <summary>The user opened an item (double-click or Enter).</summary>
     public event Action<BrowserEntry>? EntryActivated;
 
-    /// <summary>The selected item changed (null when nothing is selected).</summary>
-    public event Action<BrowserEntry?>? EntrySelected;
+    /// <summary>The selection changed. The list holds every selected item (empty when nothing is selected).</summary>
+    public event Action<IReadOnlyList<BrowserEntry>>? SelectionChanged;
 
+    /// <summary>The first selected item, or null.</summary>
     public BrowserEntry? Selected => (List.SelectedItem as EntryViewModel)?.Entry;
+
+    /// <summary>All selected items in list order.</summary>
+    public IReadOnlyList<BrowserEntry> SelectedEntries =>
+        List.SelectedItems.OfType<EntryViewModel>().Select(v => v.Entry).ToList();
+
+    public void SelectAll() => List.SelectAll();
 
     /// <summary>Replaces the list with a folder's contents. <paramref name="error"/> is shown instead of the empty-folder hint.</summary>
     public void SetListing(IReadOnlyList<BrowserEntry> entries, string? error, string emptyHint)
@@ -66,7 +73,7 @@ public sealed partial class FileListPane : UserControl
 
     private void Rebuild()
     {
-        string? keep = Selected?.FullPath;
+        var keep = SelectedEntries.Select(e => e.FullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
         List<BrowserEntry> shown = BrowserList.Sort(BrowserList.Filter(_all, _filter), _sortKey, _ascending);
 
         _items.Clear();
@@ -75,13 +82,9 @@ public sealed partial class FileListPane : UserControl
             _items.Add(new EntryViewModel(entry));
         }
 
-        if (keep is not null)
+        foreach (EntryViewModel again in _items.Where(i => keep.Contains(i.Entry.FullPath)))
         {
-            EntryViewModel? again = _items.FirstOrDefault(i => i.Entry.FullPath == keep);
-            if (again is not null)
-            {
-                List.SelectedItem = again;
-            }
+            List.SelectedItems.Add(again);
         }
 
         if (_items.Count > 0)
@@ -95,7 +98,7 @@ public sealed partial class FileListPane : UserControl
             EmptyText.Visibility = Visibility.Visible;
         }
 
-        EntrySelected?.Invoke(Selected);
+        SelectionChanged?.Invoke(SelectedEntries);
     }
 
     private void OnHeaderClick(object sender, RoutedEventArgs e)
@@ -132,7 +135,7 @@ public sealed partial class FileListPane : UserControl
         Set(TypeHeader, "Type", SortKey.Type);
     }
 
-    private void OnSelectionChanged(object sender, SelectionChangedEventArgs e) => EntrySelected?.Invoke(Selected);
+    private void OnSelectionChanged(object sender, SelectionChangedEventArgs e) => SelectionChanged?.Invoke(SelectedEntries);
 
     private void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {

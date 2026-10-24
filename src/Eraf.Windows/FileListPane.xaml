@@ -41,7 +41,7 @@
         <ListView
             x:Name="List"
             Grid.Row="1"
-            SelectionMode="Single"
+            SelectionMode="Extended"
             IsItemClickEnabled="False"
             DoubleTapped="OnDoubleTapped"
             PreviewKeyDown="OnListKeyDown"

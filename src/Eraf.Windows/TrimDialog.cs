@@ -62,7 +62,7 @@ public static class TrimDialog
         panel.Children.Add(problem);
         panel.Children.Add(preview);
 
-        var dialog = new ContentDialog
+        ContentDialog dialog = BatchDialogs.Themed(new ContentDialog
         {
             XamlRoot = xamlRoot,
             Title = "Trim voice note",
@@ -70,7 +70,7 @@ public static class TrimDialog
             PrimaryButtonText = "Trim",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
-        };
+        });
 
         ulong StartMs() => Math.Min(clip.DurationMs, (ulong)Math.Round(start.Value * 10) * 100);
         ulong EndMs() => Math.Min(clip.DurationMs, (ulong)Math.Round(end.Value * 10) * 100);

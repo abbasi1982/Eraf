@@ -27,8 +27,21 @@ public sealed partial class MainWindow : Window
             presenter.Maximize();
         }
 
+        ApplyTheme(AppSettings.Options.Theme);
         RootFrame.Navigate(typeof(MainPage));
     }
+
+    /// <summary>Switches the whole window (and its dialogs, which copy it) between the system, light and dark looks.</summary>
+    public void ApplyTheme(ThemeChoice theme) =>
+        RootGrid.RequestedTheme = theme switch
+        {
+            ThemeChoice.Light => ElementTheme.Light,
+            ThemeChoice.Dark => ElementTheme.Dark,
+            _ => ElementTheme.Default,
+        };
+
+    /// <summary>The theme dialogs should use so they match the window.</summary>
+    public ElementTheme CurrentTheme => RootGrid.RequestedTheme;
 
     private async void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
