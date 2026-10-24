@@ -19,6 +19,8 @@
             Grid.Row="0"
             IsOpen="False"
             IsClosable="True"
+            AutomationProperties.AutomationId="MessageBar"
+            AutomationProperties.Name="Message"
             Severity="Error" />
 
         <!-- Idle: nothing chosen yet. -->
@@ -40,17 +42,23 @@
                     x:Name="ImportButton"
                     Content="Import image"
                     AutomationProperties.AutomationId="ImportButton"
+                    AutomationProperties.Name="Import image"
+                    AutomationProperties.HelpText="Choose a photo file from this computer."
                     Style="{StaticResource AccentButtonStyle}"
                     Click="OnImportClick" />
                 <Button
                     x:Name="CaptureButton"
                     Content="Use camera"
                     AutomationProperties.AutomationId="CameraButton"
+                    AutomationProperties.Name="Use camera"
+                    AutomationProperties.HelpText="Show the camera and take a photo."
                     Click="OnCameraClick" />
                 <Button
                     x:Name="OpenFileButton"
                     Content="Open ERAF file"
                     AutomationProperties.AutomationId="OpenFileButton"
+                    AutomationProperties.Name="Open ERAF file"
+                    AutomationProperties.HelpText="Open a saved ERAF file with a photo and voice note."
                     Click="OnOpenFileClick" />
             </StackPanel>
         </StackPanel>
@@ -63,6 +71,7 @@
             </Grid.RowDefinitions>
             <MediaPlayerElement
                 x:Name="CameraPreview"
+                AutomationProperties.Name="Camera preview"
                 Grid.Row="0"
                 Stretch="Uniform"
                 AutoPlay="True"
@@ -76,13 +85,21 @@
                     x:Name="TakePhotoButton"
                     Content="Take photo"
                     AutomationProperties.AutomationId="TakePhotoButton"
+                    AutomationProperties.Name="Take photo"
+                    AutomationProperties.HelpText="Capture the photo shown by the camera."
                     Style="{StaticResource AccentButtonStyle}"
                     Click="OnTakePhotoClick" />
                 <Button
                     x:Name="CancelCameraButton"
                     Content="Cancel"
                     AutomationProperties.AutomationId="CancelCameraButton"
-                    Click="OnCancelCameraClick" />
+                    AutomationProperties.Name="Cancel camera"
+                    AutomationProperties.HelpText="Close the camera without taking a photo. Shortcut: Escape."
+                    Click="OnCancelCameraClick">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Escape" />
+                    </Button.KeyboardAccelerators>
+                </Button>
             </StackPanel>
         </Grid>
 
@@ -114,6 +131,8 @@
                     Content="Record voice note"
                     HorizontalAlignment="Center"
                     AutomationProperties.AutomationId="RecordButton"
+                    AutomationProperties.Name="Record voice note"
+                    AutomationProperties.HelpText="Start recording from the microphone."
                     Style="{StaticResource AccentButtonStyle}"
                     Click="OnRecordClick" />
 
@@ -128,6 +147,8 @@
                         Content="Stop recording"
                         HorizontalAlignment="Center"
                         AutomationProperties.AutomationId="StopRecordButton"
+                        AutomationProperties.Name="Stop recording"
+                        AutomationProperties.HelpText="Finish the voice note."
                         Style="{StaticResource AccentButtonStyle}"
                         Click="OnStopRecordClick" />
                 </StackPanel>
@@ -137,22 +158,27 @@
                     <TextBlock
                         x:Name="VoiceInfo"
                         HorizontalAlignment="Center"
-                        AutomationProperties.AutomationId="VoiceInfo" />
+                        AutomationProperties.AutomationId="VoiceInfo" AutomationProperties.LiveSetting="Polite" />
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
                         <Button
                             x:Name="PlayButton"
                             Content="Play"
                             AutomationProperties.AutomationId="PlayButton"
+                            AutomationProperties.HelpText="Play or stop the voice note."
                             Click="OnPlayClick" />
                         <Button
                             x:Name="RerecordButton"
                             Content="Record again"
                             AutomationProperties.AutomationId="RerecordButton"
+                            AutomationProperties.Name="Record voice note again"
+                            AutomationProperties.HelpText="Replace the current voice note with a new recording."
                             Click="OnRecordClick" />
                         <Button
                             x:Name="DeleteVoiceButton"
                             Content="Discard voice note"
                             AutomationProperties.AutomationId="DeleteVoiceButton"
+                            AutomationProperties.Name="Discard voice note"
+                            AutomationProperties.HelpText="Remove the voice note so a new one can be recorded."
                             Click="OnDeleteVoiceClick" />
                     </StackPanel>
                 </StackPanel>
@@ -163,7 +189,7 @@
                 x:Name="SaveStatus"
                 Grid.Row="3"
                 HorizontalAlignment="Center"
-                AutomationProperties.AutomationId="SaveStatus" />
+                AutomationProperties.AutomationId="SaveStatus" AutomationProperties.LiveSetting="Polite" />
 
             <StackPanel
                 Grid.Row="4"
@@ -176,6 +202,8 @@
                     Content="Save ERAF file"
                     IsEnabled="False"
                     AutomationProperties.AutomationId="SaveButton"
+                    AutomationProperties.Name="Save ERAF file"
+                    AutomationProperties.HelpText="Save the photo and voice note as one ERAF file. Available when both are present."
                     Style="{StaticResource AccentButtonStyle}"
                     Click="OnSaveClick" />
                 <!-- Shown only after a failed save. The photo and voice note are still held. -->
@@ -184,6 +212,8 @@
                     Content="OK"
                     Visibility="Collapsed"
                     AutomationProperties.AutomationId="DismissErrorButton"
+                    AutomationProperties.Name="OK, dismiss save error"
+                    AutomationProperties.HelpText="Close the error and keep working with the photo and voice note."
                     Click="OnDismissErrorClick" />
             </StackPanel>
 
@@ -194,18 +224,24 @@
                 HorizontalAlignment="Center">
                 <Button
                     x:Name="ExportPhotoButton"
-                    Content="Export photo..."
+                    Content="Export photo"
                     AutomationProperties.AutomationId="ExportPhotoButton"
+                    AutomationProperties.Name="Export photo"
+                    AutomationProperties.HelpText="Save the photo alone as a JPEG file."
                     Click="OnExportPhotoClick" />
                 <Button
                     x:Name="ExportAudioButton"
-                    Content="Export voice note..."
+                    Content="Export voice note"
                     AutomationProperties.AutomationId="ExportAudioButton"
+                    AutomationProperties.Name="Export voice note"
+                    AutomationProperties.HelpText="Save the voice note alone as an M4A file."
                     Click="OnExportAudioClick" />
                 <Button
                     x:Name="DiscardButton"
                     Content="Start over"
                     AutomationProperties.AutomationId="DiscardButton"
+                    AutomationProperties.Name="Start over"
+                    AutomationProperties.HelpText="Remove the photo and voice note and return to the start. Asks first if they are not saved."
                     Click="OnDiscardClick" />
             </StackPanel>
         </Grid>

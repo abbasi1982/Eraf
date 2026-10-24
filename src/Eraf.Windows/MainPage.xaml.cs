@@ -29,6 +29,7 @@ public sealed partial class MainPage : Page
         _workflow.Changed += (_, _) => Render();
         _recordTimer.Tick += OnRecordTimerTick;
         Unloaded += (_, _) => ReleaseEverything();
+        Loaded += (_, _) => FocusNextControl();
         Render();
     }
 
@@ -86,6 +87,7 @@ public sealed partial class MainPage : Page
         RecordingPanel.Visibility = Show(recording);
         VoicePanel.Visibility = Show(!recording && _workflow.HasAudio);
         PlayButton.Content = state == SessionState.AudioPreview ? "Stop" : "Play";
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PlayButton, state == SessionState.AudioPreview ? "Stop voice note" : "Play voice note");
 
         SaveButton.IsEnabled = _workflow.CanSave;
         DismissErrorButton.Visibility = Show(state == SessionState.Error);
@@ -115,6 +117,39 @@ public sealed partial class MainPage : Page
             string length = clip.DurationMs == 0 ? "length not recorded" : Format(clip.DurationMs);
             VoiceInfo.Text = $"Voice note ({length}, AAC M4A, {clip.M4aBytes.Length / 1024.0:N0} KB)";
         }
+
+        // Move keyboard focus to the natural next control, but only when the step changed (not on every refresh).
+        if (state != _focusedState || _workflow.HasAudio != _focusedHasAudio)
+        {
+            _focusedState = state;
+            _focusedHasAudio = _workflow.HasAudio;
+            DispatcherQueue.TryEnqueue(FocusNextControl);
+        }
+    }
+
+    private SessionState? _focusedState;
+    private bool _focusedHasAudio;
+
+    /// <summary>Keyboard users should land on the control they most likely want next after each step.</summary>
+    private void FocusNextControl()
+    {
+        if (_dialogOpen)
+        {
+            return;
+        }
+
+        Control? target = _workflow.State switch
+        {
+            SessionState.Idle => ImportButton,
+            SessionState.CapturingPhoto => TakePhotoButton,
+            SessionState.RecordingAudio => StopRecordButton,
+            SessionState.Error => DismissErrorButton,
+            SessionState.Saving => null,
+            _ when !_workflow.HasAudio => RecordButton,
+            _ when _workflow.CanSave => SaveButton,
+            _ => PlayButton,
+        };
+        target?.Focus(FocusState.Programmatic);
     }
 
     private static Visibility Show(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
