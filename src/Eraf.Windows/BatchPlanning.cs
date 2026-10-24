@@ -117,9 +117,11 @@ public sealed record AppOptions(
     OutputMode Output,
     string? OutputFolder,
     bool ShowCheckboxes = true,
-    ViewMode ListMode = ViewMode.Details)
+    ViewMode ListMode = ViewMode.Details,
+    bool OfferScreenshots = true,
+    bool GlobalHotkey = true)
 {
-    public static AppOptions Default { get; } = new(ThemeChoice.System, false, ExistingFilePolicy.Skip, OutputMode.NextToPhoto, null, true, ViewMode.Details);
+    public static AppOptions Default { get; } = new(ThemeChoice.System, false, ExistingFilePolicy.Skip, OutputMode.NextToPhoto, null, true, ViewMode.Details, true, true);
 
     public static AppOptions Load(Func<string, string?> get)
     {
@@ -131,7 +133,9 @@ public sealed record AppOptions(
             ParseEnum(get("Output"), d.Output),
             string.IsNullOrWhiteSpace(get("OutputFolder")) ? null : get("OutputFolder"),
             get("ShowCheckboxes") is { } c ? c != "0" : d.ShowCheckboxes,
-            ParseEnum(get("ListMode"), d.ListMode));
+            ParseEnum(get("ListMode"), d.ListMode),
+            get("OfferScreenshots") is { } o ? o != "0" : d.OfferScreenshots,
+            get("GlobalHotkey") is { } g ? g != "0" : d.GlobalHotkey);
     }
 
     public void Save(Action<string, string?> set)
@@ -143,6 +147,8 @@ public sealed record AppOptions(
         set("OutputFolder", string.IsNullOrWhiteSpace(OutputFolder) ? null : OutputFolder);
         set("ShowCheckboxes", ShowCheckboxes ? "1" : "0");
         set("ListMode", ListMode.ToString());
+        set("OfferScreenshots", OfferScreenshots ? "1" : "0");
+        set("GlobalHotkey", GlobalHotkey ? "1" : "0");
     }
 
     /// <summary>Earlier versions stored "Light" and "Dark"; they become the nearest colour themes.</summary>

@@ -31,6 +31,8 @@
     <Compile Include="..\..\src\Eraf.Windows\TrimRange.cs" Link="Linked\TrimRange.cs" />
     <Compile Include="..\..\src\Eraf.Windows\FileBrowsing.cs" Link="Linked\FileBrowsing.cs" />
     <Compile Include="..\..\src\Eraf.Windows\BatchPlanning.cs" Link="Linked\BatchPlanning.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\FileEditing.cs" Link="Linked\FileEditing.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\ScreenshotRules.cs" Link="Linked\ScreenshotRules.cs" />
   </ItemGroup>
 
   <ItemGroup>

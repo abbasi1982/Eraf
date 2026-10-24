@@ -171,6 +171,29 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-021 — Screenshots and the clipboard as photo sources (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review.
+
+**Decision.** A picture from the screen or the clipboard becomes the photo of a new ERAF and then follows the normal flow (voice note, trim, save, export). The four ways the product owner chose:
+- **Screenshot button** (Home tab, Start group) with three choices. *Region*: the app minimizes, starts the Windows snipping overlay (`ms-screenclip:`) and waits up to 45 seconds for the picture it puts on the clipboard, then comes back with it. *Whole screen*: the app minimizes, waits 0.6 s, copies all monitors with GDI (`BitBlt`) and comes back. *A window*: a list of open windows (titled, visible, not minimized, not the app) and `PrintWindow` captures the chosen one without its shadow border. Captures are encoded once as JPEG at quality 0.92 and are held in memory only; nothing is saved until the user saves.
+- **Paste** (button and Ctrl+V): a picture on the clipboard becomes the photo; files copied in Explorer are handled like a drop.
+- **Offer after a copy**: while the app is at the file list and the option is on (default on), a copied picture shows "A picture was just copied" in the status bar with a **Make ERAF** button. The picture is not read until the button is pressed; changes made by a snip itself are ignored for 5 seconds.
+- **Global shortcut Ctrl+Shift+F9** (default on): registered with `RegisterHotKey` on the app window; from any program it starts the region screenshot and brings the app up with the result. An F-key combination is used so that no commonly used shortcut (Save As, for example) is taken away from other programs. If another program already owns it, the app says so once. If a photo is open it answers "Close the photo you are working on first".
+Both options are in Settings. Photos get the origins `Screenshot` and `Clipboard` and default names "Screenshot 2026-10-24 112652" and "Clipboard ...", which become the suggested file name.
+
+**Consequences.** The offer reads the clipboard's format list (not its contents) whenever it changes while the app runs and the option is on; turn the option off to stop that. GDI cannot capture content that an app protects from capture (it shows black), and windows that are minimized cannot be captured. The region route depends on the Windows snipping tool being present. A second app instance has its own shortcut registration: only the first one gets it.
+
+---
+
+## ADR-020 — Right-click menu and file operations (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review.
+
+**Decision.** Right-clicking (or the Menu key) in the file list shows a menu; clicking an unselected item selects it first, as in File Explorer. For items: Open, Make ERAF, Rename (F2), Delete (Del), Show in File Explorer, Copy path; for the list: New folder (Ctrl+Shift+N), Refresh, Select all/none, a Layout submenu and a Sort by submenu (the sort control that was missing outside Details). Rename edits only the part before a file's extension and refuses names Windows would refuse, with the reason shown as the user types (`FileNames`, pure). Delete asks first and uses the Recycle Bin (`StorageDeleteOption.Default`); the question says "Recycle Bin" only for items that go there: items on removable or network drives, and in the Temp folder, are deleted by Windows for good, and then the question, button and message say so (`RecycleSupport`; found by testing that a file in Temp was not recoverable). F2 and Delete act only when the file list has the keyboard focus, so typing in a box never deletes files.
+
+---
+
 ## ADR-019 — Status bar for messages; file list layouts (requested 2026-10-24)
 
 **Status:** Implemented at the product owner's request; awaiting Cursor review.

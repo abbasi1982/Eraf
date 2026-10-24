@@ -36,6 +36,10 @@ CRC-32 and SHA-256 in the format detect **accidental** corruption only. Anyone w
 
 The app registers itself as a handler for `.eraf` through its package manifest; Windows writes the keys under the current user (`HKCU\Software\Classes`) when the package is registered, and removes them with the package. Nothing in the app writes to the registry itself. A file opened this way goes through the same validation as any other (spec 9), and its path is used only to read it.
 
+## Screen, clipboard and shortcut
+
+Screenshots and clipboard pictures are held in memory and encoded to a JPEG in memory; nothing is written until the user saves. The "picture copied" offer looks only at which formats are on the clipboard (not at their contents) and only while the app is at the file list; the picture is read when the user presses Make ERAF or Paste. It can be turned off in Settings. The global shortcut Ctrl+Shift+F9 is registered only while the app runs and can be turned off. Window and screen capture use plain GDI calls and add no permission or package. Right-click Delete moves items to the Recycle Bin and never deletes for good except where Windows itself does not use the bin, and the dialog says so first.
+
 ## Network and telemetry
 
 None. The app does not use the network, send telemetry, check for updates, or embed code that runs from file contents. Adding any of these is a scope change needing explicit approval.

@@ -25,6 +25,18 @@ Select several photos (Ctrl or Shift while clicking, or Ctrl+A), or select one o
 
 Drag photos, folders or an ERAF file from File Explorer onto the app window while you are looking at the file list. One photo starts a new ERAF, several photos or any folder start the "one voice note for many photos" flow, and an ERAF file opens. Other files in the drop are left out, and the app tells you how many.
 
+## Right-click menu
+
+Right-click a file or folder (or press the Menu key) for: **Open**, **Make ERAF**, **Rename** (F2; only the name before the extension is edited), **Delete** (Del; goes to the Recycle Bin, and the question says clearly when Windows cannot use it, for example on a USB stick, a network drive or the Temp folder), **Show in File Explorer**, **Copy path**. Right-click the empty part of the list for **New folder** (Ctrl+Shift+N), **Refresh**, **Select all**, and the **Layout** and **Sort by** lists.
+
+## Screenshots as photos
+
+You can start an ERAF from a screenshot, then add a voice note as usual.
+- **Screenshot** on the Home tab: **Region** (the Windows snipping tool opens; drag over what you want), **Whole screen**, or **A window...** (pick from the list). ERAF steps out of the way, takes the picture and comes back with it.
+- **Paste** (or Ctrl+V): uses the picture on the clipboard, for example after Print Screen or Win+Shift+S. If you copied photo files in Explorer, those are used instead.
+- **Offer:** when you copy a picture while ERAF is showing your files, a **Make ERAF** button appears at the bottom of the window. Turn this off in Settings if you do not want ERAF to notice copied pictures.
+- **Shortcut from anywhere:** while ERAF is running, **Ctrl+Shift+F9** takes a region screenshot even if another program is in front, and brings ERAF up with the picture. (If you are already working on a photo, close it first with Back to files.) You can turn the shortcut off in Settings.
+
 ## Messages and the status bar
 
 The strip along the bottom of the window is the status bar. Messages (saved, errors, how many photos were found, and so on) appear on its left with a symbol that shows what kind they are; press the small X to clear one. On the right it counts the items in the folder and how many are ticked.

@@ -47,8 +47,12 @@ public sealed partial class MainPage : Page
         AppSettings.OptionsChanged += ApplyOptions;
         ApplyOptions(AppSettings.Options);
         AddAccelerators();
+        AddListShortcuts();
+        SetUpScreenshots();
+        FileList.ContextMenuRequested += OnFileContextMenu;
         Loaded += async (_, _) =>
         {
+            HookHotkey();
             await RefreshMicrophonesAsync();
             string? startup = App.StartupFile;
             App.StartupFile = null;
@@ -395,6 +399,8 @@ public sealed partial class MainPage : Page
             ImageOrigin.ImportedJpeg => $"{session.SourceName} (JPEG, {size}, kept as is)",
             ImageOrigin.ConvertedToJpeg => $"{session.SourceName} (converted to JPEG, {size})",
             ImageOrigin.OpenedFile => $"Photo from {session.SourceName} (JPEG, {size})",
+            ImageOrigin.Screenshot => $"{session.SourceName} (JPEG, {size})",
+            ImageOrigin.Clipboard => $"Picture from the clipboard (JPEG, {size})",
             _ => $"Camera photo (JPEG, {size})",
         };
     }
@@ -1152,10 +1158,33 @@ public sealed partial class MainPage : Page
         StatusMessage.Text = message;
         ToolTipService.SetToolTip(StatusMessage, message);
         StatusDismissButton.Visibility = Visibility.Visible;
+        StatusActionButton.Visibility = Visibility.Collapsed;
+        _statusAction = null;
+    }
+
+    private Action? _statusAction;
+
+    /// <summary>A message with one button (for example "Make ERAF" after a picture was copied). Pressing it clears the message first.</summary>
+    private void ShowMessageWithAction(string message, InfoBarSeverity severity, string label, Action action)
+    {
+        ShowMessage(message, severity);
+        StatusActionButton.Content = label;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(StatusActionButton, label);
+        StatusActionButton.Visibility = Visibility.Visible;
+        _statusAction = action;
+    }
+
+    private void OnStatusActionClick(object sender, RoutedEventArgs e)
+    {
+        Action? action = _statusAction;
+        ClearMessage();
+        action?.Invoke();
     }
 
     private void ClearMessage()
     {
+        StatusActionButton.Visibility = Visibility.Collapsed;
+        _statusAction = null;
         StatusMessage.Text = string.Empty;
         ToolTipService.SetToolTip(StatusMessage, null);
         StatusIcon.Visibility = Visibility.Collapsed;

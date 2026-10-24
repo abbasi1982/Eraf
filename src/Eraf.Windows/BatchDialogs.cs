@@ -162,6 +162,97 @@ public static class BatchDialogs
         }).ShowAsync();
     }
 
+    /// <summary>
+    /// Asks for a name (rename, new folder). The box is filled and selected; the button stays off while the name is not usable and the
+    /// reason is shown. <paramref name="fixedSuffix"/> (a file's extension) is shown after the box and added by the caller.
+    /// Null when cancelled.
+    /// </summary>
+    public static async Task<string?> AskNameAsync(
+        XamlRoot xamlRoot, string title, string prompt, string initial, string fixedSuffix, string primaryText, Func<string, string?> problemWith)
+    {
+        var box = new TextBox { Text = initial, MinWidth = 280 };
+        AutomationProperties.SetName(box, prompt);
+        AutomationProperties.SetAutomationId(box, "NameBox");
+        var problem = new TextBlock { TextWrapping = TextWrapping.Wrap, Opacity = 0.85 };
+        AutomationProperties.SetLiveSetting(problem, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        row.Children.Add(box);
+        if (fixedSuffix.Length > 0)
+        {
+            row.Children.Add(new TextBlock { Text = fixedSuffix, VerticalAlignment = VerticalAlignment.Center, Opacity = 0.8 });
+        }
+
+        var panel = new StackPanel { Spacing = 8, MinWidth = 340 };
+        panel.Children.Add(new TextBlock { Text = prompt });
+        panel.Children.Add(row);
+        panel.Children.Add(problem);
+
+        ContentDialog dialog = Themed(new ContentDialog
+        {
+            XamlRoot = xamlRoot,
+            Title = title,
+            Content = panel,
+            PrimaryButtonText = primaryText,
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+        });
+
+        void Refresh()
+        {
+            string? why = problemWith(box.Text + fixedSuffix);
+            problem.Text = why ?? string.Empty;
+            dialog.IsPrimaryButtonEnabled = why is null;
+        }
+
+        box.TextChanged += (_, _) => Refresh();
+        dialog.Opened += (_, _) =>
+        {
+            box.Focus(FocusState.Programmatic);
+            box.SelectAll();
+        };
+        Refresh();
+        return await dialog.ShowAsync() == ContentDialogResult.Primary ? box.Text + fixedSuffix : null;
+    }
+
+    /// <summary>Lists the open windows (front to back) and returns the one chosen, or null.</summary>
+    public static async Task<CapturableWindow?> PickWindowAsync(XamlRoot xamlRoot, IReadOnlyList<CapturableWindow> windows)
+    {
+        var list = new ListView
+        {
+            ItemsSource = windows.Select(w => w.Title).ToList(),
+            SelectionMode = ListViewSelectionMode.Single,
+            MaxHeight = 320,
+            MinWidth = 420,
+            SelectedIndex = 0,
+        };
+        AutomationProperties.SetName(list, "Open windows");
+        AutomationProperties.SetAutomationId(list, "WindowList");
+        ContentDialog dialog = Themed(new ContentDialog
+        {
+            XamlRoot = xamlRoot,
+            Title = "Capture which window?",
+            Content = list,
+            PrimaryButtonText = "Capture",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+        });
+        list.DoubleTapped += (_, _) => dialog.Hide();
+        ContentDialogResult result = await dialog.ShowAsync();
+        return result == ContentDialogResult.Primary && list.SelectedIndex >= 0 ? windows[list.SelectedIndex] : null;
+    }
+
+    /// <summary>A yes/no question. True when the primary button was chosen; the safe button is the default.</summary>
+    public static async Task<bool> ConfirmAsync(XamlRoot xamlRoot, string title, string detail, string primaryText) =>
+        await Themed(new ContentDialog
+        {
+            XamlRoot = xamlRoot,
+            Title = title,
+            Content = new TextBlock { Text = detail, TextWrapping = TextWrapping.Wrap, MinWidth = 340 },
+            PrimaryButtonText = primaryText,
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        }).ShowAsync() == ContentDialogResult.Primary;
+
     public static async Task ShowAboutAsync(XamlRoot xamlRoot)
     {
         await Themed(new ContentDialog

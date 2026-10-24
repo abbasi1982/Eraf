@@ -14,6 +14,12 @@ public enum ImageOrigin
 
     /// <summary>The photo inside an opened .eraf file.</summary>
     OpenedFile,
+
+    /// <summary>A screenshot of the screen, a region or a window, encoded once as JPEG.</summary>
+    Screenshot,
+
+    /// <summary>A picture taken from the clipboard, encoded once as JPEG.</summary>
+    Clipboard,
 }
 
 /// <summary>

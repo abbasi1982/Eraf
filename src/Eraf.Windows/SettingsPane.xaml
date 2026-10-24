@@ -46,6 +46,26 @@
             </StackPanel>
 
             <StackPanel Spacing="10">
+                <TextBlock Text="Screenshots" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <ToggleSwitch
+                    x:Name="OfferSwitch"
+                    Header="Offer to make an ERAF when a picture is copied"
+                    OnContent="When you copy a picture (for example a screenshot), a Make ERAF button appears at the bottom of the window"
+                    OffContent="Do not look at the clipboard"
+                    Toggled="OnOfferToggled"
+                    AutomationProperties.AutomationId="OfferSwitch"
+                    AutomationProperties.Name="Offer to make an ERAF when a picture is copied" />
+                <ToggleSwitch
+                    x:Name="HotkeySwitch"
+                    Header="Shortcut Ctrl+Shift+F9 takes a screenshot from any program"
+                    OnContent="While ERAF is running, Ctrl+Shift+F9 starts a screenshot and brings ERAF up with it"
+                    OffContent="No system-wide shortcut"
+                    Toggled="OnHotkeyToggled"
+                    AutomationProperties.AutomationId="HotkeySwitch"
+                    AutomationProperties.Name="Global screenshot shortcut" />
+            </StackPanel>
+
+            <StackPanel Spacing="10">
                 <TextBlock Text="Choosing folders" Style="{StaticResource SubtitleTextBlockStyle}" />
                 <TextBlock
                     Text="When you select one or more folders and press Make ERAF, the app looks for photos inside them."

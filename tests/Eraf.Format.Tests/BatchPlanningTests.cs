@@ -49,13 +49,15 @@ public sealed class BatchPlanningTests : IDisposable
         Assert.Null(d.OutputFolder);
         Assert.True(d.ShowCheckboxes);
         Assert.Equal(ViewMode.Details, d.ListMode);
+        Assert.True(d.OfferScreenshots);
+        Assert.True(d.GlobalHotkey);
     }
 
     [Fact]
     public void OptionsSurviveASaveAndLoad()
     {
         var store = new Dictionary<string, string?>();
-        var chosen = new AppOptions(ThemeChoice.Midnight, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out", ShowCheckboxes: false, ListMode: ViewMode.Tiles);
+        var chosen = new AppOptions(ThemeChoice.Midnight, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out", ShowCheckboxes: false, ListMode: ViewMode.Tiles, OfferScreenshots: false, GlobalHotkey: false);
 
         chosen.Save((k, v) => store[k] = v);
         AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
@@ -75,6 +77,8 @@ public sealed class BatchPlanningTests : IDisposable
             ["OutputFolder"] = "  ",
             ["ShowCheckboxes"] = "0",
             ["ListMode"] = "Huge",
+            ["OfferScreenshots"] = "0",
+            ["GlobalHotkey"] = "0",
         };
 
         AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
@@ -86,6 +90,8 @@ public sealed class BatchPlanningTests : IDisposable
         Assert.Null(loaded.OutputFolder);
         Assert.False(loaded.ShowCheckboxes);
         Assert.Equal(ViewMode.Details, loaded.ListMode);
+        Assert.False(loaded.OfferScreenshots);
+        Assert.False(loaded.GlobalHotkey);
         Assert.Equal(AppOptions.Default, AppOptions.Load(_ => null));
     }
 

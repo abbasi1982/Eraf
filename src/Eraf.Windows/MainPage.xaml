@@ -98,6 +98,28 @@
                                     AutomationProperties.HelpText="Show the camera and take a photo.">
                                     <StackPanel Spacing="4"><FontIcon Glyph="&#xE722;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Camera" Style="{StaticResource RibbonLabel}" /></StackPanel>
                                 </Button>
+                                <DropDownButton
+                                    x:Name="ScreenshotButton" Width="88" Height="76" Padding="4,6" Background="Transparent" BorderThickness="0"
+                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Top"
+                                    ToolTipService.ToolTip="Take a screenshot to start an ERAF (Ctrl+Shift+F9 from anywhere)"
+                                    AutomationProperties.AutomationId="ScreenshotButton" AutomationProperties.Name="Screenshot"
+                                    AutomationProperties.HelpText="Take a screenshot of a region, the whole screen or one window and use it as the photo.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE7F4;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Screenshot" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                    <DropDownButton.Flyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem x:Name="ShotRegionItem" Text="Region (drag to select)" Click="OnScreenshotRegionClick" AutomationProperties.AutomationId="ShotRegionItem" />
+                                            <MenuFlyoutItem x:Name="ShotScreenItem" Text="Whole screen" Click="OnScreenshotScreenClick" AutomationProperties.AutomationId="ShotScreenItem" />
+                                            <MenuFlyoutItem x:Name="ShotWindowItem" Text="A window..." Click="OnScreenshotWindowClick" AutomationProperties.AutomationId="ShotWindowItem" />
+                                        </MenuFlyout>
+                                    </DropDownButton.Flyout>
+                                </DropDownButton>
+                                <Button
+                                    x:Name="PasteButton" Style="{StaticResource RibbonButtonStyle}" Click="OnPasteClick"
+                                    ToolTipService.ToolTip="Use the picture on the clipboard as the photo (Ctrl+V)"
+                                    AutomationProperties.AutomationId="PasteButton" AutomationProperties.Name="Paste picture"
+                                    AutomationProperties.HelpText="Use the picture (or the photo files) on the clipboard to start an ERAF.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE77F;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Paste" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
                                 <Button
                                     x:Name="ImportButton" Style="{StaticResource RibbonButtonStyle}" Click="OnImportClick"
                                     ToolTipService.ToolTip="Import image from anywhere (Ctrl+I)"
@@ -530,6 +552,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <FontIcon
                 x:Name="StatusIcon"
@@ -548,8 +571,15 @@
                 AutomationProperties.AutomationId="StatusMessage"
                 AutomationProperties.LiveSetting="Polite" />
             <Button
-                x:Name="StatusDismissButton"
+                x:Name="StatusActionButton"
                 Grid.Column="2"
+                Padding="10,2"
+                Visibility="Collapsed"
+                Click="OnStatusActionClick"
+                AutomationProperties.AutomationId="StatusActionButton" />
+            <Button
+                x:Name="StatusDismissButton"
+                Grid.Column="3"
                 Width="28"
                 Height="24"
                 Padding="0"
@@ -564,7 +594,7 @@
             </Button>
             <TextBlock
                 x:Name="StatusCounts"
-                Grid.Column="3"
+                Grid.Column="4"
                 VerticalAlignment="Center"
                 Opacity="0.8"
                 AutomationProperties.AutomationId="StatusCounts" />

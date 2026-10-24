@@ -32,6 +32,8 @@ public sealed partial class SettingsPane : UserControl
             ThemeCombo.SelectedIndex = ThemePalettes.IndexOf(options.Theme);
             SubfoldersSwitch.IsOn = options.ScanSubfolders;
             CheckboxesSwitch.IsOn = options.ShowCheckboxes;
+            OfferSwitch.IsOn = options.OfferScreenshots;
+            HotkeySwitch.IsOn = options.GlobalHotkey;
             ExistingChoices.SelectedIndex = (int)options.ExistingFiles;
             OutputChoices.SelectedIndex = (int)options.Output;
             OutputFolderBox.Text = options.OutputFolder ?? string.Empty;
@@ -59,6 +61,12 @@ public sealed partial class SettingsPane : UserControl
 
     private void OnCheckboxesToggled(object sender, RoutedEventArgs e) =>
         Change(o => o with { ShowCheckboxes = CheckboxesSwitch.IsOn });
+
+    private void OnOfferToggled(object sender, RoutedEventArgs e) =>
+        Change(o => o with { OfferScreenshots = OfferSwitch.IsOn });
+
+    private void OnHotkeyToggled(object sender, RoutedEventArgs e) =>
+        Change(o => o with { GlobalHotkey = HotkeySwitch.IsOn });
 
     private void OnExistingChanged(object sender, SelectionChangedEventArgs e) =>
         Change(o => o with { ExistingFiles = (ExistingFilePolicy)Math.Max(0, ExistingChoices.SelectedIndex) });

@@ -37,6 +37,9 @@ public sealed partial class MainPage
         DiscardButton.IsEnabled = state != SessionState.Idle && !busy;
         DismissErrorButton.IsEnabled = state == SessionState.Error;
         bool browsing = state == SessionState.Idle && !_showingSettings;
+        bool canStart = browsing && !_importBusy;
+        ScreenshotButton.IsEnabled = canStart;
+        PasteButton.IsEnabled = canStart;
         SelectAllButton.IsEnabled = browsing;
         SelectNoneButton.IsEnabled = browsing;
 
@@ -81,6 +84,7 @@ public sealed partial class MainPage
         ViewModeBox.SelectedIndex = ViewModes.IndexOf(options.ListMode);
         _applyingOptions = false;
         FileList.SetViewMode(options.ListMode);
+        ApplyHotkeyOption(options.GlobalHotkey);
         CheckboxToggle.IsChecked = options.ShowCheckboxes;
         SubfoldersToggle.IsChecked = options.ScanSubfolders;
         FileList.SetCheckboxes(options.ShowCheckboxes);
@@ -156,6 +160,7 @@ public sealed partial class MainPage
         Add(VirtualKey.R, VirtualKeyModifiers.Control, OnRecordClick);
         Add(VirtualKey.T, VirtualKeyModifiers.Control, OnTrimClick);
         Add(VirtualKey.F5, VirtualKeyModifiers.None, OnRefreshNavClick);
+        Add(VirtualKey.V, VirtualKeyModifiers.Control, OnPasteClick);
 
         // The same numbers File Explorer uses for its layouts.
         const VirtualKeyModifiers ctrlShift = VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift;

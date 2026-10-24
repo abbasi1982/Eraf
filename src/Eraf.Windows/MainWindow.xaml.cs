@@ -11,6 +11,53 @@ namespace Eraf.Windows;
 public sealed partial class MainWindow : Window
 {
     private bool _closeConfirmed;
+    private readonly GlobalHotkey _hotkey = new();
+
+    /// <summary>The system-wide screenshot shortcut was pressed.</summary>
+    public event Action? ScreenshotHotkeyPressed;
+
+    /// <summary>Why the shortcut could not be set up (another program owns it), or null.</summary>
+    public string? HotkeyProblem { get; private set; }
+
+    public IntPtr Handle => WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+    public bool IsMinimized => AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized };
+
+    public void MinimizeWindow()
+    {
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.Minimize();
+        }
+    }
+
+    /// <summary>Shows the window again (restoring it if it was minimized) and takes the keyboard focus.</summary>
+    public void BringToFront()
+    {
+        if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } presenter)
+        {
+            presenter.Restore();
+        }
+
+        AppWindow.Show();
+        Activate();
+        SetForegroundWindow(Handle);
+    }
+
+    public void ApplyHotkey(bool enabled)
+    {
+        if (!enabled)
+        {
+            _hotkey.Unregister();
+            HotkeyProblem = null;
+            return;
+        }
+
+        HotkeyProblem = _hotkey.TryRegister(Handle, out string? problem) ? null : problem;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr window);
 
     public MainWindow()
     {
@@ -29,6 +76,8 @@ public sealed partial class MainWindow : Window
         }
 
         ApplyTheme(AppSettings.Options.Theme);
+        _hotkey.Pressed += () => ScreenshotHotkeyPressed?.Invoke();
+        Closed += (_, _) => _hotkey.Dispose();
         RootFrame.Navigate(typeof(MainPage));
     }
 

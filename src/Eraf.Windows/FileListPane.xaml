@@ -149,6 +149,7 @@
             PreviewKeyDown="OnListKeyDown"
             SelectionChanged="OnSelectionChanged"
             ContainerContentChanging="OnContainerContentChanging"
+            ContextRequested="OnContextRequested"
             AutomationProperties.AutomationId="FileList"
             AutomationProperties.Name="Files in this folder"
             AutomationProperties.HelpText="Press Enter to open a folder, an ERAF file, or to add a voice note to a photo.">

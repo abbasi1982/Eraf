@@ -49,6 +49,59 @@ public sealed partial class FileListPane : UserControl
 
     public void SelectNone() => List.SelectedItems.Clear();
 
+    /// <summary>The column the list is sorted by, and whether A to Z / old to new / small to large.</summary>
+    public SortKey CurrentSortKey => _sortKey;
+
+    public bool SortAscending => _ascending;
+
+    public void SetSort(SortKey key, bool ascending)
+    {
+        _sortKey = key;
+        _ascending = ascending;
+        UpdateHeaders();
+        Rebuild();
+    }
+
+    /// <summary>Selects just this item (used to show a renamed file or a new folder).</summary>
+    public void SelectOnly(string fullPath)
+    {
+        EntryViewModel? row = _items.FirstOrDefault(i => string.Equals(i.Entry.FullPath, fullPath, StringComparison.OrdinalIgnoreCase));
+        if (row is null)
+        {
+            return;
+        }
+
+        List.SelectedItems.Clear();
+        List.SelectedItems.Add(row);
+        List.ScrollIntoView(row);
+    }
+
+    /// <summary>
+    /// A right-click (or the Menu key) asks for the context menu: where to show it, what is selected, and whether it was on an item.
+    /// A right-click on an item that is not selected selects it first, as in File Explorer.
+    /// </summary>
+    public event Action<global::Windows.Foundation.Point, IReadOnlyList<BrowserEntry>, bool>? ContextMenuRequested;
+
+    private void OnContextRequested(UIElement sender, ContextRequestedEventArgs e)
+    {
+        EntryViewModel? row = RowOf(e.OriginalSource);
+        if (!e.TryGetPosition(List, out global::Windows.Foundation.Point position))
+        {
+            // From the keyboard: act on the selected row and show the menu near the top of the list.
+            row ??= List.SelectedItem as EntryViewModel;
+            position = new global::Windows.Foundation.Point(48, 48);
+        }
+
+        if (row is not null && !List.SelectedItems.Contains(row))
+        {
+            List.SelectedItems.Clear();
+            List.SelectedItems.Add(row);
+        }
+
+        e.Handled = true;
+        ContextMenuRequested?.Invoke(position, SelectedEntries, row is not null);
+    }
+
     /// <summary>How many items the list shows right now (after the name filter).</summary>
     public int Count => _items.Count;
 
