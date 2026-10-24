@@ -171,6 +171,16 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-016 — Drag and drop onto the window (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review.
+
+**Decision.** The page accepts dropped files and folders (`StorageItems`). A drop means the same as selecting the items and pressing Make ERAF, decided by the pure `DropPlanner`: one ERAF file opens it; one photo starts the normal editor; several photos or any folder start the batch flow (ADR-015) with the subfolder option from Settings; ERAF files and other files mixed into a batch are left out and counted in a message; several ERAF files, or only unsupported files, are refused with a reason. Drops are accepted only from the file list with nothing else going on (no open photo, no running import or batch, no dialog, Settings closed); otherwise the pointer shows "not allowed". The drag caption reads "Make ERAF".
+
+**Consequences.** Dropping onto a window running with higher rights than the source (an elevated app) is blocked by Windows, which is outside the app's control.
+
+---
+
 ## ADR-015 — Many photos with one voice note, folder scanning, Settings, menu bar and themes (requested 2026-10-24)
 
 **Status:** Implemented at the product owner's request; awaiting Cursor review.

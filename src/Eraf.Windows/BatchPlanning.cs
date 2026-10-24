@@ -262,3 +262,71 @@ public sealed record BatchSummary(int Created, int Replaced, int Skipped, IReadO
         }
     }
 }
+
+public enum DropKind
+{
+    /// <summary>Nothing usable was dropped; <see cref="DropPlan.Message"/> says why.</summary>
+    Nothing,
+
+    /// <summary>One ERAF file: open it.</summary>
+    OpenEraf,
+
+    /// <summary>One photo: start an ERAF with it (the normal editor).</summary>
+    SinglePhoto,
+
+    /// <summary>Several photos and/or folders: the batch flow with one shared voice note.</summary>
+    Batch,
+}
+
+/// <summary>What dropping these items on the window should do.</summary>
+public sealed record DropPlan(DropKind Kind, IReadOnlyList<string> Paths, int Ignored, bool AnyFolder, string? Message);
+
+/// <summary>Decides what a drop means. It is the same as selecting the items in the list and pressing Make ERAF.</summary>
+public static class DropPlanner
+{
+    public static DropPlan Plan(IEnumerable<string> dropped)
+    {
+        var usable = new List<string>();      // photos and folders
+        var erafs = new List<string>();
+        int ignored = 0;
+        bool anyFolder = false;
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string raw in dropped)
+        {
+            if (string.IsNullOrWhiteSpace(raw) || !seen.Add(raw))
+            {
+                continue;
+            }
+
+            if (Directory.Exists(raw))
+            {
+                usable.Add(raw);
+                anyFolder = true;
+            }
+            else if (File.Exists(raw) && FileKinds.ClassifyFile(raw) is { } kind)
+            {
+                (kind == EntryKind.Eraf ? erafs : usable).Add(raw);
+            }
+            else
+            {
+                ignored++;
+            }
+        }
+
+        if (usable.Count == 0)
+        {
+            return erafs.Count switch
+            {
+                1 when ignored == 0 => new DropPlan(DropKind.OpenEraf, erafs, 0, false, null),
+                0 => new DropPlan(DropKind.Nothing, usable, ignored, false, "That is not a photo, a folder or an ERAF file."),
+                _ => new DropPlan(DropKind.Nothing, usable, ignored + erafs.Count, false, "Drop one ERAF file at a time to open it."),
+            };
+        }
+
+        int skipped = ignored + erafs.Count;
+        return usable.Count == 1 && !anyFolder
+            ? new DropPlan(DropKind.SinglePhoto, usable, skipped, false, null)
+            : new DropPlan(DropKind.Batch, usable, skipped, anyFolder, null);
+    }
+}

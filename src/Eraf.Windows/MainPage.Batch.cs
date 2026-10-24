@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 
 namespace Eraf.Windows;
@@ -30,7 +31,10 @@ public sealed partial class MainPage
         }
         else if (CanMake(selection))
         {
-            await StartBatchAsync(selection);
+            await StartBatchAsync(
+                selection.Where(s => s.Kind != EntryKind.Eraf).Select(s => s.FullPath).ToList(),
+                selection.Any(s => s.Kind == EntryKind.Folder),
+                note: null);
         }
         else
         {
@@ -39,15 +43,13 @@ public sealed partial class MainPage
     }
 
     /// <summary>Looks for photos in the selection, then shows the first one so a single voice note can be added for all of them.</summary>
-    private async Task StartBatchAsync(IReadOnlyList<BrowserEntry> selection)
+    private async Task StartBatchAsync(IReadOnlyList<string> paths, bool anyFolder, string? note)
     {
         if (!_workflow.CanApply(SessionEvent.PhotoReady))
         {
             return;
         }
 
-        List<string> paths = selection.Where(s => s.Kind != EntryKind.Eraf).Select(s => s.FullPath).ToList();
-        bool anyFolder = selection.Any(s => s.Kind == EntryKind.Folder);
         AppOptions options = AppSettings.Options;
 
         ClearMessage();
@@ -103,11 +105,92 @@ public sealed partial class MainPage
             ShowInfo(
                 $"{n} photo{(n == 1 ? " was" : "s were")} found"
                 + (scan.Truncated ? $" (the first {PhotoScanner.DefaultMaxPhotos}; narrow the selection to include the rest)" : string.Empty)
-                + ". Record or attach one voice note: it will be used for all of them.");
+                + ". Record or attach one voice note: it will be used for all of them."
+                + (note is null ? string.Empty : " " + note));
         }
         finally
         {
             SetBusy(false);
+        }
+    }
+
+    // ---------------------------------------------------------------- drag and drop
+
+    /// <summary>Dropping is only for starting something new: from the file list, with nothing else going on.</summary>
+    private bool CanAcceptDrop =>
+        _workflow.State == SessionState.Idle && !_importBusy && !_showingSettings && !_dialogOpen;
+
+    private void OnDragOver(object sender, DragEventArgs e)
+    {
+        if (CanAcceptDrop && e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "Make ERAF";
+            e.DragUIOverride.IsGlyphVisible = false;
+        }
+        else
+        {
+            e.AcceptedOperation = DataPackageOperation.None;
+        }
+
+        e.Handled = true;
+    }
+
+    private async void OnDrop(object sender, DragEventArgs e)
+    {
+        if (!CanAcceptDrop || !e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            return;
+        }
+
+        // Only the reading of the dropped items belongs inside the deferral; the work that follows can take a while.
+        var paths = new List<string>();
+        DragOperationDeferral deferral = e.GetDeferral();
+        try
+        {
+            foreach (IStorageItem item in await e.DataView.GetStorageItemsAsync())
+            {
+                if (!string.IsNullOrEmpty(item.Path))
+                {
+                    paths.Add(item.Path);
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Treated as nothing usable below.
+        }
+        finally
+        {
+            deferral.Complete();
+        }
+
+        await HandleDropAsync(paths);
+    }
+
+    private async Task HandleDropAsync(IReadOnlyList<string> paths)
+    {
+        DropPlan plan = DropPlanner.Plan(paths);
+        string? note = plan.Ignored > 0
+            ? $"{plan.Ignored} dropped item{(plan.Ignored == 1 ? " was" : "s were")} left out because {(plan.Ignored == 1 ? "it is" : "they are")} not a photo or folder."
+            : null;
+
+        switch (plan.Kind)
+        {
+            case DropKind.OpenEraf:
+                _sessionFolder = Path.GetDirectoryName(plan.Paths[0]);
+                await OpenErafPathAsync(plan.Paths[0]);
+                break;
+            case DropKind.SinglePhoto:
+                _sessionFolder = Path.GetDirectoryName(plan.Paths[0]);
+                await ImportPhotoPathAsync(plan.Paths[0]);
+                break;
+            case DropKind.Batch:
+                await StartBatchAsync(plan.Paths, plan.AnyFolder, note);
+                break;
+            default:
+                ShowInfo(plan.Message ?? "Nothing was opened.");
+                break;
         }
     }
 

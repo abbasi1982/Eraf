@@ -21,6 +21,10 @@ The app appears in the Start menu as **ERAF**. To keep it handy, right-click it 
 
 Select several photos (Ctrl or Shift while clicking, or Ctrl+A), or select one or more folders, then press **Make ERAF** (also Tools > Make ERAF from selection, or Ctrl+M). The app finds the photos, shows the first one, and lets you record or attach **one** voice note (and trim it). Then press **Make N ERAF files**: it asks what to do if an ERAF file with the same name already exists (skip, replace, or keep both with a number), shows progress with a Stop button, and finishes with a summary. Each file is saved next to its photo with the photo's name, or in one folder you choose in Settings. By default only photos directly inside a selected folder are used; turn on **Search subfolders too** in Settings to include the folders below it.
 
+## Drag and drop
+
+Drag photos, folders or an ERAF file from File Explorer onto the app window while you are looking at the file list. One photo starts a new ERAF, several photos or any folder start the "one voice note for many photos" flow, and an ERAF file opens. Other files in the drop are left out, and the app tells you how many.
+
 ## Settings, menus and themes
 
 Use the menu bar at the top (File, Voice note, View, Tools, Help). **Tools > Settings** opens the Settings page: theme (Windows setting, Light or Dark), whether folders are searched with their subfolders, what to do when a file already exists, and where batch files are saved. Changes take effect immediately. The theme can also be changed from **View > Theme**.
