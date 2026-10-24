@@ -17,7 +17,7 @@
   <mp:PhoneIdentity PhoneProductId="90DA0760-F0D9-4200-A4DB-1BDF858BEB2B" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>Eraf.Windows</DisplayName>
+    <DisplayName>ERAF</DisplayName>
     <PublisherDisplayName>AppPublisher</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <uap10:PackageIntegrity>
@@ -39,8 +39,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="Eraf.Windows"
-        Description="Eraf.Windows"
+        DisplayName="ERAF"
+        Description="Keep a photo and its voice note together in one file."
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

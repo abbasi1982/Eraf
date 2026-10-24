@@ -135,7 +135,7 @@ public static class ImageImportService
         return await ReadAsync(stream, (uint)stream.Size);
     }
 
-    private static async Task<byte[]> ReadAsync(IRandomAccessStream stream, uint count)
+    internal static async Task<byte[]> ReadAsync(IRandomAccessStream stream, uint count)
     {
         if (count == 0)
         {

@@ -35,7 +35,8 @@ public sealed class AudioRecorder : IDisposable
     /// <summary>Time since recording began; frozen once stopped.</summary>
     public ulong ElapsedMs => (ulong)_clock.ElapsedMilliseconds;
 
-    public static async Task<RecorderStartResult> StartAsync()
+    /// <param name="deviceId">The microphone to use, or null for the Windows default.</param>
+    public static async Task<RecorderStartResult> StartAsync(string? deviceId = null)
     {
         MediaCapture? capture = null;
         InMemoryRandomAccessStream? stream = null;
@@ -48,11 +49,20 @@ public sealed class AudioRecorder : IDisposable
                     "No microphone was found. Connect one to record a voice note. You can still look at the photo.");
             }
 
-            capture = new MediaCapture();
-            await capture.InitializeAsync(new MediaCaptureInitializationSettings
+            if (deviceId is not null && !microphones.Any(m => m.Id == deviceId))
             {
-                StreamingCaptureMode = StreamingCaptureMode.Audio,
-            });
+                return new RecorderStartResult(null,
+                    "The microphone you chose is not connected any more. Pick another one from the list, or choose Default microphone.");
+            }
+
+            capture = new MediaCapture();
+            var settings = new MediaCaptureInitializationSettings { StreamingCaptureMode = StreamingCaptureMode.Audio };
+            if (deviceId is not null)
+            {
+                settings.AudioDeviceId = deviceId;
+            }
+
+            await capture.InitializeAsync(settings);
 
             stream = new InMemoryRandomAccessStream();
             var recorder = new AudioRecorder(capture, stream);

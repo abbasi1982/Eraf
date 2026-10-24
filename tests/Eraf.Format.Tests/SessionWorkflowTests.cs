@@ -35,6 +35,10 @@ public class SessionWorkflowTests
         [(Play, SessionEvent.StartRecording)] = Rec,
         [(Saved, SessionEvent.StartRecording)] = Rec,
         [(Rec, SessionEvent.RecordingSucceeded)] = Ready,
+        [(Photo, SessionEvent.AudioAttached)] = Ready,
+        [(Ready, SessionEvent.AudioAttached)] = Ready,
+        [(Play, SessionEvent.AudioAttached)] = Ready,
+        [(Saved, SessionEvent.AudioAttached)] = Ready,
 
         [(Ready, SessionEvent.PlaybackStarted)] = Play,
         [(Saved, SessionEvent.PlaybackStarted)] = Play,
@@ -134,8 +138,8 @@ public class SessionWorkflowTests
     {
         // Guards the test itself: adding a state or event without updating the table should fail here.
         Assert.Equal(9, Enum.GetValues<SessionState>().Length);
-        Assert.Equal(15, Enum.GetValues<SessionEvent>().Length);
-        Assert.Equal(28, Legal.Count);
+        Assert.Equal(16, Enum.GetValues<SessionEvent>().Length);
+        Assert.Equal(32, Legal.Count);
     }
 
     [Fact]

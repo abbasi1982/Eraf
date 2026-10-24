@@ -29,7 +29,11 @@ public sealed partial class MainPage : Page
         _workflow.Changed += (_, _) => Render();
         _recordTimer.Tick += OnRecordTimerTick;
         Unloaded += (_, _) => ReleaseEverything();
-        Loaded += (_, _) => FocusNextControl();
+        Loaded += async (_, _) =>
+        {
+            await RefreshMicrophonesAsync();
+            FocusNextControl();
+        };
         Render();
     }
 
@@ -77,23 +81,26 @@ public sealed partial class MainPage : Page
     {
         SessionState state = _workflow.State;
         bool recording = state == SessionState.RecordingAudio;
-        bool busy = state == SessionState.Saving;
+        bool busy = state == SessionState.Saving || _attachingAudio;
 
         IdlePanel.Visibility = Show(state == SessionState.Idle);
         CameraPanel.Visibility = Show(state == SessionState.CapturingPhoto);
         PhotoPanel.Visibility = Show(state != SessionState.Idle && state != SessionState.CapturingPhoto);
 
         RecordButton.Visibility = Show(!recording && !_workflow.HasAudio);
+        AttachAudioButton.Visibility = Show(!recording && !_workflow.HasAudio);
         RecordingPanel.Visibility = Show(recording);
+        MicrophoneCombo.Visibility = Show(!recording);
+        MicrophoneCombo.IsEnabled = !busy;
         VoicePanel.Visibility = Show(!recording && _workflow.HasAudio);
         PlayButton.Content = state == SessionState.AudioPreview ? "Stop" : "Play";
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PlayButton, state == SessionState.AudioPreview ? "Stop voice note" : "Play voice note");
 
-        SaveButton.IsEnabled = _workflow.CanSave;
+        SaveButton.IsEnabled = _workflow.CanSave && !_attachingAudio;
         DismissErrorButton.Visibility = Show(state == SessionState.Error);
         ExportPhotoButton.IsEnabled = !busy && !recording && _session is not null;
         ExportAudioButton.IsEnabled = !busy && !recording && _workflow.HasAudio;
-        foreach (Button b in new[] { RecordButton, RerecordButton, PlayButton, DeleteVoiceButton, DiscardButton })
+        foreach (Button b in new[] { RecordButton, RerecordButton, AttachAudioButton, ReplaceAudioFileButton, PlayButton, DeleteVoiceButton, DiscardButton })
         {
             b.IsEnabled = !busy;
         }
@@ -520,7 +527,9 @@ public sealed partial class MainPage : Page
         RerecordButton.IsEnabled = false;
         try
         {
-            RecorderStartResult result = await AudioRecorder.StartAsync();
+            // The list may be out of date (a microphone was plugged in or removed since it was filled).
+            await RefreshMicrophonesAsync();
+            RecorderStartResult result = await AudioRecorder.StartAsync((MicrophoneCombo.SelectedItem as MicrophoneOption)?.Id);
             if (result.Recorder is null)
             {
                 ShowError(result.Error ?? "The microphone could not be started.");
@@ -542,6 +551,93 @@ public sealed partial class MainPage : Page
         {
             RecordButton.IsEnabled = true;
             RerecordButton.IsEnabled = true;
+        }
+    }
+
+    // ---------------------------------------------------------------- audio file as the voice note
+
+    private bool _attachingAudio;
+
+    /// <summary>Uses a saved audio file as the voice note (converted to AAC M4A if needed). A failure keeps any earlier voice note.</summary>
+    private async void OnAttachAudioClick(object sender, RoutedEventArgs e)
+    {
+        if (_recorder is not null || _attachingAudio || _session is null || !_workflow.CanApply(SessionEvent.AudioAttached))
+        {
+            return;
+        }
+
+        ClearMessage();
+        EndPlayback();
+        _attachingAudio = true;
+        Render();
+        try
+        {
+            AudioImportResult result = await AudioImportService.PickAndImportAsync(App.MainWindow!);
+            if (result.Clip is not null)
+            {
+                // The page may have moved on while the file was being converted (for example Start over).
+                if (_session is null || !_workflow.CanApply(SessionEvent.AudioAttached))
+                {
+                    return;
+                }
+
+                _player?.Dispose();
+                _player = null;
+                _session.SetAudio(result.Clip);
+                _workflow.TryApply(SessionEvent.AudioAttached);
+            }
+            else if (result.Error is not null)
+            {
+                ShowError(result.Error);
+            }
+        }
+        finally
+        {
+            _attachingAudio = false;
+            Render();
+        }
+    }
+
+    // ---------------------------------------------------------------- microphone choice
+
+    private IReadOnlyList<MicrophoneOption> _microphones = Array.Empty<MicrophoneOption>();
+    private bool _fillingMicrophones;
+
+    /// <summary>Re-reads the device list and keeps the user's choice if that device is still there.</summary>
+    private async Task RefreshMicrophonesAsync()
+    {
+        IReadOnlyList<MicrophoneOption> found = await MicrophoneService.ListAsync();
+        string? wanted = (MicrophoneCombo.SelectedItem as MicrophoneOption)?.Id ?? MicrophoneService.LoadPreferredId();
+        if (_microphones.Count > 0 && MicrophoneChoice.SameList(_microphones, found))
+        {
+            return;
+        }
+
+        MicrophoneOption chosen = MicrophoneChoice.Resolve(found, wanted);
+        _fillingMicrophones = true;
+        try
+        {
+            _microphones = found;
+            MicrophoneCombo.ItemsSource = found;
+            MicrophoneCombo.SelectedItem = chosen;
+        }
+        finally
+        {
+            _fillingMicrophones = false;
+        }
+    }
+
+    private async void OnMicrophoneDropDownOpened(object? sender, object e)
+    {
+        // Pick up a microphone that was just plugged in. Rebuilding only happens when the list changed.
+        await RefreshMicrophonesAsync();
+    }
+
+    private void OnMicrophoneSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_fillingMicrophones && MicrophoneCombo.SelectedItem is MicrophoneOption option)
+        {
+            MicrophoneService.SavePreferredId(option.Id);
         }
     }
 

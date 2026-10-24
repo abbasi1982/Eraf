@@ -125,6 +125,19 @@
                 AutomationProperties.AutomationId="PhotoInfo" />
 
             <StackPanel Grid.Row="2" Spacing="8" HorizontalAlignment="Center">
+                <!-- Which microphone the next recording uses. Hidden while recording. -->
+                <ComboBox
+                    x:Name="MicrophoneCombo"
+                    Header="Microphone"
+                    MinWidth="280"
+                    HorizontalAlignment="Center"
+                    DisplayMemberPath="Name"
+                    AutomationProperties.AutomationId="MicrophoneCombo"
+                    AutomationProperties.Name="Microphone"
+                    AutomationProperties.HelpText="Choose which microphone records the voice note."
+                    DropDownOpened="OnMicrophoneDropDownOpened"
+                    SelectionChanged="OnMicrophoneSelectionChanged" />
+
                 <!-- No voice note yet. -->
                 <Button
                     x:Name="RecordButton"
@@ -135,6 +148,15 @@
                     AutomationProperties.HelpText="Start recording from the microphone."
                     Style="{StaticResource AccentButtonStyle}"
                     Click="OnRecordClick" />
+
+                <Button
+                    x:Name="AttachAudioButton"
+                    Content="Attach audio file"
+                    HorizontalAlignment="Center"
+                    AutomationProperties.AutomationId="AttachAudioButton"
+                    AutomationProperties.Name="Attach audio file"
+                    AutomationProperties.HelpText="Use a saved audio file (M4A, MP3, WAV and others) as the voice note instead of recording."
+                    Click="OnAttachAudioClick" />
 
                 <!-- Recording in progress. -->
                 <StackPanel x:Name="RecordingPanel" Spacing="8" Visibility="Collapsed" HorizontalAlignment="Center">
@@ -173,6 +195,13 @@
                             AutomationProperties.Name="Record voice note again"
                             AutomationProperties.HelpText="Replace the current voice note with a new recording."
                             Click="OnRecordClick" />
+                        <Button
+                            x:Name="ReplaceAudioFileButton"
+                            Content="Replace with audio file"
+                            AutomationProperties.AutomationId="ReplaceAudioFileButton"
+                            AutomationProperties.Name="Replace with audio file"
+                            AutomationProperties.HelpText="Replace the voice note with a saved audio file."
+                            Click="OnAttachAudioClick" />
                         <Button
                             x:Name="DeleteVoiceButton"
                             Content="Discard voice note"

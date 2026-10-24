@@ -16,6 +16,22 @@ public enum ImageImportAction
     RejectTooLarge,
 }
 
+/// <summary>What to do with an audio file the user wants to attach as the voice note.</summary>
+public enum AudioImportAction
+{
+    /// <summary>An MPEG-4 file whose audio is already AAC: keep the bytes untouched (no re-encoding).</summary>
+    KeepAsM4a,
+
+    /// <summary>Anything else the system can decode: transcode once to AAC-LC in MPEG-4, then check the result with <see cref="ErafMedia.CheckAudio"/>.</summary>
+    ConvertToM4a,
+
+    /// <summary>No bytes.</summary>
+    RejectEmpty,
+
+    /// <summary>Larger than <see cref="ErafMedia.MaxAudioImportSourceBytes"/>: too big to even attempt converting.</summary>
+    RejectTooLarge,
+}
+
 /// <summary>Result of checking a finished voice recording against the v1 limits and signature.</summary>
 public enum AudioCheck
 {
@@ -109,5 +125,32 @@ public static class ErafMedia
         }
 
         return IsJpeg(head) ? ImageImportAction.KeepAsJpeg : ImageImportAction.ConvertToJpeg;
+    }
+
+    /// <summary>
+    /// Largest audio file the app will try to convert. This is app policy, not a format rule: the converted
+    /// result is still held to <see cref="ErafLimits.MaxAudioBytes"/> and <see cref="ErafLimits.MaxAudioDurationMs"/>.
+    /// An uncompressed 10 minute stereo file is about 100 MB, so the source limit is deliberately larger than the payload limit.
+    /// </summary>
+    public const long MaxAudioImportSourceBytes = 512L * 1024 * 1024;
+
+    /// <summary>
+    /// Decides how to turn a chosen audio file into the voice-note payload. <paramref name="head"/> is the start of the file;
+    /// <paramref name="platformSaysAac"/> is the platform's own probe that the file is a single AAC audio stream with no video.
+    /// A kept file must still pass <see cref="CheckAudio"/>; a converted one must be planned and checked again after conversion.
+    /// </summary>
+    public static AudioImportAction PlanAudioImport(long length, ReadOnlySpan<byte> head, bool platformSaysAac)
+    {
+        if (length <= 0)
+        {
+            return AudioImportAction.RejectEmpty;
+        }
+
+        if (length > MaxAudioImportSourceBytes)
+        {
+            return AudioImportAction.RejectTooLarge;
+        }
+
+        return platformSaysAac && IsM4a(head) ? AudioImportAction.KeepAsM4a : AudioImportAction.ConvertToM4a;
     }
 }

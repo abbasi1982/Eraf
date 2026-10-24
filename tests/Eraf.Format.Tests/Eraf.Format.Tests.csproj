@@ -27,6 +27,7 @@
     <Compile Include="..\..\src\Eraf.Windows\CaptureSession.cs" Link="Linked\CaptureSession.cs" />
     <Compile Include="..\..\src\Eraf.Windows\AtomicFile.cs" Link="Linked\AtomicFile.cs" />
     <Compile Include="..\..\src\Eraf.Windows\SessionFile.cs" Link="Linked\SessionFile.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\MicrophoneChoice.cs" Link="Linked\MicrophoneChoice.cs" />
   </ItemGroup>
 
   <ItemGroup>

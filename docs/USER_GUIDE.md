@@ -6,11 +6,16 @@ An **ERAF file** (`.eraf`) keeps one photo and one spoken voice note together in
 
 1. Start the app. Choose **Import image** to pick a photo already on your computer, or **Use camera** to take one. (If you have no camera, or have not allowed it, use Import image.)
 2. If you used the camera, press **Take photo** (or **Cancel camera**, or the Esc key, to go back).
-3. Press **Record voice note** and speak. Press **Stop recording** when you are done. A note can be up to 10 minutes.
-4. Press **Play voice note** to listen. **Record voice note again** replaces it; **Discard voice note** removes it.
+3. If you have more than one microphone, pick the one to use from the **Microphone** list (it starts on "Default microphone" and remembers your choice). Then press **Record voice note** and speak. Press **Stop recording** when you are done. A note can be up to 10 minutes.
+Instead of recording, you can press **Attach audio file** and choose a saved sound file (M4A, MP3, WAV, WMA, AAC or FLAC, up to 10 minutes). The app converts it to the right format if needed; an M4A that is already AAC is used as it is. If the file cannot be used, you get a plain message and any voice note you already had stays.
+4. Press **Play voice note** to listen. **Record voice note again** or **Replace with audio file** replaces it; **Discard voice note** removes it.
 5. Press **Save ERAF file**, choose where to save it and a name, and confirm. The line under the photo changes from "Not saved yet" to "Saved: name".
 
 You can only save when the photo and a voice note are both there.
+
+## Start menu
+
+The app appears in the Start menu as **ERAF**. To keep it handy, right-click it and choose **Pin to Start** or **Pin to taskbar**.
 
 ## Open an ERAF file
 

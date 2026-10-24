@@ -171,6 +171,18 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-013 — Attach a saved audio file as the voice note
+
+**Status:** Implemented at the product owner's request (2026-10-24); awaiting Cursor review.
+
+**Context.** The format requires AAC-LC in MPEG-4 (ADR-002). Users may already have a recording in another format.
+
+**Decision.** `AudioImportService` takes a file from the picker (.m4a .mp3 .wav .wma .aac .flac .mp4). The pure rule is `ErafMedia.PlanAudioImport`: an MPEG-4 file (`ftyp`) that Windows reports as a single AAC audio stream with no video is kept byte for byte; anything else is transcoded once with `MediaTranscoder` and the recorder's `CreateM4a` profile. The length comes from the file's music properties; empty, over 512 MiB source, unreadable, under 300 ms or over 10 minutes are rejected before converting, and the result must pass `ErafMedia.CheckAudio` (64 MiB, `ftyp`). The workflow gets one event, `AudioAttached` (PhotoPreview, ReadyToSave, Saved, AudioPreview → ReadyToSave). A failed attach changes nothing, so an earlier voice note survives.
+
+**Consequences.** Attached audio is lossy-converted unless already AAC. "AAC" is the platform's probe: an HE-AAC file in M4A would be kept and would not be strictly AAC-LC (the spec's reader checks only the `ftyp` signature); this is a known gap, not verified either way. The kept file's duration comes from file properties, not from re-measuring.
+
+---
+
 ## ADR-012 — Start Android implementation (Phase 2)
 
 **Status:** **Proposed — blocked on product-owner approval.** Nothing in this entry is decided.

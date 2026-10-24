@@ -81,6 +81,9 @@ public enum SessionEvent
 
     /// <summary>The user acknowledged a save error; the media is still there to retry.</summary>
     AcknowledgeError,
+
+    /// <summary>A valid voice note was taken from an audio file (instead of being recorded) and replaces any earlier one.</summary>
+    AudioAttached,
 }
 
 /// <summary>
@@ -104,6 +107,7 @@ public enum SessionEvent
 ///   SaveSucceeded      Saving → Saved
 ///   SaveFailed         Saving → Error
 ///   AcknowledgeError   Error → ReadyToSave
+///   AudioAttached      PhotoPreview, ReadyToSave, Saved, AudioPreview → ReadyToSave
 ///
 /// Playing a voice note or a failed re-record never changes whether the held media is saved: both return
 /// to the state they started from. Making new media (a photo, a successful recording) or discarding the
@@ -202,6 +206,12 @@ public sealed class SessionWorkflow
 
             case SessionEvent.RecordingSucceeded:
                 return state == SessionState.RecordingAudio
+                    ? new Outcome(SessionState.ReadyToSave, true, true, SessionState.Idle)
+                    : null;
+
+            case SessionEvent.AudioAttached:
+                return state is SessionState.PhotoPreview or SessionState.ReadyToSave
+                    or SessionState.Saved or SessionState.AudioPreview
                     ? new Outcome(SessionState.ReadyToSave, true, true, SessionState.Idle)
                     : null;
 
