@@ -27,7 +27,7 @@ Cloud sync, accounts, and general media-management features are out of scope unl
 
 **Application features are not implemented yet.**
 
-**M0–M6 closed.** Next: **M7** — [docs/CLAUDE_CODE_BRIEF_M7.md](docs/CLAUDE_CODE_BRIEF_M7.md).
+**M0–M7 closed.** Next: **M8** — [docs/CLAUDE_CODE_BRIEF_M8.md](docs/CLAUDE_CODE_BRIEF_M8.md).
 
 Live progress: [docs/STATUS.md](docs/STATUS.md)
 
@@ -91,7 +91,8 @@ The normative specification is [docs/ERAF_FORMAT_SPEC.md](docs/ERAF_FORMAT_SPEC.
 | [docs/CLAUDE_CODE_BRIEF_M4.md](docs/CLAUDE_CODE_BRIEF_M4.md) | M4 brief (closed) |
 | [docs/CLAUDE_CODE_BRIEF_M5.md](docs/CLAUDE_CODE_BRIEF_M5.md) | M5 brief (closed) |
 | [docs/CLAUDE_CODE_BRIEF_M6.md](docs/CLAUDE_CODE_BRIEF_M6.md) | M6 brief (closed) |
-| [docs/CLAUDE_CODE_BRIEF_M7.md](docs/CLAUDE_CODE_BRIEF_M7.md) | Current implementer brief for M7 |
+| [docs/CLAUDE_CODE_BRIEF_M7.md](docs/CLAUDE_CODE_BRIEF_M7.md) | M7 brief (closed) |
+| [docs/CLAUDE_CODE_BRIEF_M8.md](docs/CLAUDE_CODE_BRIEF_M8.md) | Current implementer brief for M8 |
 
 A user guide is planned for late Phase 1.
 

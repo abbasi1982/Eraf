@@ -21,7 +21,7 @@ CRC-32 and SHA-256 in the format detect **accidental** corruption only. Anyone w
 - The format library does not decode media. The signature check (spec §8.1) is a plausibility check, not a defense against a crafted JPEG or M4A. JPEG and AAC decoding is done by the operating system's media stack, which is the real attack surface; keep Windows updated and do not add third-party decoders without review.
 - Never execute, load or interpret anything from a payload other than as image or audio data.
 - Opening a file reads straight from a `FileStream`: the reader sees the real length and allocates only after the claimed lengths are checked, so there is no separate size pre-check that could change which error is reported. A valid container whose photo cannot be decoded is reported, not shown.
-- Saving and exporting write a unique temp file next to the target, flush it, verify it, and swap it in (`AtomicFile`); a failure leaves any existing file unchanged. A temp `.partial` can remain only if the process is killed mid-write.
+- Saving and exporting write a unique temp file next to the target, flush it, verify it, and swap it in (`AtomicFile`); a failure leaves any existing file unchanged. A temp `.partial` can remain only if the process is killed mid-write; the next save to the same target name deletes such leftovers (M7: only `{target name}.{32 hex}.partial`, untouched for 5+ minutes, not open elsewhere — never any other file).
 - New files store the **save time (UTC)** as `CreatedUtcUnixMs`; this is the only metadata the app writes (see ADR-011).
 
 ## Temp files and privacy
@@ -30,7 +30,7 @@ CRC-32 and SHA-256 in the format detect **accidental** corruption only. Anyone w
 - Delete temp files on every path: success, cancel, discard, error and app close. Test cleanup, do not assume it.
 - Never write incomplete audio as a saved file. Failed saves must not damage an existing file (atomic save, spec §11).
 - The container adds no GPS, device IDs, contacts or paths. A JPEG's own Exif (which can include location) is preserved as imported; surface this to the user before any sharing feature exists, and treat stripping as a product decision.
-- Do not log photo or audio contents, file paths of user files, or bytes from `.eraf` files.
+- Do not log photo or audio contents, file paths of user files, or bytes from `.eraf` files. M7 audit: the source contains no logging or console/trace output at all; failed save/export messages (`SaveErrorText`) contain neither paths nor raw system messages. The success message names the chosen path on screen only.
 
 ## Network and telemetry
 
@@ -50,7 +50,7 @@ Maintain here as dependencies are added; each needs name, version, license and p
 | Microsoft.Windows.SDK.BuildTools | 10.0.28000.2705 | Build tooling | see package (Microsoft) |
 | Microsoft.Windows.SDK.BuildTools.WinApp | 0.7.1 | `winapp` CLI for packaged launch | see package (Microsoft) |
 
-Licenses are not yet verified from the packages; record exact license identifiers here before the M9 release gate. The project's own license is not yet declared (see README).
+M7 added no dependencies. Licenses are not yet verified from the packages; record exact license identifiers here before the M9 release gate. The project's own license is not yet declared (see README).
 
 ## Reporting
 

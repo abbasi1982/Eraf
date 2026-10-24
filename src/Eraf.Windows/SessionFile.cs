@@ -67,9 +67,9 @@ public static class SessionFile
         {
             return OpenResult.Fail($"\"{name}\" cannot be read. Check that you have permission to open it.");
         }
-        catch (IOException ex)
+        catch (IOException)
         {
-            return OpenResult.Fail($"\"{name}\" could not be read ({ex.Message}).");
+            return OpenResult.Fail($"\"{name}\" could not be read. It may be open in another app, or the drive may be unavailable.");
         }
     }
 }

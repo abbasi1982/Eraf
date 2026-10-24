@@ -405,7 +405,7 @@ public sealed partial class MainPage : Page
         catch (Exception ex)
         {
             _workflow.TryApply(SessionEvent.SaveFailed);
-            ShowError($"The file could not be saved ({ex.Message}). Nothing on disk was changed, and your photo and voice note are still here.");
+            ShowError($"The file could not be saved. {SaveErrorText.Describe(ex)} Nothing on disk was changed, and your photo and voice note are still here.");
             return;
         }
 
@@ -415,7 +415,7 @@ public sealed partial class MainPage : Page
         // ADR-008: a hint, never a reason to refuse the save.
         if (!ErafMedia.JpegHasEndMarker(session.Photo.JpegBytes))
         {
-            ShowMessage($"Saved to {path}. Note: the photo looks incomplete (it ends earlier than a complete JPEG normally does), so it may be damaged.", InfoBarSeverity.Warning);
+            ShowMessage($"Saved to {path}. The file is valid, but the photo looks incomplete (it ends earlier than a complete JPEG normally does) and may be partly missing.", InfoBarSeverity.Warning);
         }
         else
         {
@@ -466,7 +466,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception ex)
         {
-            ShowError($"The file could not be exported ({ex.Message}). Nothing on disk was changed.");
+            ShowError($"The file could not be exported. {SaveErrorText.Describe(ex)} Nothing on disk was changed.");
         }
     }
 
@@ -522,7 +522,7 @@ public sealed partial class MainPage : Page
         if (_recorder.ElapsedMs >= ErafLimits.MaxAudioDurationMs)
         {
             await FinishRecordingAsync();
-            ShowError("The recording reached the 10 minute limit and was stopped.");
+            ShowMessage("The recording reached the 10 minute limit and was stopped. It has been kept.", InfoBarSeverity.Informational);
             return;
         }
 

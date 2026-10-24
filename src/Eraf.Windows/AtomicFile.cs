@@ -38,6 +38,8 @@ public static class AtomicFile
             throw new IOException($"\"{Path.GetFileName(fullTarget)}\" already exists.");
         }
 
+        RemoveOrphanedPartials(directory, Path.GetFileName(fullTarget));
+
         // Same directory (so the swap is on one volume and atomic), unique name (so nothing is clobbered).
         string temp = Path.Combine(directory, $"{Path.GetFileName(fullTarget)}.{Guid.NewGuid():N}.partial");
         try
@@ -74,6 +76,38 @@ public static class AtomicFile
         }
     }
 
+    /// <summary>A temp file is only deleted as an orphan once it has been untouched this long (a live save rewrites it constantly).</summary>
+    internal static readonly TimeSpan OrphanAge = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Deletes leftovers of an earlier crashed save of this same target: files named exactly
+    /// <c>{target name}.{32 hex digits}.partial</c> that are old enough and not open elsewhere. Nothing else is touched.
+    /// </summary>
+    internal static void RemoveOrphanedPartials(string directory, string targetName)
+    {
+        try
+        {
+            foreach (string path in Directory.EnumerateFiles(directory, targetName + ".*.partial"))
+            {
+                string name = Path.GetFileName(path);
+                string middle = name.Substring(targetName.Length + 1, name.Length - targetName.Length - 1 - ".partial".Length);
+                if (middle.Length != 32 || !middle.All(Uri.IsHexDigit))
+                {
+                    continue;
+                }
+
+                if (DateTime.UtcNow - File.GetLastWriteTimeUtc(path) >= OrphanAge)
+                {
+                    TryDelete(path);
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Cleanup is a courtesy; it must never stop a save.
+        }
+    }
+
     private static void TryDelete(string path)
     {
         try
@@ -88,4 +122,23 @@ public static class AtomicFile
             // Best effort: a leftover .partial is harmless and fails ERAF validation if opened.
         }
     }
+}
+
+/// <summary>User-facing wording for a failed save or export. Never includes a path or a raw system message.</summary>
+public static class SaveErrorText
+{
+    private const int ErrorHandleDiskFull = unchecked((int)0x80070027);
+    private const int ErrorDiskFull = unchecked((int)0x80070070);
+
+    public static string Describe(Exception ex) => ex switch
+    {
+        UnauthorizedAccessException =>
+            "Windows did not allow writing to that file or folder. Choose a different name or folder (for example Documents), or check that it is not read-only.",
+        DirectoryNotFoundException => "That folder no longer exists. Choose another folder.",
+        PathTooLongException => "That file path is too long. Choose a shorter name or a folder closer to the top.",
+        InvalidDataException => "The file was written but did not pass the final check, so it was not kept.",
+        IOException io when io.HResult is ErrorDiskFull or ErrorHandleDiskFull => "There is not enough free space on that drive.",
+        IOException => "The file could not be written. It may be open in another app, or the drive may be unavailable.",
+        _ => "An unexpected problem stopped the save.",
+    };
 }
