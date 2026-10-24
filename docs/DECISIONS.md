@@ -171,6 +171,21 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-017 — Ribbon, checkboxes, scan progress (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review. Supersedes the menu bar of ADR-015.
+
+**Decision.**
+- **Ribbon instead of the menu bar.** WinUI 3 has no ribbon control, so the ribbon is built from a `SelectorBar` (tabs Home, Voice note, View) over a row of grouped icon-and-label buttons in a horizontally scrolling panel. Home: Start (Camera, Import image, Open ERAF, Make ERAF), Select (Select all, Select none), App (Settings, About). Voice note: Record (label becomes "Record again" once a note exists), Stop, Play/Stop, Attach audio, Trim, Discard, and the microphone list. View: Checkboxes, Subfolders, and the three theme buttons. A "Photo and file" group (Save ERAF / Make N files, Export photo, Export voice, Back to files, Dismiss error) stays visible beside every tab so saving never needs a tab change. The ribbon picks Home while choosing files and the Voice note tab once a photo is open.
+- **Buttons moved out of the photo area.** Record, Stop, Play, Attach, Trim, Discard, Save, the exports, Back to files and the error OK button now live in the ribbon; the separate "Record again" and "Replace with audio file" buttons became the one Record and Attach buttons. Under the photo only the status lines remain. The path bar (Back, Forward, Up, Refresh, folder path, name filter) stays under the ribbon.
+- **Shortcuts** belong to the page, not to buttons, so they work whichever tab is shown: Ctrl+O, I, S, M, R, T; F5; Alt+Left/Right/Up.
+- **Checkboxes.** The list uses `Multiple` selection mode (a tick box on each row) when the new option `ShowCheckboxes` is on (default), with a select-all box in the header; with it off the list is Explorer-style (Ctrl and Shift). Opening an item no longer depends on the selection: double-click and Enter act on the row they came from, because with checkboxes a double-click ticks twice. The option is in View and in Settings.
+- **Progress.** Folder reads that take more than 300 ms show an indeterminate bar above the list. Photo scans report folders looked at, photos found and entries seen (every folder, and every 200 entries inside one); if a scan takes more than 400 ms a box shows this with a Stop button. Stop is honoured inside a single huge folder too (a unit test found that the "skip unreadable folder" handler swallowed the cancel, now fixed).
+
+**Consequences.** The ribbon is custom, so its keyboard and screen reader behavior is only what the standard controls give (tab order through the buttons, names and help text set on every button); it has not been heard with Narrator. The View tab's theme buttons act as a radio group in code. A narrow window scrolls the ribbon sideways instead of collapsing groups.
+
+---
+
 ## ADR-016 — Drag and drop onto the window (requested 2026-10-24)
 
 **Status:** Implemented at the product owner's request; awaiting Cursor review.
@@ -191,7 +206,7 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 - **Selection and batch.** The file list is multi-select. **Make ERAF** with one photo or one `.eraf` behaves as before; with several items, or any folder, it starts a *batch*. `PhotoScanner` (pure) collects photos from the selection: files as given, folders searched for photos (and subfolders only if the option is on); hidden/system items and folder links skipped, duplicates removed, at most 2000 photos. The first readable photo is shown, and the existing editor is used to record, attach or trim **one** voice note. The Save button becomes "Make N ERAF files". The workflow is unchanged: the batch is `BeginSave` to `SaveSucceeded` or `SaveFailed`, so unsaved-work prompts still apply.
 - **Running.** A confirmation box states the count and asks what to do when a name already exists (skip, replace, keep both with a number), defaulting to the Settings choice. `BatchTargets.Plan` (pure) works out every output name; two photos wanting the same name in one batch always get numbers. `BatchRunner` reads one photo at a time, converts it with the usual import rules, builds the file with the same shared audio bytes, writes it with `AtomicFile` (verified, replace only when chosen) and carries on after a failure. A progress box has Stop (finishes the current photo). A summary lists made, replaced, skipped and failed photos with plain reasons. Output goes beside each photo, or into one chosen folder (Settings).
 - **Settings.** `AppOptions` (pure; unknown or damaged values fall back to defaults) stored in `LocalSettings`: theme, search subfolders (default off), default existing-file choice (default skip), output location. The Settings page (`SettingsPane`) is shown inside the main window over the content; changes apply and save at once; "Reset all settings".
-- **Menu bar.** `MenuBar` with File, Voice note, View, Tools and Help, using the same handlers as the buttons, with keyboard shortcuts (Ctrl+O, I, S, R, T, M; Alt+Left/Right/Up; F5) and enabled states mirroring the buttons. A ribbon was not used.
+- **Menu bar.** `MenuBar` (replaced by the ribbon in ADR-017) with File, Voice note, View, Tools and Help, using the same handlers as the buttons, with keyboard shortcuts (Ctrl+O, I, S, R, T, M; Alt+Left/Right/Up; F5) and enabled states mirroring the buttons. A ribbon was not used.
 - **Theme.** System, Light or Dark through `RequestedTheme` on the window root; dialogs copy it (`BatchDialogs.Themed`). Changeable from View > Theme or Settings.
 
 **Consequences.** Audio is attached once per batch; every file in a run carries identical audio bytes. A re-run with "Replace" re-makes the files. Photos that are not readable are reported, not skipped silently. Ctrl+A is not a menu shortcut (it would clash with text boxes); the list handles it itself.

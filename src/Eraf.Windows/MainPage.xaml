@@ -8,6 +8,57 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <!-- Ribbon look: big icon over a short label. -->
+        <Style x:Key="RibbonButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+            <Setter Property="Width" Value="78" />
+            <Setter Property="Height" Value="76" />
+            <Setter Property="Padding" Value="4,6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+        </Style>
+        <Style x:Key="RibbonAccentButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+            <Setter Property="Width" Value="78" />
+            <Setter Property="Height" Value="76" />
+            <Setter Property="Padding" Value="4,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+        </Style>
+        <Style x:Key="RibbonToggleStyle" TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}">
+            <Setter Property="Width" Value="78" />
+            <Setter Property="Height" Value="76" />
+            <Setter Property="Padding" Value="4,6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+        </Style>
+        <Style x:Key="RibbonIcon" TargetType="FontIcon">
+            <Setter Property="FontFamily" Value="{StaticResource SymbolThemeFontFamily}" />
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="RibbonLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="RibbonGroupLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="RibbonDivider" TargetType="Rectangle">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Height" Value="84" />
+            <Setter Property="Margin" Value="6,4" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+        </Style>
+    </Page.Resources>
+
     <Grid Background="Transparent" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,94 +66,281 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <MenuBar x:Name="MainMenu" Grid.Row="0" AutomationProperties.Name="Main menu" AutomationProperties.AutomationId="MainMenu">
-            <MenuBarItem Title="File" AutomationProperties.AutomationId="MenuFile">
-                <MenuFlyoutItem x:Name="MenuOpenEraf" Text="Open ERAF file..." Click="OnOpenFileClick" AutomationProperties.AutomationId="MenuOpenEraf">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="O" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuImport" Text="Import image..." Click="OnImportClick" AutomationProperties.AutomationId="MenuImport">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="I" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuCamera" Text="Use camera" Click="OnCameraClick" AutomationProperties.AutomationId="MenuCamera" />
-                <MenuFlyoutSeparator />
-                <MenuFlyoutItem x:Name="MenuSave" Text="Save ERAF file" Click="OnSaveClick" AutomationProperties.AutomationId="MenuSave">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="S" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuExportPhoto" Text="Export photo..." Click="OnExportPhotoClick" AutomationProperties.AutomationId="MenuExportPhoto" />
-                <MenuFlyoutItem x:Name="MenuExportAudio" Text="Export voice note..." Click="OnExportAudioClick" AutomationProperties.AutomationId="MenuExportAudio" />
-                <MenuFlyoutSeparator />
-                <MenuFlyoutItem x:Name="MenuBackToFiles" Text="Back to files" Click="OnDiscardClick" AutomationProperties.AutomationId="MenuBackToFiles" />
-                <MenuFlyoutItem x:Name="MenuExit" Text="Exit" Click="OnMenuExitClick" AutomationProperties.AutomationId="MenuExit" />
-            </MenuBarItem>
-            <MenuBarItem Title="Voice note" AutomationProperties.AutomationId="MenuVoice">
-                <MenuFlyoutItem x:Name="MenuRecord" Text="Record voice note" Click="OnRecordClick" AutomationProperties.AutomationId="MenuRecord">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="R" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuStop" Text="Stop recording" Click="OnStopRecordClick" AutomationProperties.AutomationId="MenuStop" />
-                <MenuFlyoutItem x:Name="MenuPlay" Text="Play or stop voice note" Click="OnPlayClick" AutomationProperties.AutomationId="MenuPlay" />
-                <MenuFlyoutSeparator />
-                <MenuFlyoutItem x:Name="MenuAttach" Text="Attach audio file..." Click="OnAttachAudioClick" AutomationProperties.AutomationId="MenuAttach" />
-                <MenuFlyoutItem x:Name="MenuTrim" Text="Trim voice note..." Click="OnTrimClick" AutomationProperties.AutomationId="MenuTrim">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="T" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuDiscardVoice" Text="Discard voice note" Click="OnDeleteVoiceClick" AutomationProperties.AutomationId="MenuDiscardVoice" />
-            </MenuBarItem>
-            <MenuBarItem Title="View" AutomationProperties.AutomationId="MenuView">
-                <MenuFlyoutItem x:Name="MenuBack" Text="Back" Click="OnBackNavClick" AutomationProperties.AutomationId="MenuBack" KeyboardAcceleratorTextOverride="Alt+Left">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Menu" Key="Left" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuForward" Text="Forward" Click="OnForwardNavClick" AutomationProperties.AutomationId="MenuForward" KeyboardAcceleratorTextOverride="Alt+Right">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Menu" Key="Right" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuUp" Text="Up one folder" Click="OnUpNavClick" AutomationProperties.AutomationId="MenuUp" KeyboardAcceleratorTextOverride="Alt+Up">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Menu" Key="Up" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuRefresh" Text="Refresh" Click="OnRefreshNavClick" AutomationProperties.AutomationId="MenuRefresh">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Key="F5" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="MenuSelectAll" Text="Select all" Click="OnMenuSelectAllClick" AutomationProperties.AutomationId="MenuSelectAll" KeyboardAcceleratorTextOverride="Ctrl+A" />
-                <MenuFlyoutSeparator />
-                <MenuFlyoutSubItem Text="Theme" AutomationProperties.AutomationId="MenuTheme">
-                    <RadioMenuFlyoutItem x:Name="MenuThemeSystem" Text="Use my Windows setting" GroupName="Theme" Tag="System" Click="OnMenuThemeClick" AutomationProperties.AutomationId="MenuThemeSystem" />
-                    <RadioMenuFlyoutItem x:Name="MenuThemeLight" Text="Light" GroupName="Theme" Tag="Light" Click="OnMenuThemeClick" AutomationProperties.AutomationId="MenuThemeLight" />
-                    <RadioMenuFlyoutItem x:Name="MenuThemeDark" Text="Dark" GroupName="Theme" Tag="Dark" Click="OnMenuThemeClick" AutomationProperties.AutomationId="MenuThemeDark" />
-                </MenuFlyoutSubItem>
-            </MenuBarItem>
-            <MenuBarItem Title="Tools" AutomationProperties.AutomationId="MenuTools">
-                <MenuFlyoutItem x:Name="MenuMakeEraf" Text="Make ERAF from selection" Click="OnMakeErafClick" AutomationProperties.AutomationId="MenuMakeEraf">
-                    <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="M" /></MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-                <MenuFlyoutSeparator />
-                <MenuFlyoutItem x:Name="MenuSettings" Text="Settings..." Click="OnMenuSettingsClick" AutomationProperties.AutomationId="MenuSettings" />
-            </MenuBarItem>
-            <MenuBarItem Title="Help" AutomationProperties.AutomationId="MenuHelp">
-                <MenuFlyoutItem x:Name="MenuAbout" Text="About ERAF" Click="OnMenuAboutClick" AutomationProperties.AutomationId="MenuAbout" />
-            </MenuBarItem>
-        </MenuBar>
+        <!-- Ribbon: tabs on top, the commands of the chosen tab below. -->
+        <StackPanel Grid.Row="0" Background="{ThemeResource LayerFillColorDefaultBrush}" AutomationProperties.AutomationId="Ribbon" AutomationProperties.Name="Ribbon">
+            <SelectorBar
+                x:Name="RibbonTabs"
+                Margin="8,2,8,0"
+                SelectionChanged="OnRibbonTabChanged"
+                AutomationProperties.AutomationId="RibbonTabs"
+                AutomationProperties.Name="Ribbon tabs">
+                <SelectorBarItem x:Name="TabHome" Text="Home" IsSelected="True" AutomationProperties.AutomationId="TabHome" />
+                <SelectorBarItem x:Name="TabVoice" Text="Voice note" AutomationProperties.AutomationId="TabVoice" />
+                <SelectorBarItem x:Name="TabView" Text="View" AutomationProperties.AutomationId="TabView" />
+            </SelectorBar>
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Disabled"
+                HorizontalScrollMode="Auto"
+                VerticalScrollMode="Disabled"
+                Padding="8,0,8,4">
+                <StackPanel Orientation="Horizontal">
+                <Grid>
+                    <!-- Home: start something, select, save and export, settings. -->
+                    <StackPanel x:Name="HomeTab" Orientation="Horizontal">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="CaptureButton" Style="{StaticResource RibbonButtonStyle}" Click="OnCameraClick"
+                                    ToolTipService.ToolTip="Use camera"
+                                    AutomationProperties.AutomationId="CameraButton" AutomationProperties.Name="Use camera"
+                                    AutomationProperties.HelpText="Show the camera and take a photo.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE722;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Camera" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="ImportButton" Style="{StaticResource RibbonButtonStyle}" Click="OnImportClick"
+                                    ToolTipService.ToolTip="Import image from anywhere (Ctrl+I)"
+                                    AutomationProperties.AutomationId="ImportButton" AutomationProperties.Name="Import image"
+                                    AutomationProperties.HelpText="Choose a photo file from any folder.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE8B9;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Import image" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="OpenFileButton" Style="{StaticResource RibbonButtonStyle}" Click="OnOpenFileClick"
+                                    ToolTipService.ToolTip="Open ERAF file from anywhere (Ctrl+O)"
+                                    AutomationProperties.AutomationId="OpenFileButton" AutomationProperties.Name="Open ERAF file"
+                                    AutomationProperties.HelpText="Choose a saved ERAF file from any folder.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE8E5;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Open ERAF" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="MakeErafButton" Style="{StaticResource RibbonAccentButtonStyle}" Click="OnMakeErafClick"
+                                    ToolTipService.ToolTip="Add a voice note to the selected photos or folders and save ERAF files (Ctrl+M)"
+                                    AutomationProperties.AutomationId="MakeErafButton" AutomationProperties.Name="Make ERAF from selection"
+                                    AutomationProperties.HelpText="Select photos or folders in the list first. You can then record or attach one voice note and save everything as ERAF files.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE720;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Make ERAF" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Start" Style="{StaticResource RibbonGroupLabel}" />
+                        </StackPanel>
+                        <Rectangle Style="{StaticResource RibbonDivider}" />
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="SelectAllButton" Style="{StaticResource RibbonButtonStyle}" Click="OnSelectAllClick"
+                                    ToolTipService.ToolTip="Select every item in the list"
+                                    AutomationProperties.AutomationId="SelectAllButton" AutomationProperties.Name="Select all"
+                                    AutomationProperties.HelpText="Select every item in this folder.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE8B3;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Select all" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="SelectNoneButton" Style="{StaticResource RibbonButtonStyle}" Click="OnSelectNoneClick"
+                                    ToolTipService.ToolTip="Clear the selection"
+                                    AutomationProperties.AutomationId="SelectNoneButton" AutomationProperties.Name="Select none"
+                                    AutomationProperties.HelpText="Clear the selection.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE894;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Select none" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Select" Style="{StaticResource RibbonGroupLabel}" />
+                        </StackPanel>
+                        <Rectangle Style="{StaticResource RibbonDivider}" />
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="SettingsButton" Style="{StaticResource RibbonButtonStyle}" Click="OnSettingsClick"
+                                    ToolTipService.ToolTip="Theme, folder scanning and batch options"
+                                    AutomationProperties.AutomationId="SettingsButton" AutomationProperties.Name="Settings"
+                                    AutomationProperties.HelpText="Open the Settings page.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE713;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Settings" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="AboutButton" Style="{StaticResource RibbonButtonStyle}" Click="OnAboutClick"
+                                    ToolTipService.ToolTip="About ERAF"
+                                    AutomationProperties.AutomationId="AboutButton" AutomationProperties.Name="About ERAF"
+                                    AutomationProperties.HelpText="Show what ERAF is.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE946;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="About" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="App" Style="{StaticResource RibbonGroupLabel}" />
+                        </StackPanel>
+                    </StackPanel>
 
-        <!-- Top bar: folder navigation on the left, the address, a name filter, then the ways to start an ERAF file. -->
-        <Grid
-            Grid.Row="1"
-            Padding="12,8"
-            ColumnSpacing="6"
-            Background="{ThemeResource LayerFillColorDefaultBrush}">
+                    <!-- Voice note: record, play, bring in or cut an audio file, choose the microphone. -->
+                    <StackPanel x:Name="VoiceTab" Orientation="Horizontal" Visibility="Collapsed">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="RecordButton" Style="{StaticResource RibbonAccentButtonStyle}" Click="OnRecordClick"
+                                    ToolTipService.ToolTip="Record a voice note (Ctrl+R)"
+                                    AutomationProperties.AutomationId="RecordButton" AutomationProperties.Name="Record voice note"
+                                    AutomationProperties.HelpText="Start recording from the microphone. If there is already a voice note, the new one replaces it.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE720;" Style="{StaticResource RibbonIcon}" /><TextBlock x:Name="RecordLabel" Text="Record" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="StopRecordButton" Style="{StaticResource RibbonButtonStyle}" Click="OnStopRecordClick" IsEnabled="False"
+                                    ToolTipService.ToolTip="Stop recording"
+                                    AutomationProperties.AutomationId="StopRecordButton" AutomationProperties.Name="Stop recording"
+                                    AutomationProperties.HelpText="Finish the voice note.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE71A;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Stop" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="PlayButton" Style="{StaticResource RibbonButtonStyle}" Click="OnPlayClick" IsEnabled="False"
+                                    ToolTipService.ToolTip="Play or stop the voice note"
+                                    AutomationProperties.AutomationId="PlayButton"
+                                    AutomationProperties.HelpText="Play or stop the voice note.">
+                                    <StackPanel Spacing="4"><FontIcon x:Name="PlayGlyph" Glyph="&#xE768;" Style="{StaticResource RibbonIcon}" /><TextBlock x:Name="PlayLabel" Text="Play" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Record and listen" Style="{StaticResource RibbonGroupLabel}" />
+                        </StackPanel>
+                        <Rectangle Style="{StaticResource RibbonDivider}" />
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="AttachAudioButton" Style="{StaticResource RibbonButtonStyle}" Click="OnAttachAudioClick" IsEnabled="False"
+                                    ToolTipService.ToolTip="Use a saved audio file as the voice note"
+                                    AutomationProperties.AutomationId="AttachAudioButton" AutomationProperties.Name="Attach audio file"
+                                    AutomationProperties.HelpText="Use a saved audio file (M4A, MP3, WAV and others) as the voice note instead of recording. It replaces any voice note you already have.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE723;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Attach audio" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="TrimButton" Style="{StaticResource RibbonButtonStyle}" Click="OnTrimClick" IsEnabled="False"
+                                    ToolTipService.ToolTip="Cut the start or end off the voice note (Ctrl+T)"
+                                    AutomationProperties.AutomationId="TrimButton" AutomationProperties.Name="Trim voice note"
+                                    AutomationProperties.HelpText="Cut the start or end off the voice note.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE8C6;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Trim" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="DeleteVoiceButton" Style="{StaticResource RibbonButtonStyle}" Click="OnDeleteVoiceClick" IsEnabled="False"
+                                    ToolTipService.ToolTip="Remove the voice note"
+                                    AutomationProperties.AutomationId="DeleteVoiceButton" AutomationProperties.Name="Discard voice note"
+                                    AutomationProperties.HelpText="Remove the voice note so a new one can be recorded.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE74D;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Discard" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Audio file" Style="{StaticResource RibbonGroupLabel}" />
+                        </StackPanel>
+                        <Rectangle Style="{StaticResource RibbonDivider}" />
+                        <StackPanel>
+                            <ComboBox
+                                x:Name="MicrophoneCombo"
+                                Width="260"
+                                Margin="4,22,4,0"
+                                DisplayMemberPath="Name"
+                                AutomationProperties.AutomationId="MicrophoneCombo"
+                                AutomationProperties.Name="Microphone"
+                                AutomationProperties.HelpText="Choose which microphone records the voice note."
+                                DropDownOpened="OnMicrophoneDropDownOpened"
+                                SelectionChanged="OnMicrophoneSelectionChanged" />
+                            <TextBlock Text="Microphone" Style="{StaticResource RibbonGroupLabel}" Margin="0,22,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- View: checkboxes, subfolder search, theme. -->
+                    <StackPanel x:Name="ViewTab" Orientation="Horizontal" Visibility="Collapsed">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <ToggleButton
+                                    x:Name="CheckboxToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnCheckboxToggleClick"
+                                    ToolTipService.ToolTip="Show a checkbox next to every file and folder"
+                                    AutomationProperties.AutomationId="CheckboxToggle" AutomationProperties.Name="Show checkboxes"
+                                    AutomationProperties.HelpText="Show a checkbox next to every file and folder so several can be ticked.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE73A;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Checkboxes" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </ToggleButton>
+                                <ToggleButton
+                                    x:Name="SubfoldersToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnSubfoldersToggleClick"
+                                    ToolTipService.ToolTip="Also look in the subfolders when a folder is selected"
+                                    AutomationProperties.AutomationId="SubfoldersToggle" AutomationProperties.Name="Search subfolders"
+                                    AutomationProperties.HelpText="When a folder is selected for Make ERAF, also look in the folders inside it.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE8B7;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Subfolders" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </ToggleButton>
+                            </StackPanel>
+                            <TextBlock Text="Selection" Style="{StaticResource RibbonGroupLabel}" />
+                        </StackPanel>
+                        <Rectangle Style="{StaticResource RibbonDivider}" />
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <ToggleButton
+                                    x:Name="ThemeSystemToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnThemeToggleClick" Tag="System"
+                                    ToolTipService.ToolTip="Use my Windows light or dark setting"
+                                    AutomationProperties.AutomationId="ThemeSystemToggle" AutomationProperties.Name="Theme: Windows setting">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE7F4;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Windows" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </ToggleButton>
+                                <ToggleButton
+                                    x:Name="ThemeLightToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnThemeToggleClick" Tag="Light"
+                                    ToolTipService.ToolTip="Light theme"
+                                    AutomationProperties.AutomationId="ThemeLightToggle" AutomationProperties.Name="Theme: Light">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE706;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Light" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </ToggleButton>
+                                <ToggleButton
+                                    x:Name="ThemeDarkToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnThemeToggleClick" Tag="Dark"
+                                    ToolTipService.ToolTip="Dark theme"
+                                    AutomationProperties.AutomationId="ThemeDarkToggle" AutomationProperties.Name="Theme: Dark">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE708;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Dark" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </ToggleButton>
+                            </StackPanel>
+                            <TextBlock Text="Theme" Style="{StaticResource RibbonGroupLabel}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+                        <Rectangle Style="{StaticResource RibbonDivider}" />
+                        <StackPanel x:Name="FileGroup">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="SaveButton" Style="{StaticResource RibbonAccentButtonStyle}" Click="OnSaveClick" IsEnabled="False"
+                                    ToolTipService.ToolTip="Save the photo and voice note as an ERAF file (Ctrl+S)"
+                                    AutomationProperties.AutomationId="SaveButton" AutomationProperties.Name="Save ERAF file"
+                                    AutomationProperties.HelpText="Save the photo and voice note as one ERAF file. Available when both are present.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE74E;" Style="{StaticResource RibbonIcon}" /><TextBlock x:Name="SaveLabel" Text="Save ERAF" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="ExportPhotoButton" Style="{StaticResource RibbonButtonStyle}" Click="OnExportPhotoClick"
+                                    ToolTipService.ToolTip="Save the photo alone as a JPEG file"
+                                    AutomationProperties.AutomationId="ExportPhotoButton" AutomationProperties.Name="Export photo"
+                                    AutomationProperties.HelpText="Save the photo alone as a JPEG file.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE91B;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Export photo" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="ExportAudioButton" Style="{StaticResource RibbonButtonStyle}" Click="OnExportAudioClick"
+                                    ToolTipService.ToolTip="Save the voice note alone as an M4A file"
+                                    AutomationProperties.AutomationId="ExportAudioButton" AutomationProperties.Name="Export voice note"
+                                    AutomationProperties.HelpText="Save the voice note alone as an M4A file.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE8D6;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Export voice" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="DiscardButton" Style="{StaticResource RibbonButtonStyle}" Click="OnDiscardClick"
+                                    ToolTipService.ToolTip="Close this photo and go back to the file list"
+                                    AutomationProperties.AutomationId="DiscardButton" AutomationProperties.Name="Back to files"
+                                    AutomationProperties.HelpText="Close this photo and voice note and go back to the file list. Asks first if they are not saved.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE8B7;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Back to files" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="DismissErrorButton" Style="{StaticResource RibbonButtonStyle}" Click="OnDismissErrorClick" IsEnabled="False"
+                                    ToolTipService.ToolTip="Close the save error and keep working"
+                                    AutomationProperties.AutomationId="DismissErrorButton" AutomationProperties.Name="OK, dismiss save error"
+                                    AutomationProperties.HelpText="Close the error and keep working with the photo and voice note.">
+                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE10B;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Dismiss error" Style="{StaticResource RibbonLabel}" /></StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Photo and file" Style="{StaticResource RibbonGroupLabel}" />
+                        </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </StackPanel>
+
+        <!-- Path bar: where you are, and a name filter. -->
+        <Grid Grid.Row="1" Padding="12,8" ColumnSpacing="6" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="220" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="260" />
             </Grid.ColumnDefinitions>
 
             <Button
                 x:Name="BackNavButton" Grid.Column="0" Width="40" Height="36" Padding="0"
                 Click="OnBackNavClick"
-                ToolTipService.ToolTip="Back"
+                ToolTipService.ToolTip="Back (Alt+Left)"
                 AutomationProperties.AutomationId="BackNavButton"
                 AutomationProperties.Name="Back"
                 AutomationProperties.HelpText="Go to the previous folder.">
@@ -111,7 +349,7 @@
             <Button
                 x:Name="ForwardNavButton" Grid.Column="1" Width="40" Height="36" Padding="0"
                 Click="OnForwardNavClick"
-                ToolTipService.ToolTip="Forward"
+                ToolTipService.ToolTip="Forward (Alt+Right)"
                 AutomationProperties.AutomationId="ForwardNavButton"
                 AutomationProperties.Name="Forward"
                 AutomationProperties.HelpText="Go to the next folder.">
@@ -120,7 +358,7 @@
             <Button
                 x:Name="UpNavButton" Grid.Column="2" Width="40" Height="36" Padding="0"
                 Click="OnUpNavClick"
-                ToolTipService.ToolTip="Up one folder"
+                ToolTipService.ToolTip="Up one folder (Alt+Up)"
                 AutomationProperties.AutomationId="UpNavButton"
                 AutomationProperties.Name="Up one folder"
                 AutomationProperties.HelpText="Go to the folder that contains this one.">
@@ -129,7 +367,7 @@
             <Button
                 x:Name="RefreshNavButton" Grid.Column="3" Width="40" Height="36" Padding="0"
                 Click="OnRefreshNavClick"
-                ToolTipService.ToolTip="Refresh"
+                ToolTipService.ToolTip="Refresh (F5)"
                 AutomationProperties.AutomationId="RefreshNavButton"
                 AutomationProperties.Name="Refresh"
                 AutomationProperties.HelpText="Read this folder again.">
@@ -150,47 +388,6 @@
                 AutomationProperties.AutomationId="FilterBox"
                 AutomationProperties.Name="Filter by name"
                 AutomationProperties.HelpText="Show only the items in this folder whose name contains what you type." />
-
-            <Button
-                x:Name="CaptureButton" Grid.Column="6" Width="40" Height="36" Padding="0"
-                Click="OnCameraClick"
-                ToolTipService.ToolTip="Use camera"
-                AutomationProperties.AutomationId="CameraButton"
-                AutomationProperties.Name="Use camera"
-                AutomationProperties.HelpText="Show the camera and take a photo.">
-                <FontIcon Glyph="&#xE722;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-            </Button>
-            <Button
-                x:Name="ImportButton" Grid.Column="7" Width="40" Height="36" Padding="0"
-                Click="OnImportClick"
-                ToolTipService.ToolTip="Import image from anywhere"
-                AutomationProperties.AutomationId="ImportButton"
-                AutomationProperties.Name="Import image"
-                AutomationProperties.HelpText="Choose a photo file from any folder.">
-                <FontIcon Glyph="&#xE8B9;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-            </Button>
-            <Button
-                x:Name="OpenFileButton" Grid.Column="8" Width="40" Height="36" Padding="0"
-                Click="OnOpenFileClick"
-                ToolTipService.ToolTip="Open ERAF file from anywhere"
-                AutomationProperties.AutomationId="OpenFileButton"
-                AutomationProperties.Name="Open ERAF file"
-                AutomationProperties.HelpText="Choose a saved ERAF file from any folder.">
-                <FontIcon Glyph="&#xE8E5;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-            </Button>
-            <Button
-                x:Name="MakeErafButton" Grid.Column="9" Height="36"
-                Style="{StaticResource AccentButtonStyle}"
-                Click="OnMakeErafClick"
-                ToolTipService.ToolTip="Add a voice note to the selected photo and save it as an ERAF file"
-                AutomationProperties.AutomationId="MakeErafButton"
-                AutomationProperties.Name="Make ERAF from selected photo"
-                AutomationProperties.HelpText="Select a photo in the list first. You can then record or attach a voice note and save everything as one ERAF file.">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE720;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                    <TextBlock Text="Make ERAF" />
-                </StackPanel>
-            </Button>
         </Grid>
 
         <Grid Grid.Row="2">
@@ -208,244 +405,119 @@
             </Border>
 
             <!-- Right: the files of the current folder, or the photo and voice note being worked on. -->
-            <Grid Grid.Column="1" Padding="16" RowSpacing="12">
+            <Grid Grid.Column="1" Padding="16,8,16,16" RowSpacing="8">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
+                <!-- Shown while a big folder is being read. -->
+                <ProgressBar
+                    x:Name="FolderLoading"
+                    Grid.Row="0"
+                    IsIndeterminate="True"
+                    Visibility="Collapsed"
+                    AutomationProperties.AutomationId="FolderLoading"
+                    AutomationProperties.Name="Reading the folder" />
+
                 <InfoBar
                     x:Name="MessageBar"
-                    Grid.Row="0"
+                    Grid.Row="1"
                     IsOpen="False"
                     IsClosable="True"
                     AutomationProperties.AutomationId="MessageBar"
                     AutomationProperties.Name="Message"
                     Severity="Error" />
 
-                <local:FileListPane x:Name="FileList" x:FieldModifier="private" Grid.Row="1" />
+                <local:FileListPane x:Name="FileList" x:FieldModifier="private" Grid.Row="2" />
 
-        <!-- Live camera preview. -->
-        <Grid x:Name="CameraPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <MediaPlayerElement
-                x:Name="CameraPreview"
-                AutomationProperties.Name="Camera preview"
-                Grid.Row="0"
-                Stretch="Uniform"
-                AutoPlay="True"
-                AreTransportControlsEnabled="False" />
-            <StackPanel
-                Grid.Row="1"
-                Orientation="Horizontal"
-                Spacing="12"
-                HorizontalAlignment="Center">
-                <Button
-                    x:Name="TakePhotoButton"
-                    Content="Take photo"
-                    AutomationProperties.AutomationId="TakePhotoButton"
-                    AutomationProperties.Name="Take photo"
-                    AutomationProperties.HelpText="Capture the photo shown by the camera."
-                    Style="{StaticResource AccentButtonStyle}"
-                    Click="OnTakePhotoClick" />
-                <Button
-                    x:Name="CancelCameraButton"
-                    Content="Cancel"
-                    AutomationProperties.AutomationId="CancelCameraButton"
-                    AutomationProperties.Name="Cancel camera"
-                    AutomationProperties.HelpText="Close the camera without taking a photo. Shortcut: Escape."
-                    Click="OnCancelCameraClick">
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="Escape" />
-                    </Button.KeyboardAccelerators>
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <!-- Photo preview of exactly the bytes held in the session, with the voice note controls. -->
-        <Grid x:Name="PhotoPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <Image
-                x:Name="PhotoImage"
-                Grid.Row="0"
-                Stretch="Uniform"
-                AutomationProperties.Name="Photo preview" />
-            <TextBlock
-                x:Name="PhotoInfo"
-                Grid.Row="1"
-                HorizontalAlignment="Center"
-                AutomationProperties.AutomationId="PhotoInfo" />
-
-            <StackPanel Grid.Row="2" Spacing="8" HorizontalAlignment="Center">
-                <!-- Which microphone the next recording uses. Hidden while recording. -->
-                <ComboBox
-                    x:Name="MicrophoneCombo"
-                    Header="Microphone"
-                    MinWidth="280"
-                    HorizontalAlignment="Center"
-                    DisplayMemberPath="Name"
-                    AutomationProperties.AutomationId="MicrophoneCombo"
-                    AutomationProperties.Name="Microphone"
-                    AutomationProperties.HelpText="Choose which microphone records the voice note."
-                    DropDownOpened="OnMicrophoneDropDownOpened"
-                    SelectionChanged="OnMicrophoneSelectionChanged" />
-
-                <!-- No voice note yet. -->
-                <Button
-                    x:Name="RecordButton"
-                    Content="Record voice note"
-                    HorizontalAlignment="Center"
-                    AutomationProperties.AutomationId="RecordButton"
-                    AutomationProperties.Name="Record voice note"
-                    AutomationProperties.HelpText="Start recording from the microphone."
-                    Style="{StaticResource AccentButtonStyle}"
-                    Click="OnRecordClick" />
-
-                <Button
-                    x:Name="AttachAudioButton"
-                    Content="Attach audio file"
-                    HorizontalAlignment="Center"
-                    AutomationProperties.AutomationId="AttachAudioButton"
-                    AutomationProperties.Name="Attach audio file"
-                    AutomationProperties.HelpText="Use a saved audio file (M4A, MP3, WAV and others) as the voice note instead of recording."
-                    Click="OnAttachAudioClick" />
-
-                <!-- Recording in progress. -->
-                <StackPanel x:Name="RecordingPanel" Spacing="8" Visibility="Collapsed" HorizontalAlignment="Center">
-                    <TextBlock
-                        x:Name="RecordingStatus"
-                        HorizontalAlignment="Center"
-                        AutomationProperties.AutomationId="RecordingStatus" />
-                    <Button
-                        x:Name="StopRecordButton"
-                        Content="Stop recording"
-                        HorizontalAlignment="Center"
-                        AutomationProperties.AutomationId="StopRecordButton"
-                        AutomationProperties.Name="Stop recording"
-                        AutomationProperties.HelpText="Finish the voice note."
-                        Style="{StaticResource AccentButtonStyle}"
-                        Click="OnStopRecordClick" />
-                </StackPanel>
-
-                <!-- A voice note is held in the session. -->
-                <StackPanel x:Name="VoicePanel" Spacing="8" Visibility="Collapsed" HorizontalAlignment="Center">
-                    <TextBlock
-                        x:Name="VoiceInfo"
-                        HorizontalAlignment="Center"
-                        AutomationProperties.AutomationId="VoiceInfo" AutomationProperties.LiveSetting="Polite" />
-                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                <!-- Live camera preview. -->
+                <Grid x:Name="CameraPanel" Grid.Row="2" Visibility="Collapsed" RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <MediaPlayerElement
+                        x:Name="CameraPreview"
+                        AutomationProperties.Name="Camera preview"
+                        Grid.Row="0"
+                        Stretch="Uniform"
+                        AutoPlay="True"
+                        AreTransportControlsEnabled="False" />
+                    <StackPanel
+                        Grid.Row="1"
+                        Orientation="Horizontal"
+                        Spacing="12"
+                        HorizontalAlignment="Center">
                         <Button
-                            x:Name="PlayButton"
-                            Content="Play"
-                            AutomationProperties.AutomationId="PlayButton"
-                            AutomationProperties.HelpText="Play or stop the voice note."
-                            Click="OnPlayClick" />
+                            x:Name="TakePhotoButton"
+                            Content="Take photo"
+                            AutomationProperties.AutomationId="TakePhotoButton"
+                            AutomationProperties.Name="Take photo"
+                            AutomationProperties.HelpText="Capture the photo shown by the camera."
+                            Style="{StaticResource AccentButtonStyle}"
+                            Click="OnTakePhotoClick" />
                         <Button
-                            x:Name="RerecordButton"
-                            Content="Record again"
-                            AutomationProperties.AutomationId="RerecordButton"
-                            AutomationProperties.Name="Record voice note again"
-                            AutomationProperties.HelpText="Replace the current voice note with a new recording."
-                            Click="OnRecordClick" />
-                        <Button
-                            x:Name="ReplaceAudioFileButton"
-                            Content="Replace with audio file"
-                            AutomationProperties.AutomationId="ReplaceAudioFileButton"
-                            AutomationProperties.Name="Replace with audio file"
-                            AutomationProperties.HelpText="Replace the voice note with a saved audio file."
-                            Click="OnAttachAudioClick" />
-                        <Button
-                            x:Name="TrimButton"
-                            Content="Trim voice note"
-                            AutomationProperties.AutomationId="TrimButton"
-                            AutomationProperties.Name="Trim voice note"
-                            AutomationProperties.HelpText="Cut the start or end off the voice note."
-                            Click="OnTrimClick" />
-                        <Button
-                            x:Name="DeleteVoiceButton"
-                            Content="Discard voice note"
-                            AutomationProperties.AutomationId="DeleteVoiceButton"
-                            AutomationProperties.Name="Discard voice note"
-                            AutomationProperties.HelpText="Remove the voice note so a new one can be recorded."
-                            Click="OnDeleteVoiceClick" />
+                            x:Name="CancelCameraButton"
+                            Content="Cancel"
+                            AutomationProperties.AutomationId="CancelCameraButton"
+                            AutomationProperties.Name="Cancel camera"
+                            AutomationProperties.HelpText="Close the camera without taking a photo. Shortcut: Escape."
+                            Click="OnCancelCameraClick">
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="Escape" />
+                            </Button.KeyboardAccelerators>
+                        </Button>
                     </StackPanel>
-                </StackPanel>
-            </StackPanel>
+                </Grid>
 
-            <!-- Whether what is held is on disk: "Not saved yet", "Saving...", "Saved: name", or the error state. -->
-            <TextBlock
-                x:Name="SaveStatus"
-                Grid.Row="3"
-                HorizontalAlignment="Center"
-                AutomationProperties.AutomationId="SaveStatus" AutomationProperties.LiveSetting="Polite" />
+                <!-- Photo preview of exactly the bytes held in the session. The commands live in the ribbon. -->
+                <Grid x:Name="PhotoPanel" Grid.Row="2" Visibility="Collapsed" RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Image
+                        x:Name="PhotoImage"
+                        Grid.Row="0"
+                        Stretch="Uniform"
+                        AutomationProperties.Name="Photo preview" />
+                    <TextBlock
+                        x:Name="PhotoInfo"
+                        Grid.Row="1"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AutomationId="PhotoInfo" />
 
-            <StackPanel
-                Grid.Row="4"
-                Orientation="Horizontal"
-                Spacing="12"
-                HorizontalAlignment="Center">
-                <!-- Enabled only in ReadyToSave (photo + valid voice note). -->
-                <Button
-                    x:Name="SaveButton"
-                    Content="Save ERAF file"
-                    IsEnabled="False"
-                    AutomationProperties.AutomationId="SaveButton"
-                    AutomationProperties.Name="Save ERAF file"
-                    AutomationProperties.HelpText="Save the photo and voice note as one ERAF file. Available when both are present."
-                    Style="{StaticResource AccentButtonStyle}"
-                    Click="OnSaveClick" />
-                <!-- Shown only after a failed save. The photo and voice note are still held. -->
-                <Button
-                    x:Name="DismissErrorButton"
-                    Content="OK"
-                    Visibility="Collapsed"
-                    AutomationProperties.AutomationId="DismissErrorButton"
-                    AutomationProperties.Name="OK, dismiss save error"
-                    AutomationProperties.HelpText="Close the error and keep working with the photo and voice note."
-                    Click="OnDismissErrorClick" />
-            </StackPanel>
+                    <StackPanel Grid.Row="2" Spacing="4" HorizontalAlignment="Center">
+                        <!-- Recording in progress. -->
+                        <StackPanel x:Name="RecordingPanel" Visibility="Collapsed" HorizontalAlignment="Center">
+                            <TextBlock
+                                x:Name="RecordingStatus"
+                                HorizontalAlignment="Center"
+                                AutomationProperties.AutomationId="RecordingStatus" />
+                        </StackPanel>
+                        <!-- A voice note is held in the session. -->
+                        <StackPanel x:Name="VoicePanel" Visibility="Collapsed" HorizontalAlignment="Center">
+                            <TextBlock
+                                x:Name="VoiceInfo"
+                                HorizontalAlignment="Center"
+                                AutomationProperties.AutomationId="VoiceInfo" AutomationProperties.LiveSetting="Polite" />
+                        </StackPanel>
+                    </StackPanel>
 
-            <StackPanel
-                Grid.Row="5"
-                Orientation="Horizontal"
-                Spacing="12"
-                HorizontalAlignment="Center">
-                <Button
-                    x:Name="ExportPhotoButton"
-                    Content="Export photo"
-                    AutomationProperties.AutomationId="ExportPhotoButton"
-                    AutomationProperties.Name="Export photo"
-                    AutomationProperties.HelpText="Save the photo alone as a JPEG file."
-                    Click="OnExportPhotoClick" />
-                <Button
-                    x:Name="ExportAudioButton"
-                    Content="Export voice note"
-                    AutomationProperties.AutomationId="ExportAudioButton"
-                    AutomationProperties.Name="Export voice note"
-                    AutomationProperties.HelpText="Save the voice note alone as an M4A file."
-                    Click="OnExportAudioClick" />
-                <Button
-                    x:Name="DiscardButton"
-                    Content="Back to files"
-                    AutomationProperties.AutomationId="DiscardButton"
-                    AutomationProperties.Name="Back to files"
-                    AutomationProperties.HelpText="Close this photo and voice note and go back to the file list. Asks first if they are not saved."
-                    Click="OnDiscardClick" />
-            </StackPanel>
-        </Grid>
+                    <!-- Whether what is held is on disk: "Not saved yet", "Saving...", "Saved: name", or the error state. -->
+                    <TextBlock
+                        x:Name="SaveStatus"
+                        Grid.Row="3"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AutomationId="SaveStatus" AutomationProperties.LiveSetting="Polite" />
+                </Grid>
 
                 <!-- Settings page: covers the file list and the editor while it is open. -->
-                <local:SettingsPane x:Name="SettingsView" Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" />
+                <local:SettingsPane x:Name="SettingsView" Grid.Row="1" Grid.RowSpan="2" Visibility="Collapsed" />
             </Grid>
         </Grid>
     </Grid>

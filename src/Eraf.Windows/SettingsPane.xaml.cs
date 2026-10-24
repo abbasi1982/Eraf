@@ -26,6 +26,7 @@ public sealed partial class SettingsPane : UserControl
         {
             ThemeChoices.SelectedIndex = (int)options.Theme;
             SubfoldersSwitch.IsOn = options.ScanSubfolders;
+            CheckboxesSwitch.IsOn = options.ShowCheckboxes;
             ExistingChoices.SelectedIndex = (int)options.ExistingFiles;
             OutputChoices.SelectedIndex = (int)options.Output;
             OutputFolderBox.Text = options.OutputFolder ?? string.Empty;
@@ -50,6 +51,9 @@ public sealed partial class SettingsPane : UserControl
 
     private void OnSubfoldersToggled(object sender, RoutedEventArgs e) =>
         Change(o => o with { ScanSubfolders = SubfoldersSwitch.IsOn });
+
+    private void OnCheckboxesToggled(object sender, RoutedEventArgs e) =>
+        Change(o => o with { ShowCheckboxes = CheckboxesSwitch.IsOn });
 
     private void OnExistingChanged(object sender, SelectionChangedEventArgs e) =>
         Change(o => o with { ExistingFiles = (ExistingFilePolicy)Math.Max(0, ExistingChoices.SelectedIndex) });

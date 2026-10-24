@@ -60,6 +60,10 @@ Camera absence or denial never blocks the app: image import stays available.
 
 `MainPage` hosts, from the top: the top bar, then the folder tree (`PlacesBlade`) and a content area. The content area shows the file list (`FileListPane`) while the workflow is `Idle`, and the camera or photo panels in every other state. Pure logic (`FileBrowsing.cs`: classification, sort, filter, history, folder reading; `TrimRange.cs`; `MicrophoneChoice.cs`) is linked into the test project; WinUI types stay in the panes, `TrimDialog` and the page. See ADR-014.
 
+## Ribbon (post-gate, ADR-017)
+
+`MainPage.xaml` holds the ribbon (a `SelectorBar` of tabs over grouped icon buttons), the path bar, the folder tree and the content area. `MainPage.Ribbon.cs` decides which commands are enabled, switches tabs with the workflow state, applies options (theme, checkboxes) and registers the page-level keyboard shortcuts. The editor buttons and the microphone list are in the ribbon; the photo area only shows the photo, its info and the status lines. The Save group sits beside the tabs so it is visible on every tab.
+
 ## Menu, Settings and batches (post-gate)
 
 `MainPage` also hosts a `MenuBar` (same handlers as the buttons) and a `SettingsPane` overlay. Pure, tested logic: `AppOptions` (options and defaults), `PhotoScanner` (finding photos in files and folders), `BatchTargets` (output names and existing-file rules), `BatchSummary`, all in `BatchPlanning.cs`. WinUI/WinRT parts: `BatchRunner` (one photo at a time through `ImageImportService`, `SessionFile.Build` and `AtomicFile`), `BatchDialogs` (confirm, progress with Stop, summary, About, theming of dialogs) and `MainPage.Batch.cs` (starting and running a batch inside the existing workflow). See ADR-015.

@@ -4,11 +4,11 @@ An **ERAF file** (`.eraf`) keeps one photo and one spoken voice note together in
 
 ## Make an ERAF file
 
-1. Start the app. It opens maximized as a file manager: the left blade lists your quick-access folders and drives, the top bar has Back, Forward, Up, Refresh, a folder path box and a name filter, and the right side lists the folders, photos and ERAF files in the current folder. Pick a photo in the list and press **Make ERAF** (or double-click it or press Enter). You can also use the camera icon to take a photo, or the picture icon to choose a photo from anywhere.
+1. Start the app. It opens maximized as a file manager. At the top is the **ribbon** with three tabs: **Home** (camera, import, open, **Make ERAF**, select all or none, settings, about), **Voice note** (record, stop, play, attach an audio file, trim, discard, choose the microphone) and **View** (checkboxes, subfolder search, theme). The Save, Export and **Back to files** buttons stay visible on every tab. Under the ribbon are Back, Forward, Up, Refresh, the folder path and a name filter. The left blade lists your quick-access folders and drives, and the right side lists the folders, photos and ERAF files in the current folder. Tick a photo's checkbox (or double-click it) and press **Make ERAF**. You can also use the camera button, or the import button to choose a photo from anywhere.
 2. If you used the camera, press **Take photo** (or **Cancel camera**, or the Esc key, to go back).
-3. If you have more than one microphone, pick the one to use from the **Microphone** list (it starts on "Default microphone" and remembers your choice). Then press **Record voice note** and speak. Press **Stop recording** when you are done. A note can be up to 10 minutes.
-Instead of recording, you can press **Attach audio file** and choose a saved sound file (M4A, MP3, WAV, WMA, AAC or FLAC, up to 10 minutes). The app converts it to the right format if needed; an M4A that is already AAC is used as it is. If the file cannot be used, you get a plain message and any voice note you already had stays.
-4. Press **Play voice note** to listen. **Record voice note again** or **Replace with audio file** replaces it; **Trim voice note** lets you keep only part of it (drag the Start and End sliders, press **Play selection** to listen, then **Trim**); **Discard voice note** removes it.
+3. Open the **Voice note** tab (it opens by itself once a photo is shown). If you have more than one microphone, pick the one to use from the microphone list (it starts on "Default microphone" and remembers your choice). Then press **Record** and speak. Press **Stop** when you are done. A note can be up to 10 minutes.
+Instead of recording, you can press **Attach audio** and choose a saved sound file (M4A, MP3, WAV, WMA, AAC or FLAC, up to 10 minutes). The app converts it to the right format if needed; an M4A that is already AAC is used as it is. If the file cannot be used, you get a plain message and any voice note you already had stays.
+4. Press **Play voice note** to listen. **Record again** or **Attach audio** replaces it; **Trim** lets you keep only part of it (drag the Start and End sliders, press **Play selection** to listen, then **Trim**); **Discard voice note** removes it.
 5. Press **Save ERAF file**, choose where to save it and a name, and confirm. The line under the photo changes from "Not saved yet" to "Saved: name".
 
 You can only save when the photo and a voice note are both there.
@@ -19,15 +19,23 @@ The app appears in the Start menu as **ERAF**. To keep it handy, right-click it 
 
 ## One voice note for many photos
 
-Select several photos (Ctrl or Shift while clicking, or Ctrl+A), or select one or more folders, then press **Make ERAF** (also Tools > Make ERAF from selection, or Ctrl+M). The app finds the photos, shows the first one, and lets you record or attach **one** voice note (and trim it). Then press **Make N ERAF files**: it asks what to do if an ERAF file with the same name already exists (skip, replace, or keep both with a number), shows progress with a Stop button, and finishes with a summary. Each file is saved next to its photo with the photo's name, or in one folder you choose in Settings. By default only photos directly inside a selected folder are used; turn on **Search subfolders too** in Settings to include the folders below it.
+Select several photos (Ctrl or Shift while clicking, or Ctrl+A), or select one or more folders, then press **Make ERAF** (or Ctrl+M). The app finds the photos, shows the first one, and lets you record or attach **one** voice note (and trim it). Then press **Make N files**: it asks what to do if an ERAF file with the same name already exists (skip, replace, or keep both with a number), shows progress with a Stop button, and finishes with a summary. Each file is saved next to its photo with the photo's name, or in one folder you choose in Settings. By default only photos directly inside a selected folder are used; turn on **Search subfolders too** in Settings to include the folders below it.
 
 ## Drag and drop
 
 Drag photos, folders or an ERAF file from File Explorer onto the app window while you are looking at the file list. One photo starts a new ERAF, several photos or any folder start the "one voice note for many photos" flow, and an ERAF file opens. Other files in the drop are left out, and the app tells you how many.
 
-## Settings, menus and themes
+## Checkboxes and selecting
 
-Use the menu bar at the top (File, Voice note, View, Tools, Help). **Tools > Settings** opens the Settings page: theme (Windows setting, Light or Dark), whether folders are searched with their subfolders, what to do when a file already exists, and where batch files are saved. Changes take effect immediately. The theme can also be changed from **View > Theme**.
+Every file and folder has a checkbox. Tick the ones you want, or tick the box at the top of the list to select everything (**Select all** and **Select none** are on the Home tab). Double-click, or press Enter, to open the item you are on. You can turn the checkboxes off in the View tab or in Settings; the list then works like Explorer, where Ctrl and Shift select several.
+
+## Big folders
+
+When a folder takes a moment to read, a thin moving bar appears above the list. When photos are being searched for in a large folder, a box shows how many folders have been looked at and how many photos found so far, with a **Stop** button.
+
+## Settings, ribbon and themes
+
+Use the ribbon at the top. **Settings** on the Home tab opens the Settings page: theme (Windows setting, Light or Dark), whether folders are searched with their subfolders, what to do when a file already exists, and where batch files are saved. Changes take effect immediately. The theme, checkboxes and subfolder search can also be switched on the **View** tab. Keyboard shortcuts: Ctrl+O open, Ctrl+I import, Ctrl+S save, Ctrl+M Make ERAF, Ctrl+R record, Ctrl+T trim, F5 refresh, Alt+Left/Right/Up for Back, Forward and Up.
 
 ## Open an ERAF file
 

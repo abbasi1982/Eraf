@@ -57,7 +57,14 @@ public sealed partial class MainPage
         SetBusy(true);
         try
         {
-            ScanResult scan = await Task.Run(() => PhotoScanner.Scan(paths, options.ScanSubfolders, PhotoScanner.DefaultMaxPhotos));
+            ScanResult? found = await ScanWithProgressAsync(paths, options.ScanSubfolders);
+            if (found is null)
+            {
+                ShowInfo("Stopped looking for photos. Nothing was changed.");
+                return;
+            }
+
+            ScanResult scan = found;
             if (scan.Photos.Count == 0)
             {
                 ShowInfo(anyFolder && !options.ScanSubfolders
@@ -191,6 +198,49 @@ public sealed partial class MainPage
             default:
                 ShowInfo(plan.Message ?? "Nothing was opened.");
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Scans off the UI thread. If it takes more than a moment, a box shows how far it has got (folders looked at, photos found)
+    /// with a Stop button. Returns null when the user stopped it.
+    /// </summary>
+    private async Task<ScanResult?> ScanWithProgressAsync(IReadOnlyList<string> paths, bool includeSubfolders)
+    {
+        using var cancel = new CancellationTokenSource();
+        BatchDialogs.ProgressBox? box = null;
+        string Describe(ScanProgress p) =>
+            $"{p.FoldersScanned} folder{(p.FoldersScanned == 1 ? string.Empty : "s")} looked at, "
+            + $"{p.PhotosFound} photo{(p.PhotosFound == 1 ? string.Empty : "s")} found so far...";
+        var progress = new Progress<ScanProgress>(p => box?.SetText(Describe(p)));
+
+        Task<ScanResult> scanning = Task.Run(
+            () => PhotoScanner.Scan(paths, includeSubfolders, PhotoScanner.DefaultMaxPhotos, cancel.Token, progress));
+        Task? shown = null;
+        if (await Task.WhenAny(scanning, Task.Delay(400)) != scanning)
+        {
+            box = new BatchDialogs.ProgressBox(XamlRoot, cancel, "Looking for photos", indeterminate: true);
+            box.SetText("Looking for photos...");
+            _dialogOpen = true;
+            shown = box.ShowAsync();
+        }
+
+        try
+        {
+            return await scanning;
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+        finally
+        {
+            if (box is not null)
+            {
+                box.Close();
+                await shown!;
+                _dialogOpen = false;
+            }
         }
     }
 

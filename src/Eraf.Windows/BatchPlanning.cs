@@ -38,9 +38,10 @@ public sealed record AppOptions(
     bool ScanSubfolders,
     ExistingFilePolicy ExistingFiles,
     OutputMode Output,
-    string? OutputFolder)
+    string? OutputFolder,
+    bool ShowCheckboxes = true)
 {
-    public static AppOptions Default { get; } = new(ThemeChoice.System, false, ExistingFilePolicy.Skip, OutputMode.NextToPhoto, null);
+    public static AppOptions Default { get; } = new(ThemeChoice.System, false, ExistingFilePolicy.Skip, OutputMode.NextToPhoto, null, true);
 
     public static AppOptions Load(Func<string, string?> get)
     {
@@ -50,7 +51,8 @@ public sealed record AppOptions(
             get("ScanSubfolders") is { } s ? s == "1" : d.ScanSubfolders,
             ParseEnum(get("ExistingFiles"), d.ExistingFiles),
             ParseEnum(get("Output"), d.Output),
-            string.IsNullOrWhiteSpace(get("OutputFolder")) ? null : get("OutputFolder"));
+            string.IsNullOrWhiteSpace(get("OutputFolder")) ? null : get("OutputFolder"),
+            get("ShowCheckboxes") is { } c ? c != "0" : d.ShowCheckboxes);
     }
 
     public void Save(Action<string, string?> set)
@@ -60,6 +62,7 @@ public sealed record AppOptions(
         set("ExistingFiles", ExistingFiles.ToString());
         set("Output", Output.ToString());
         set("OutputFolder", string.IsNullOrWhiteSpace(OutputFolder) ? null : OutputFolder);
+        set("ShowCheckboxes", ShowCheckboxes ? "1" : "0");
     }
 
     private static T ParseEnum<T>(string? text, T fallback) where T : struct, Enum =>
@@ -68,6 +71,9 @@ public sealed record AppOptions(
 
 /// <summary>The photos found for a batch.</summary>
 public sealed record ScanResult(IReadOnlyList<string> Photos, bool Truncated, int FoldersScanned);
+
+/// <summary>How far a scan has got: shown to the user while a large folder is searched.</summary>
+public sealed record ScanProgress(int FoldersScanned, int PhotosFound, int EntriesSeen);
 
 /// <summary>Collects photo files from a mix of files and folders.</summary>
 public static class PhotoScanner
@@ -80,11 +86,15 @@ public static class PhotoScanner
     /// Hidden and system items and folder links are skipped, unreadable folders are ignored, duplicates are removed,
     /// and the result is sorted by path. Stops at <paramref name="maxPhotos"/> and says so.
     /// </summary>
-    public static ScanResult Scan(IEnumerable<string> paths, bool includeSubfolders, int maxPhotos, CancellationToken cancel = default)
+    public static ScanResult Scan(
+        IEnumerable<string> paths, bool includeSubfolders, int maxPhotos,
+        CancellationToken cancel = default, IProgress<ScanProgress>? progress = null)
     {
         var found = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         int folders = 0;
+        int entries = 0;
         bool truncated = false;
+        void Report() => progress?.Report(new ScanProgress(folders, found.Count, entries));
 
         foreach (string path in paths)
         {
@@ -111,10 +121,18 @@ public static class PhotoScanner
                 cancel.ThrowIfCancellationRequested();
                 string folder = pending.Pop();
                 folders++;
+                Report();
                 try
                 {
                     foreach (FileSystemInfo item in new DirectoryInfo(folder).EnumerateFileSystemInfos())
                     {
+                        // A single huge folder must stay stoppable and visible too, so check in and report as entries go by.
+                        if (++entries % ReportEvery == 0)
+                        {
+                            cancel.ThrowIfCancellationRequested();
+                            Report();
+                        }
+
                         if ((item.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0)
                         {
                             continue;
@@ -133,6 +151,10 @@ public static class PhotoScanner
                         }
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                    throw; // Stop must stop, not be mistaken for an unreadable folder.
+                }
                 catch (Exception)
                 {
                     // An unreadable folder is skipped; the rest of the scan carries on.
@@ -145,8 +167,12 @@ public static class PhotoScanner
             }
         }
 
+        Report();
         return new ScanResult(found.ToList(), truncated, folders);
     }
+
+    /// <summary>Progress is reported at every folder and after this many entries inside one.</summary>
+    public const int ReportEvery = 200;
 
     private static bool Add(SortedSet<string> found, string path, int max, ref bool truncated)
     {

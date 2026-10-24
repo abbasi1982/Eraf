@@ -36,6 +36,18 @@
             </StackPanel>
 
             <StackPanel Spacing="10">
+                <TextBlock Text="File list" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <ToggleSwitch
+                    x:Name="CheckboxesSwitch"
+                    Header="Checkboxes next to files and folders"
+                    OnContent="A checkbox on every row; click to tick or untick"
+                    OffContent="No checkboxes; use Ctrl or Shift to select several"
+                    Toggled="OnCheckboxesToggled"
+                    AutomationProperties.AutomationId="CheckboxesSwitch"
+                    AutomationProperties.Name="Checkboxes next to files and folders" />
+            </StackPanel>
+
+            <StackPanel Spacing="10">
                 <TextBlock Text="Choosing folders" Style="{StaticResource SubtitleTextBlockStyle}" />
                 <TextBlock
                     Text="When you select one or more folders and press Make ERAF, the app looks for photos inside them."

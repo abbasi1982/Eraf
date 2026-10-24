@@ -12,7 +12,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Padding="12,0,12,4" ColumnSpacing="8">
+        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="12,0,12,4" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="40" />
                 <ColumnDefinition Width="*" />
@@ -20,6 +20,18 @@
                 <ColumnDefinition Width="90" />
                 <ColumnDefinition Width="110" />
             </Grid.ColumnDefinitions>
+            <CheckBox
+                x:Name="HeaderCheck"
+                Grid.Column="0"
+                MinWidth="0"
+                Padding="0"
+                Margin="-16,0,0,0"
+                Visibility="Collapsed"
+                Checked="OnHeaderChecked"
+                Unchecked="OnHeaderUnchecked"
+                AutomationProperties.AutomationId="SelectAllCheckbox"
+                AutomationProperties.Name="Select all items"
+                AutomationProperties.HelpText="Tick to select every item in this folder, untick to clear the selection." />
             <Button
                 x:Name="NameHeader" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                 Background="Transparent" BorderThickness="0" Click="OnHeaderClick" Tag="Name"

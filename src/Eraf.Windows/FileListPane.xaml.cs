@@ -46,6 +46,70 @@ public sealed partial class FileListPane : UserControl
 
     public void SelectAll() => List.SelectAll();
 
+    public void SelectNone() => List.SelectedItems.Clear();
+
+    /// <summary>
+    /// With checkboxes on, every row has a tick box and a click ticks or unticks it (several can be ticked). Without them
+    /// the list works like Explorer: Ctrl and Shift select several. A header box ticks or clears everything.
+    /// </summary>
+    public void SetCheckboxes(bool on)
+    {
+        List.SelectionMode = on ? ListViewSelectionMode.Multiple : ListViewSelectionMode.Extended;
+        HeaderCheck.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        HeaderGrid.Padding = new Thickness(on ? CheckboxIndent : 12, 0, 12, 4);
+    }
+
+    /// <summary>How far the row contents move to the right when each row shows its own checkbox.</summary>
+    private const double CheckboxIndent = 35;
+
+    private bool _syncingHeader;
+
+    private void OnHeaderChecked(object sender, RoutedEventArgs e)
+    {
+        if (!_syncingHeader)
+        {
+            List.SelectAll();
+        }
+    }
+
+    private void OnHeaderUnchecked(object sender, RoutedEventArgs e)
+    {
+        if (!_syncingHeader)
+        {
+            List.SelectedItems.Clear();
+        }
+    }
+
+    private void SyncHeaderCheck()
+    {
+        _syncingHeader = true;
+        try
+        {
+            HeaderCheck.IsChecked = _items.Count > 0 && List.SelectedItems.Count == _items.Count;
+        }
+        finally
+        {
+            _syncingHeader = false;
+        }
+    }
+
+    /// <summary>The row an event came from. With checkboxes a double-click ticks twice, so the selection cannot say which row was meant.</summary>
+    private static EntryViewModel? RowOf(object? source)
+    {
+        DependencyObject? node = source as DependencyObject;
+        while (node is not null)
+        {
+            if (node is ListViewItem { Content: EntryViewModel row })
+            {
+                return row;
+            }
+
+            node = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(node);
+        }
+
+        return null;
+    }
+
     /// <summary>Replaces the list with a folder's contents. <paramref name="error"/> is shown instead of the empty-folder hint.</summary>
     public void SetListing(IReadOnlyList<BrowserEntry> entries, string? error, string emptyHint)
     {
@@ -98,6 +162,7 @@ public sealed partial class FileListPane : UserControl
             EmptyText.Visibility = Visibility.Visible;
         }
 
+        SyncHeaderCheck();
         SelectionChanged?.Invoke(SelectedEntries);
     }
 
@@ -135,22 +200,26 @@ public sealed partial class FileListPane : UserControl
         Set(TypeHeader, "Type", SortKey.Type);
     }
 
-    private void OnSelectionChanged(object sender, SelectionChangedEventArgs e) => SelectionChanged?.Invoke(SelectedEntries);
+    private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        SyncHeaderCheck();
+        SelectionChanged?.Invoke(SelectedEntries);
+    }
 
     private void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if (Selected is { } entry)
+        if ((RowOf(e.OriginalSource) ?? List.SelectedItem as EntryViewModel) is { } row)
         {
-            EntryActivated?.Invoke(entry);
+            EntryActivated?.Invoke(row.Entry);
         }
     }
 
     private void OnListKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == VirtualKey.Enter && Selected is { } entry)
+        if (e.Key == VirtualKey.Enter && (RowOf(e.OriginalSource) ?? List.SelectedItem as EntryViewModel) is { } row)
         {
             e.Handled = true;
-            EntryActivated?.Invoke(entry);
+            EntryActivated?.Invoke(row.Entry);
         }
     }
 

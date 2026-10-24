@@ -44,12 +44,9 @@ public sealed partial class MainPage : Page
             Render();
             FocusNextControl();
         };
-        AppSettings.OptionsChanged += options =>
-        {
-            (App.MainWindow as MainWindow)?.ApplyTheme(options.Theme);
-            ShowThemeInMenu(options.Theme);
-        };
-        ShowThemeInMenu(AppSettings.Options.Theme);
+        AppSettings.OptionsChanged += ApplyOptions;
+        ApplyOptions(AppSettings.Options);
+        AddAccelerators();
         Loaded += async (_, _) =>
         {
             await RefreshMicrophonesAsync();
@@ -115,14 +112,8 @@ public sealed partial class MainPage : Page
         CameraPanel.Visibility = Show(state == SessionState.CapturingPhoto && !settings);
         PhotoPanel.Visibility = Show(state != SessionState.Idle && state != SessionState.CapturingPhoto && !settings);
 
-        RecordButton.Visibility = Show(!recording && !_workflow.HasAudio);
-        AttachAudioButton.Visibility = Show(!recording && !_workflow.HasAudio);
         RecordingPanel.Visibility = Show(recording);
-        MicrophoneCombo.Visibility = Show(!recording);
-        MicrophoneCombo.IsEnabled = !busy;
         VoicePanel.Visibility = Show(!recording && _workflow.HasAudio);
-        PlayButton.Content = state == SessionState.AudioPreview ? "Stop" : "Play";
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PlayButton, state == SessionState.AudioPreview ? "Stop voice note" : "Play voice note");
 
         // Starting a photo is only possible from the file list; navigation is blocked while something is being written or converted.
         bool startable = state == SessionState.Idle && !_importBusy && !_showingSettings;
@@ -139,16 +130,11 @@ public sealed partial class MainPage : Page
         Blade.IsEnabled = navigable;
         SaveButton.IsEnabled = _workflow.CanSave && !_attachingAudio;
         string saveLabel = _batch is { } info ? $"Make {info.Photos.Count} ERAF files" : "Save ERAF file";
-        SaveButton.Content = saveLabel;
+        SaveLabel.Text = _batch is { } many ? $"Make {many.Photos.Count} files" : "Save ERAF";
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(SaveButton, saveLabel);
-        RenderMenu(state, recording, busy);
-        DismissErrorButton.Visibility = Show(state == SessionState.Error);
         ExportPhotoButton.IsEnabled = !busy && !recording && _session is not null && _batch is null;
         ExportAudioButton.IsEnabled = !busy && !recording && _workflow.HasAudio;
-        foreach (Button b in new[] { RecordButton, RerecordButton, AttachAudioButton, ReplaceAudioFileButton, TrimButton, PlayButton, DeleteVoiceButton, DiscardButton })
-        {
-            b.IsEnabled = !busy;
-        }
+        RenderRibbon(state, recording, busy);
 
         SaveStatus.Text = state switch
         {
@@ -615,7 +601,6 @@ public sealed partial class MainPage : Page
         ClearMessage();
         EndPlayback();
         RecordButton.IsEnabled = false;
-        RerecordButton.IsEnabled = false;
         try
         {
             // The list may be out of date (a microphone was plugged in or removed since it was filled).
@@ -640,66 +625,9 @@ public sealed partial class MainPage : Page
         }
         finally
         {
-            RecordButton.IsEnabled = true;
-            RerecordButton.IsEnabled = true;
+            Render(); // puts the ribbon back in line with the state
         }
     }
-
-    // ---------------------------------------------------------------- menu and settings
-
-    /// <summary>Greys out menu commands that cannot be used right now. The handlers re-check, so this is only a hint for the user.</summary>
-    private void RenderMenu(SessionState state, bool recording, bool busy)
-    {
-        bool inEditor = state != SessionState.Idle && state != SessionState.CapturingPhoto;
-        bool free = inEditor && !recording && !busy;
-        MenuOpenEraf.IsEnabled = OpenFileButton.IsEnabled;
-        MenuImport.IsEnabled = ImportButton.IsEnabled;
-        MenuCamera.IsEnabled = CaptureButton.IsEnabled;
-        MenuSave.IsEnabled = SaveButton.IsEnabled;
-        MenuExportPhoto.IsEnabled = ExportPhotoButton.IsEnabled && inEditor;
-        MenuExportAudio.IsEnabled = ExportAudioButton.IsEnabled && inEditor;
-        MenuBackToFiles.IsEnabled = state != SessionState.Idle && !busy;
-        MenuRecord.IsEnabled = free;
-        MenuStop.IsEnabled = recording;
-        MenuPlay.IsEnabled = free && _workflow.HasAudio;
-        MenuAttach.IsEnabled = free;
-        MenuTrim.IsEnabled = free && _workflow.HasAudio;
-        MenuDiscardVoice.IsEnabled = free && _workflow.HasAudio;
-        MenuBack.IsEnabled = BackNavButton.IsEnabled;
-        MenuForward.IsEnabled = ForwardNavButton.IsEnabled;
-        MenuUp.IsEnabled = UpNavButton.IsEnabled;
-        MenuRefresh.IsEnabled = RefreshNavButton.IsEnabled;
-        MenuSelectAll.IsEnabled = state == SessionState.Idle && !_showingSettings;
-        MenuMakeEraf.IsEnabled = MakeErafButton.IsEnabled;
-    }
-
-    private void ShowThemeInMenu(ThemeChoice theme)
-    {
-        MenuThemeSystem.IsChecked = theme == ThemeChoice.System;
-        MenuThemeLight.IsChecked = theme == ThemeChoice.Light;
-        MenuThemeDark.IsChecked = theme == ThemeChoice.Dark;
-    }
-
-    private void OnMenuThemeClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is RadioMenuFlyoutItem { Tag: string tag } && Enum.TryParse(tag, out ThemeChoice theme))
-        {
-            AppSettings.Options = AppSettings.Options with { Theme = theme };
-        }
-    }
-
-    private void OnMenuSettingsClick(object sender, RoutedEventArgs e)
-    {
-        _showingSettings = true;
-        Render();
-        SettingsView.Focus(FocusState.Programmatic);
-    }
-
-    private async void OnMenuAboutClick(object sender, RoutedEventArgs e) => await BatchDialogs.ShowAboutAsync(XamlRoot);
-
-    private void OnMenuSelectAllClick(object sender, RoutedEventArgs e) => FileList.SelectAll();
-
-    private void OnMenuExitClick(object sender, RoutedEventArgs e) => App.MainWindow?.Close();
 
     // ---------------------------------------------------------------- file browser
 
@@ -735,7 +663,22 @@ public sealed partial class MainPage : Page
     /// <summary>Reads a folder off the UI thread and shows it in the list.</summary>
     private async Task ShowFolderAsync(string path, bool addToHistory)
     {
-        FolderListing listing = await Task.Run(() => FolderLister.List(path));
+        Task<FolderListing> load = Task.Run(() => FolderLister.List(path));
+        if (await Task.WhenAny(load, Task.Delay(300)) != load)
+        {
+            FolderLoading.Visibility = Visibility.Visible; // only for folders that take a moment, so quick ones do not flicker
+        }
+
+        FolderListing listing;
+        try
+        {
+            listing = await load;
+        }
+        finally
+        {
+            FolderLoading.Visibility = Visibility.Collapsed;
+        }
+
         if (addToHistory)
         {
             _history.Navigate(path);

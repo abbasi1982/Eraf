@@ -70,8 +70,9 @@ public static class BatchDialogs
         private bool _closed;
         private bool _opened;
 
-        public ProgressBox(XamlRoot xamlRoot, CancellationTokenSource cancel)
+        public ProgressBox(XamlRoot xamlRoot, CancellationTokenSource cancel, string title = "Making ERAF files", bool indeterminate = false)
         {
+            _bar.IsIndeterminate = indeterminate;
             var panel = new StackPanel { Spacing = 12, MinWidth = 380 };
             panel.Children.Add(_text);
             panel.Children.Add(_bar);
@@ -81,7 +82,7 @@ public static class BatchDialogs
             _dialog = Themed(new ContentDialog
             {
                 XamlRoot = xamlRoot,
-                Title = "Making ERAF files",
+                Title = title,
                 Content = panel,
                 CloseButtonText = "Stop",
             });
@@ -98,7 +99,7 @@ public static class BatchDialogs
                 if (!_closed)
                 {
                     cancel.Cancel();
-                    _text.Text = "Stopping after the current photo...";
+                    _text.Text = "Stopping...";
                     args.Cancel = true; // stay open until the running photo has finished
                 }
             };
@@ -106,6 +107,9 @@ public static class BatchDialogs
 
         /// <summary>Opens the box. Completes when it is closed.</summary>
         public Task ShowAsync() => _dialog.ShowAsync().AsTask();
+
+        /// <summary>Replaces the message (used by the scan, which has no total to count towards).</summary>
+        public void SetText(string text) => _text.Text = text;
 
         public void Update(int done, int total, string name)
         {

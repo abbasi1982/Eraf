@@ -47,13 +47,14 @@ public sealed class BatchPlanningTests : IDisposable
         Assert.Equal(ExistingFilePolicy.Skip, d.ExistingFiles);
         Assert.Equal(OutputMode.NextToPhoto, d.Output);
         Assert.Null(d.OutputFolder);
+        Assert.True(d.ShowCheckboxes);
     }
 
     [Fact]
     public void OptionsSurviveASaveAndLoad()
     {
         var store = new Dictionary<string, string?>();
-        var chosen = new AppOptions(ThemeChoice.Dark, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out");
+        var chosen = new AppOptions(ThemeChoice.Dark, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out", ShowCheckboxes: false);
 
         chosen.Save((k, v) => store[k] = v);
         AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
@@ -71,6 +72,7 @@ public sealed class BatchPlanningTests : IDisposable
             ["Output"] = "",
             ["ScanSubfolders"] = "maybe",
             ["OutputFolder"] = "  ",
+            ["ShowCheckboxes"] = "0",
         };
 
         AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
@@ -80,6 +82,7 @@ public sealed class BatchPlanningTests : IDisposable
         Assert.Equal(OutputMode.NextToPhoto, loaded.Output);
         Assert.False(loaded.ScanSubfolders);
         Assert.Null(loaded.OutputFolder);
+        Assert.False(loaded.ShowCheckboxes);
         Assert.Equal(AppOptions.Default, AppOptions.Load(_ => null));
     }
 
@@ -160,6 +163,59 @@ public sealed class BatchPlanningTests : IDisposable
         Assert.Equal(4, result.Photos.Count);
         Assert.True(result.Truncated);
         Assert.False(PhotoScanner.Scan(new[] { _dir }, false, 10).Truncated);
+    }
+
+    [Fact]
+    public void ScanReportsProgressAndTheLastReportMatchesTheResult()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            Make($"f{i}\\p.jpg");
+        }
+
+        var reports = new List<ScanProgress>();
+        ScanResult result = PhotoScanner.Scan(new[] { _dir }, true, 100, default, new SyncProgress(reports.Add));
+
+        Assert.NotEmpty(reports);
+        Assert.Equal(result.Photos.Count, reports[^1].PhotosFound);
+        Assert.Equal(result.FoldersScanned, reports[^1].FoldersScanned);
+        for (int i = 1; i < reports.Count; i++)
+        {
+            Assert.True(reports[i].FoldersScanned >= reports[i - 1].FoldersScanned);
+            Assert.True(reports[i].PhotosFound >= reports[i - 1].PhotosFound);
+            Assert.True(reports[i].EntriesSeen >= reports[i - 1].EntriesSeen);
+        }
+    }
+
+    [Fact]
+    public void AHugeFolderIsReportedAndStoppableWhileItIsBeingRead()
+    {
+        for (int i = 0; i < PhotoScanner.ReportEvery * 3; i++)
+        {
+            Make($"big\\n{i:0000}.txt", 1);
+        }
+
+        var reports = new List<ScanProgress>();
+        ScanResult result = PhotoScanner.Scan(new[] { Path.Combine(_dir, "big") }, false, 100, default, new SyncProgress(reports.Add));
+
+        Assert.Empty(result.Photos);
+        Assert.True(reports.Count >= 4, "reports during one folder: " + reports.Count);
+        Assert.Equal(PhotoScanner.ReportEvery * 3, reports[^1].EntriesSeen);
+
+        using var cts = new CancellationTokenSource();
+        var stopAtFirst = new SyncProgress(p => { if (p.EntriesSeen > 0) { cts.Cancel(); } });
+        Assert.Throws<OperationCanceledException>(
+            () => PhotoScanner.Scan(new[] { Path.Combine(_dir, "big") }, false, 100, cts.Token, stopAtFirst));
+    }
+
+    /// <summary>Reports on the calling thread at once (Progress&lt;T&gt; would post them later, which a test cannot wait for).</summary>
+    private sealed class SyncProgress : IProgress<ScanProgress>
+    {
+        private readonly Action<ScanProgress> _onReport;
+
+        public SyncProgress(Action<ScanProgress> onReport) => _onReport = onReport;
+
+        public void Report(ScanProgress value) => _onReport(value);
     }
 
     [Fact]
