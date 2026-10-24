@@ -39,11 +39,17 @@ public sealed class ClipPlayer : IDisposable
         return new ClipPlayer(stream);
     }
 
-    public void Play()
+    public void Play() => PlayFrom(0);
+
+    /// <summary>Starts playing at <paramref name="startMs"/> (used to preview a trim).</summary>
+    public void PlayFrom(ulong startMs)
     {
-        _player.PlaybackSession.Position = TimeSpan.Zero;
+        _player.PlaybackSession.Position = TimeSpan.FromMilliseconds(startMs);
         _player.Play();
     }
+
+    /// <summary>Where playback is now, in milliseconds.</summary>
+    public ulong PositionMs => (ulong)Math.Max(0, _player.PlaybackSession.Position.TotalMilliseconds);
 
     public void Stop()
     {

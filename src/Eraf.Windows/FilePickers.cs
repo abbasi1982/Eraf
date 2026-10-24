@@ -36,7 +36,7 @@ public static class FilePickers
     /// (<c>ShowOverwritePrompt</c>); the caller then replaces atomically.
     /// </summary>
     public static async Task<(string? Path, string? Error)> PickSaveAsync(
-        Window window, string suggestedName, string typeLabel, string extension)
+        Window window, string suggestedName, string typeLabel, string extension, string? suggestedFolder = null)
     {
         try
         {
@@ -47,6 +47,11 @@ public static class FilePickers
                 DefaultFileExtension = extension,
                 ShowOverwritePrompt = true,
             };
+            if (suggestedFolder is not null && Directory.Exists(suggestedFolder))
+            {
+                picker.SuggestedFolder = suggestedFolder;
+            }
+
             picker.FileTypeChoices.Add(typeLabel, new List<string> { extension });
 
             PickFileResult? picked = await picker.PickSaveFileAsync();

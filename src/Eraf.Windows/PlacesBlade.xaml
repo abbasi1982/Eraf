@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Eraf.Windows.PlacesBlade"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Eraf.Windows">
+
+    <!-- The left blade: quick-access folders, then every drive with folders that load when opened. -->
+    <TreeView
+        x:Name="Tree"
+        SelectionMode="Single"
+        CanDragItems="False"
+        AllowDrop="False"
+        AutomationProperties.AutomationId="FolderTree"
+        AutomationProperties.Name="Folders and drives"
+        AutomationProperties.HelpText="Browse your drives and folders. Press Enter to open one, Right arrow to expand."
+        Expanding="OnExpanding"
+        ItemInvoked="OnItemInvoked" />
+</UserControl>

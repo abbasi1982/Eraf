@@ -56,6 +56,10 @@ The legal transitions are tabled in [STATUS.md](STATUS.md) (M5 evidence) and in 
 
 Camera absence or denial never blocks the app: image import stays available.
 
+## File-manager shell (post-gate)
+
+`MainPage` hosts, from the top: the top bar, then the folder tree (`PlacesBlade`) and a content area. The content area shows the file list (`FileListPane`) while the workflow is `Idle`, and the camera or photo panels in every other state. Pure logic (`FileBrowsing.cs`: classification, sort, filter, history, folder reading; `TrimRange.cs`; `MicrophoneChoice.cs`) is linked into the test project; WinUI types stay in the panes, `TrimDialog` and the page. See ADR-014.
+
 ## Build and launch (this machine)
 
 - Build: `dotnet build src\Eraf.Windows\Eraf.Windows.csproj -p:Platform=x64`

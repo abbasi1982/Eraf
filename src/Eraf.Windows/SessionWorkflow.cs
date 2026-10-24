@@ -82,7 +82,7 @@ public enum SessionEvent
     /// <summary>The user acknowledged a save error; the media is still there to retry.</summary>
     AcknowledgeError,
 
-    /// <summary>A valid voice note was taken from an audio file (instead of being recorded) and replaces any earlier one.</summary>
+    /// <summary>A valid voice note came from an audio file or from trimming (instead of a recording) and replaces any earlier one.</summary>
     AudioAttached,
 }
 

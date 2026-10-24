@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-M0 through M8 are closed and M9 (Windows release gate evidence) awaits Cursor review: the Windows app can import or capture a photo, record a voice note, save/open/export `.eraf` files. Logic that can be UI-free (`SessionWorkflow`, `AtomicFile`, `SessionFile`, the session classes) lives in `src/Eraf.Windows` but is compiled into `tests/Eraf.Format.Tests` as linked source (ADR-010), so it must stay free of WinUI/WinRT types. `docs/STATUS.md` is the live source of truth, and each milestone has a brief at `docs/CLAUDE_CODE_BRIEF_*.md`.
+M0 through M9 are closed (Windows Phase 1 gate passed; Phase 2 Android is planning only and not started). Post-gate additions requested by the product owner (icon, microphone choice, attach and trim audio, file-manager shell; ADR-013, ADR-014) are described in `docs/STATUS.md`. The Windows app can browse folders, import or capture a photo, record a voice note, save/open/export `.eraf` files. Logic that can be UI-free (`SessionWorkflow`, `AtomicFile`, `SessionFile`, the session classes) lives in `src/Eraf.Windows` but is compiled into `tests/Eraf.Format.Tests` as linked source (ADR-010), so it must stay free of WinUI/WinRT types. `docs/STATUS.md` is the live source of truth, and each milestone has a brief at `docs/CLAUDE_CODE_BRIEF_*.md`.
 
 Commands (project-level only; redirect output to a file if a command hangs, since piped output and solution-level restore hung in this shell):
 

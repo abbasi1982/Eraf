@@ -21,6 +21,12 @@ public sealed partial class MainWindow : Window
         AppWindow.SetIcon("Assets/AppIcon.ico");
         AppWindow.Closing += OnAppWindowClosing;
 
+        // Starts maximized, like a file manager. The user can still restore or resize it.
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.Maximize();
+        }
+
         RootFrame.Navigate(typeof(MainPage));
     }
 

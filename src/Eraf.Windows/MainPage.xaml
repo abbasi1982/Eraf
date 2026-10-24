@@ -8,60 +8,156 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Padding="24" RowSpacing="16">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <InfoBar
-            x:Name="MessageBar"
+        <!-- Top bar: folder navigation on the left, the address, a name filter, then the ways to start an ERAF file. -->
+        <Grid
             Grid.Row="0"
-            IsOpen="False"
-            IsClosable="True"
-            AutomationProperties.AutomationId="MessageBar"
-            AutomationProperties.Name="Message"
-            Severity="Error" />
+            Padding="12,8"
+            ColumnSpacing="6"
+            Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-        <!-- Idle: nothing chosen yet. -->
-        <StackPanel
-            x:Name="IdlePanel"
-            Grid.Row="1"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Spacing="16">
-            <TextBlock
-                Text="Choose a photo"
-                Style="{StaticResource TitleTextBlockStyle}"
-                HorizontalAlignment="Center" />
-            <TextBlock
-                Text="Import an existing image, take one with the camera, or open an ERAF file."
-                HorizontalAlignment="Center" />
-            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                <Button
-                    x:Name="ImportButton"
-                    Content="Import image"
-                    AutomationProperties.AutomationId="ImportButton"
-                    AutomationProperties.Name="Import image"
-                    AutomationProperties.HelpText="Choose a photo file from this computer."
-                    Style="{StaticResource AccentButtonStyle}"
-                    Click="OnImportClick" />
-                <Button
-                    x:Name="CaptureButton"
-                    Content="Use camera"
-                    AutomationProperties.AutomationId="CameraButton"
-                    AutomationProperties.Name="Use camera"
-                    AutomationProperties.HelpText="Show the camera and take a photo."
-                    Click="OnCameraClick" />
-                <Button
-                    x:Name="OpenFileButton"
-                    Content="Open ERAF file"
-                    AutomationProperties.AutomationId="OpenFileButton"
-                    AutomationProperties.Name="Open ERAF file"
-                    AutomationProperties.HelpText="Open a saved ERAF file with a photo and voice note."
-                    Click="OnOpenFileClick" />
-            </StackPanel>
-        </StackPanel>
+            <Button
+                x:Name="BackNavButton" Grid.Column="0" Width="40" Height="36" Padding="0"
+                Click="OnBackNavClick"
+                ToolTipService.ToolTip="Back"
+                AutomationProperties.AutomationId="BackNavButton"
+                AutomationProperties.Name="Back"
+                AutomationProperties.HelpText="Go to the previous folder.">
+                <FontIcon Glyph="&#xE72B;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            </Button>
+            <Button
+                x:Name="ForwardNavButton" Grid.Column="1" Width="40" Height="36" Padding="0"
+                Click="OnForwardNavClick"
+                ToolTipService.ToolTip="Forward"
+                AutomationProperties.AutomationId="ForwardNavButton"
+                AutomationProperties.Name="Forward"
+                AutomationProperties.HelpText="Go to the next folder.">
+                <FontIcon Glyph="&#xE72A;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            </Button>
+            <Button
+                x:Name="UpNavButton" Grid.Column="2" Width="40" Height="36" Padding="0"
+                Click="OnUpNavClick"
+                ToolTipService.ToolTip="Up one folder"
+                AutomationProperties.AutomationId="UpNavButton"
+                AutomationProperties.Name="Up one folder"
+                AutomationProperties.HelpText="Go to the folder that contains this one.">
+                <FontIcon Glyph="&#xE74A;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            </Button>
+            <Button
+                x:Name="RefreshNavButton" Grid.Column="3" Width="40" Height="36" Padding="0"
+                Click="OnRefreshNavClick"
+                ToolTipService.ToolTip="Refresh"
+                AutomationProperties.AutomationId="RefreshNavButton"
+                AutomationProperties.Name="Refresh"
+                AutomationProperties.HelpText="Read this folder again.">
+                <FontIcon Glyph="&#xE72C;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            </Button>
+
+            <TextBox
+                x:Name="AddressBox" Grid.Column="4"
+                PlaceholderText="Type a folder path and press Enter"
+                KeyDown="OnAddressKeyDown"
+                AutomationProperties.AutomationId="AddressBox"
+                AutomationProperties.Name="Folder path"
+                AutomationProperties.HelpText="The folder being shown. Type another path and press Enter to go there." />
+            <TextBox
+                x:Name="FilterBox" Grid.Column="5"
+                PlaceholderText="Filter by name"
+                TextChanged="OnFilterChanged"
+                AutomationProperties.AutomationId="FilterBox"
+                AutomationProperties.Name="Filter by name"
+                AutomationProperties.HelpText="Show only the items in this folder whose name contains what you type." />
+
+            <Button
+                x:Name="CaptureButton" Grid.Column="6" Width="40" Height="36" Padding="0"
+                Click="OnCameraClick"
+                ToolTipService.ToolTip="Use camera"
+                AutomationProperties.AutomationId="CameraButton"
+                AutomationProperties.Name="Use camera"
+                AutomationProperties.HelpText="Show the camera and take a photo.">
+                <FontIcon Glyph="&#xE722;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            </Button>
+            <Button
+                x:Name="ImportButton" Grid.Column="7" Width="40" Height="36" Padding="0"
+                Click="OnImportClick"
+                ToolTipService.ToolTip="Import image from anywhere"
+                AutomationProperties.AutomationId="ImportButton"
+                AutomationProperties.Name="Import image"
+                AutomationProperties.HelpText="Choose a photo file from any folder.">
+                <FontIcon Glyph="&#xE8B9;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            </Button>
+            <Button
+                x:Name="OpenFileButton" Grid.Column="8" Width="40" Height="36" Padding="0"
+                Click="OnOpenFileClick"
+                ToolTipService.ToolTip="Open ERAF file from anywhere"
+                AutomationProperties.AutomationId="OpenFileButton"
+                AutomationProperties.Name="Open ERAF file"
+                AutomationProperties.HelpText="Choose a saved ERAF file from any folder.">
+                <FontIcon Glyph="&#xE8E5;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            </Button>
+            <Button
+                x:Name="MakeErafButton" Grid.Column="9" Height="36"
+                Style="{StaticResource AccentButtonStyle}"
+                Click="OnMakeErafClick"
+                ToolTipService.ToolTip="Add a voice note to the selected photo and save it as an ERAF file"
+                AutomationProperties.AutomationId="MakeErafButton"
+                AutomationProperties.Name="Make ERAF from selected photo"
+                AutomationProperties.HelpText="Select a photo in the list first. You can then record or attach a voice note and save everything as one ERAF file.">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE720;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                    <TextBlock Text="Make ERAF" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left blade: drives and folders. -->
+            <Border
+                Grid.Column="0"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                BorderThickness="0,0,1,0">
+                <local:PlacesBlade x:Name="Blade" />
+            </Border>
+
+            <!-- Right: the files of the current folder, or the photo and voice note being worked on. -->
+            <Grid Grid.Column="1" Padding="16" RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <InfoBar
+                    x:Name="MessageBar"
+                    Grid.Row="0"
+                    IsOpen="False"
+                    IsClosable="True"
+                    AutomationProperties.AutomationId="MessageBar"
+                    AutomationProperties.Name="Message"
+                    Severity="Error" />
+
+                <local:FileListPane x:Name="FileList" x:FieldModifier="private" Grid.Row="1" />
 
         <!-- Live camera preview. -->
         <Grid x:Name="CameraPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
@@ -203,6 +299,13 @@
                             AutomationProperties.HelpText="Replace the voice note with a saved audio file."
                             Click="OnAttachAudioClick" />
                         <Button
+                            x:Name="TrimButton"
+                            Content="Trim voice note"
+                            AutomationProperties.AutomationId="TrimButton"
+                            AutomationProperties.Name="Trim voice note"
+                            AutomationProperties.HelpText="Cut the start or end off the voice note."
+                            Click="OnTrimClick" />
+                        <Button
                             x:Name="DeleteVoiceButton"
                             Content="Discard voice note"
                             AutomationProperties.AutomationId="DeleteVoiceButton"
@@ -267,12 +370,14 @@
                     Click="OnExportAudioClick" />
                 <Button
                     x:Name="DiscardButton"
-                    Content="Start over"
+                    Content="Back to files"
                     AutomationProperties.AutomationId="DiscardButton"
-                    AutomationProperties.Name="Start over"
-                    AutomationProperties.HelpText="Remove the photo and voice note and return to the start. Asks first if they are not saved."
+                    AutomationProperties.Name="Back to files"
+                    AutomationProperties.HelpText="Close this photo and voice note and go back to the file list. Asks first if they are not saved."
                     Click="OnDiscardClick" />
             </StackPanel>
+        </Grid>
+            </Grid>
         </Grid>
     </Grid>
 </Page>

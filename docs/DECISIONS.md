@@ -171,6 +171,24 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-014 — File-manager shell and trimming (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review.
+
+**Context.** The product owner asked for a file-manager style app (left blade for drives and folders, top bar icons, right list of supported files, maximized window), a way to trim attached audio, and a simple flow from a common photo file to an `.eraf`.
+
+**Decision.**
+- The page keeps the single `SessionWorkflow`. `Idle` now shows the file list instead of a start screen; every other state shows the existing camera or photo and voice-note panels, with the folder tree and top bar still visible. "Start over" became "Back to files".
+- Leaving a session (tree, address box, Back, Forward, Up, Refresh) goes through one method, `LeaveSessionAsync`, which asks before discarding unsaved work and refuses during a save.
+- The list shows folders plus `.eraf` and photo files (jpg, jpeg, png, bmp, gif, tif, tiff) only; hidden and system items are skipped. Opening a photo starts a session with it through the same import rules as before (ADR-007); opening an `.eraf` uses the M6 open path. Saving suggests the photo's own name and its folder.
+- All listing, sorting, filtering, size wording and history logic is pure (`FileBrowsing.cs`, linked into the tests). Folder reads are plain `System.IO` (the app is full trust); thumbnails come from Windows' thumbnail cache as rows appear.
+- The window starts maximized (`OverlappedPresenter.Maximize()`). The last folder is remembered in `ApplicationData.LocalSettings`.
+- Trim: `TrimRange` (pure) validates start and end (at least 300 ms, inside the clip, not the whole clip); `AudioTrimService` re-encodes the kept part with `MediaTranscoder.TrimStartTime/TrimStopTime` to AAC M4A and re-checks it with `ErafMedia.CheckAudio`. It works on any held voice note and reuses the `AudioAttached` event. Cancel or failure leaves the voice note unchanged.
+
+**Consequences.** The folder tree shows plain names (no icons) because the tree control cannot bind a plain C# class in this setup. Sources longer than 10 minutes are still refused at attach time and cannot be trimmed first. Trimming is a lossy re-encode.
+
+---
+
 ## ADR-013 — Attach a saved audio file as the voice note
 
 **Status:** Implemented at the product owner's request (2026-10-24); awaiting Cursor review.

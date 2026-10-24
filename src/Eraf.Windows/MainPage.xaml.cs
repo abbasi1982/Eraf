@@ -2,7 +2,9 @@ using Eraf.Format;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Windows.Storage;
 using Windows.Storage.Streams;
 
 namespace Eraf.Windows;
@@ -29,9 +31,21 @@ public sealed partial class MainPage : Page
         _workflow.Changed += (_, _) => Render();
         _recordTimer.Tick += OnRecordTimerTick;
         Unloaded += (_, _) => ReleaseEverything();
+        Blade.FolderChosen += async path => await GoToFolderAsync(path);
+        FileList.EntryActivated += async entry => await OpenEntryAsync(entry);
+        FileList.EntrySelected += entry =>
+        {
+            _selectedEntry = entry;
+            Render();
+        };
         Loaded += async (_, _) =>
         {
             await RefreshMicrophonesAsync();
+            if (_history.Current is null)
+            {
+                await ShowFolderAsync(StartFolder(), addToHistory: true);
+            }
+
             FocusNextControl();
         };
         Render();
@@ -83,7 +97,7 @@ public sealed partial class MainPage : Page
         bool recording = state == SessionState.RecordingAudio;
         bool busy = state == SessionState.Saving || _attachingAudio;
 
-        IdlePanel.Visibility = Show(state == SessionState.Idle);
+        FileList.Visibility = Show(state == SessionState.Idle);
         CameraPanel.Visibility = Show(state == SessionState.CapturingPhoto);
         PhotoPanel.Visibility = Show(state != SessionState.Idle && state != SessionState.CapturingPhoto);
 
@@ -96,11 +110,24 @@ public sealed partial class MainPage : Page
         PlayButton.Content = state == SessionState.AudioPreview ? "Stop" : "Play";
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PlayButton, state == SessionState.AudioPreview ? "Stop voice note" : "Play voice note");
 
+        // Starting a photo is only possible from the file list; navigation is blocked while something is being written or converted.
+        bool startable = state == SessionState.Idle && !_importBusy;
+        ImportButton.IsEnabled = startable;
+        CaptureButton.IsEnabled = startable;
+        OpenFileButton.IsEnabled = startable;
+        MakeErafButton.IsEnabled = startable && _selectedEntry is { Kind: EntryKind.Photo or EntryKind.Eraf };
+        bool navigable = !busy && !_importBusy;
+        BackNavButton.IsEnabled = navigable && _history.CanBack;
+        ForwardNavButton.IsEnabled = navigable && _history.CanForward;
+        UpNavButton.IsEnabled = navigable && _history.Current is { } here && FolderLister.Parent(here) is not null;
+        RefreshNavButton.IsEnabled = navigable;
+        AddressBox.IsEnabled = navigable;
+        Blade.IsEnabled = navigable;
         SaveButton.IsEnabled = _workflow.CanSave && !_attachingAudio;
         DismissErrorButton.Visibility = Show(state == SessionState.Error);
         ExportPhotoButton.IsEnabled = !busy && !recording && _session is not null;
         ExportAudioButton.IsEnabled = !busy && !recording && _workflow.HasAudio;
-        foreach (Button b in new[] { RecordButton, RerecordButton, AttachAudioButton, ReplaceAudioFileButton, PlayButton, DeleteVoiceButton, DiscardButton })
+        foreach (Button b in new[] { RecordButton, RerecordButton, AttachAudioButton, ReplaceAudioFileButton, TrimButton, PlayButton, DeleteVoiceButton, DiscardButton })
         {
             b.IsEnabled = !busy;
         }
@@ -147,7 +174,7 @@ public sealed partial class MainPage : Page
 
         Control? target = _workflow.State switch
         {
-            SessionState.Idle => ImportButton,
+            SessionState.Idle => null,
             SessionState.CapturingPhoto => TakePhotoButton,
             SessionState.RecordingAudio => StopRecordButton,
             SessionState.Error => DismissErrorButton,
@@ -156,6 +183,12 @@ public sealed partial class MainPage : Page
             _ when _workflow.CanSave => SaveButton,
             _ => PlayButton,
         };
+        if (_workflow.State == SessionState.Idle)
+        {
+            FileList.FocusList();
+            return;
+        }
+
         target?.Focus(FocusState.Programmatic);
     }
 
@@ -251,29 +284,43 @@ public sealed partial class MainPage : Page
         _workflow.TryApply(SessionEvent.CancelCamera);
     }
 
-    /// <summary>Start over: drops the photo and voice note and returns to idle. Asks first if something would be lost.</summary>
-    private async void OnDiscardClick(object sender, RoutedEventArgs e)
+    /// <summary>Back to files: drops the photo and voice note and returns to the file list. Asks first if something would be lost.</summary>
+    private async void OnDiscardClick(object sender, RoutedEventArgs e) => await LeaveSessionAsync();
+
+    /// <summary>
+    /// Ends the current session if there is one (asking first when it holds unsaved work). True when the page is
+    /// now at the file list, false when the user kept working or a save is still running.
+    /// </summary>
+    private async Task<bool> LeaveSessionAsync()
     {
+        if (_workflow.State == SessionState.Idle)
+        {
+            return true;
+        }
+
         if (!_workflow.CanApply(SessionEvent.StartOver))
         {
-            return;
+            return false;
         }
 
         if (_workflow.HasUnsavedWork && !await ConfirmDiscardAsync())
         {
-            return;
+            return false;
         }
 
         // The state may have moved while the dialog was open (for example a recording auto-stopped).
         if (!_workflow.CanApply(SessionEvent.StartOver))
         {
-            return;
+            return false;
         }
 
         ClearMessage();
         ReleaseEverything();
         _savedLabel = null;
         _workflow.TryApply(SessionEvent.StartOver);
+        // The folder may now hold a file that was just saved.
+        _ = ShowFolderAsync(_history.Current ?? StartFolder(), addToHistory: false);
+        return true;
     }
 
     /// <summary>Decodes the session's own bytes into the preview, so what is shown is what would be saved.</summary>
@@ -363,6 +410,26 @@ public sealed partial class MainPage : Page
                 return; // cancelled
             }
 
+            await OpenErafPathAsync(path);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    /// <summary>Opens a chosen .eraf file: full validation (spec 9) off the UI thread, then show it. A bad file is a message, never an exception.</summary>
+    private async Task OpenErafPathAsync(string path)
+    {
+        if (!_workflow.CanApply(SessionEvent.FileOpened))
+        {
+            return;
+        }
+
+        ClearMessage();
+        SetBusy(true);
+        try
+        {
             // Full validation (spec §9) happens off the UI thread; a bad file comes back as a message, never an exception.
             OpenResult result = await Task.Run(() => SessionFile.Open(path));
             if (result.Session is null)
@@ -407,7 +474,7 @@ public sealed partial class MainPage : Page
 
         // Choose the target first, while still in ReadyToSave: cancelling the dialog is not a failure.
         (string? path, string? pickError) = await FilePickers.PickSaveAsync(
-            App.MainWindow!, $"ERAF {DateTime.Now:yyyy-MM-dd HHmm}", "ERAF file", ".eraf");
+            App.MainWindow!, SuggestedErafName(), "ERAF file", ".eraf", _sessionFolder);
         if (pickError is not null)
         {
             ShowError(pickError);
@@ -554,6 +621,184 @@ public sealed partial class MainPage : Page
         }
     }
 
+    // ---------------------------------------------------------------- file browser
+
+    private readonly FolderHistory _history = new();
+    private BrowserEntry? _selectedEntry;
+    private string? _sessionFolder;
+
+    /// <summary>The last folder used, if it still exists, otherwise Pictures, otherwise the user's home folder.</summary>
+    private static string StartFolder()
+    {
+        string? last = AppSettings.Get("LastFolder");
+        if (last is not null && Directory.Exists(last))
+        {
+            return last;
+        }
+
+        string pictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+        return Directory.Exists(pictures) ? pictures : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    }
+
+    /// <summary>Goes to a folder from the tree, address box or a double-click, leaving any open photo first.</summary>
+    private async Task GoToFolderAsync(string path)
+    {
+        if (!await LeaveSessionAsync())
+        {
+            return;
+        }
+
+        await ShowFolderAsync(path, addToHistory: true);
+    }
+
+    /// <summary>Reads a folder off the UI thread and shows it in the list.</summary>
+    private async Task ShowFolderAsync(string path, bool addToHistory)
+    {
+        FolderListing listing = await Task.Run(() => FolderLister.List(path));
+        if (addToHistory)
+        {
+            _history.Navigate(path);
+        }
+
+        AddressBox.Text = _history.Current ?? path;
+        FileList.SetListing(listing.Entries, listing.Error,
+            "Nothing here yet. Open a folder with photos or ERAF files, or use the camera.");
+        AppSettings.Set("LastFolder", path);
+        Render();
+    }
+
+    private async Task OpenEntryAsync(BrowserEntry entry)
+    {
+        if (_workflow.State != SessionState.Idle || _importBusy)
+        {
+            return;
+        }
+
+        switch (entry.Kind)
+        {
+            case EntryKind.Folder:
+                await GoToFolderAsync(entry.FullPath);
+                break;
+            case EntryKind.Eraf:
+                _sessionFolder = Path.GetDirectoryName(entry.FullPath);
+                await OpenErafPathAsync(entry.FullPath);
+                break;
+            default:
+                _sessionFolder = Path.GetDirectoryName(entry.FullPath);
+                await ImportPhotoPathAsync(entry.FullPath);
+                break;
+        }
+    }
+
+    /// <summary>Starts a session with a photo chosen in the list (same rules as the Import button).</summary>
+    private async Task ImportPhotoPathAsync(string path)
+    {
+        if (!_workflow.CanApply(SessionEvent.PhotoReady))
+        {
+            return;
+        }
+
+        ClearMessage();
+        SetBusy(true);
+        try
+        {
+            StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+            ImportResult result = await ImageImportService.ImportFileAsync(file);
+            if (result.Session is not null)
+            {
+                await ShowPhotoAsync(result.Session);
+            }
+            else if (result.Error is not null)
+            {
+                ShowError(result.Error);
+            }
+        }
+        catch (Exception)
+        {
+            ShowError($"\"{Path.GetFileName(path)}\" could not be opened. It may have been moved or is in use.");
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private async void OnMakeErafClick(object sender, RoutedEventArgs e)
+    {
+        if (_selectedEntry is { Kind: EntryKind.Photo or EntryKind.Eraf } entry)
+        {
+            await OpenEntryAsync(entry);
+        }
+        else
+        {
+            ShowInfo("Select a photo in the list first.");
+        }
+    }
+
+    private async void OnBackNavClick(object sender, RoutedEventArgs e) => await StepHistoryAsync(_history.Back);
+
+    private async void OnForwardNavClick(object sender, RoutedEventArgs e) => await StepHistoryAsync(_history.Forward);
+
+    private async Task StepHistoryAsync(Func<string?> step)
+    {
+        if (!await LeaveSessionAsync())
+        {
+            return;
+        }
+
+        if (step() is { } path)
+        {
+            await ShowFolderAsync(path, addToHistory: false);
+        }
+    }
+
+    private async void OnUpNavClick(object sender, RoutedEventArgs e)
+    {
+        if (_history.Current is { } here && FolderLister.Parent(here) is { } parent)
+        {
+            await GoToFolderAsync(parent);
+        }
+    }
+
+    private async void OnRefreshNavClick(object sender, RoutedEventArgs e)
+    {
+        if (await LeaveSessionAsync())
+        {
+            await ShowFolderAsync(_history.Current ?? StartFolder(), addToHistory: false);
+        }
+    }
+
+    private async void OnAddressKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != global::Windows.System.VirtualKey.Enter)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        string typed = AddressBox.Text.Trim().Trim('"');
+        if (typed.Length > 0 && Directory.Exists(typed))
+        {
+            await GoToFolderAsync(Path.GetFullPath(typed));
+        }
+        else
+        {
+            ShowError("That folder does not exist. Check the path and try again.");
+            AddressBox.Text = _history.Current ?? string.Empty;
+        }
+    }
+
+    private void OnFilterChanged(object sender, TextChangedEventArgs e) => FileList.SetFilter(FilterBox.Text);
+
+    /// <summary>The photo's own name makes the best default for the ERAF file next to it.</summary>
+    private string SuggestedErafName()
+    {
+        string? source = _session?.Photo.SourceName;
+        return string.IsNullOrWhiteSpace(source)
+            ? $"ERAF {DateTime.Now:yyyy-MM-dd HHmm}"
+            : Path.GetFileNameWithoutExtension(source);
+    }
+
     // ---------------------------------------------------------------- audio file as the voice note
 
     private bool _attachingAudio;
@@ -579,6 +824,62 @@ public sealed partial class MainPage : Page
                 if (_session is null || !_workflow.CanApply(SessionEvent.AudioAttached))
                 {
                     return;
+                }
+
+                _player?.Dispose();
+                _player = null;
+                _session.SetAudio(result.Clip);
+                _workflow.TryApply(SessionEvent.AudioAttached);
+            }
+            else if (result.Error is not null)
+            {
+                ShowError(result.Error);
+            }
+        }
+        finally
+        {
+            _attachingAudio = false;
+            Render();
+        }
+    }
+
+    /// <summary>Cuts the voice note down to the part the user keeps. Cancelling or failing leaves the voice note as it was.</summary>
+    private async void OnTrimClick(object sender, RoutedEventArgs e)
+    {
+        AudioClip? clip = _session?.Audio;
+        if (clip is null || _recorder is not null || _attachingAudio || _dialogOpen || !_workflow.CanApply(SessionEvent.AudioAttached))
+        {
+            return;
+        }
+
+        ClearMessage();
+        EndPlayback();
+        TrimRange? range;
+        _dialogOpen = true;
+        try
+        {
+            range = await TrimDialog.ShowAsync(XamlRoot, clip);
+        }
+        finally
+        {
+            _dialogOpen = false;
+        }
+
+        if (range is null)
+        {
+            return;
+        }
+
+        _attachingAudio = true;
+        Render();
+        try
+        {
+            AudioImportResult result = await AudioTrimService.TrimAsync(clip, range.Value);
+            if (result.Clip is not null)
+            {
+                if (_session is null || !ReferenceEquals(_session.Audio, clip) || !_workflow.CanApply(SessionEvent.AudioAttached))
+                {
+                    return; // the session changed while trimming
                 }
 
                 _player?.Dispose();
@@ -812,10 +1113,12 @@ public sealed partial class MainPage : Page
 
     private void ClearMessage() => MessageBar.IsOpen = false;
 
+    private bool _importBusy;
+
+    /// <summary>True while a picker, a conversion or a camera start is running: the start buttons and navigation are off.</summary>
     private void SetBusy(bool busy)
     {
-        ImportButton.IsEnabled = !busy;
-        CaptureButton.IsEnabled = !busy;
-        OpenFileButton.IsEnabled = !busy;
+        _importBusy = busy;
+        Render();
     }
 }

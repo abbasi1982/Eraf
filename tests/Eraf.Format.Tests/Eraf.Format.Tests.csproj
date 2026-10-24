@@ -28,6 +28,8 @@
     <Compile Include="..\..\src\Eraf.Windows\AtomicFile.cs" Link="Linked\AtomicFile.cs" />
     <Compile Include="..\..\src\Eraf.Windows\SessionFile.cs" Link="Linked\SessionFile.cs" />
     <Compile Include="..\..\src\Eraf.Windows\MicrophoneChoice.cs" Link="Linked\MicrophoneChoice.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\TrimRange.cs" Link="Linked\TrimRange.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\FileBrowsing.cs" Link="Linked\FileBrowsing.cs" />
   </ItemGroup>
 
   <ItemGroup>
