@@ -42,15 +42,7 @@ Declare only what is needed: webcam and microphone capabilities in the package m
 
 ## Dependencies and license inventory
 
-Maintain here as dependencies are added; each needs name, version, license and purpose. Current (M0):
-
-| Package | Version | Purpose | License |
-|---|---|---|---|
-| Microsoft.WindowsAppSDK | 2.5.1 | WinUI 3 / app platform | see package (Microsoft) |
-| Microsoft.Windows.SDK.BuildTools | 10.0.28000.2705 | Build tooling | see package (Microsoft) |
-| Microsoft.Windows.SDK.BuildTools.WinApp | 0.7.1 | `winapp` CLI for packaged launch | see package (Microsoft) |
-
-M7 added no dependencies. Licenses are not yet verified from the packages; record exact license identifiers here before the M9 release gate. The project's own license is not yet declared (see README).
+The full inventory with versions, purposes and license identifiers read from package metadata is in [DEPENDENCIES.md](DEPENDENCIES.md). Summary: `Eraf.Format` has no dependencies; the app uses Microsoft Windows App SDK 2.5.1 (Microsoft license text, no SPDX id), the Windows SDK build tools (Microsoft license) and `winapp` 0.7.1 (MIT); tests use xunit (Apache-2.0) and Microsoft.NET.Test.Sdk (MIT). **Still open for a public release:** a human reading of the two Microsoft license texts, and the project's own license.
 
 ## Reporting
 

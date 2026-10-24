@@ -1,6 +1,6 @@
 # ERAF Project Status
 
-**Last updated:** 2026-10-24 (M8 closed by Cursor)
+**Last updated:** 2026-10-24 (M9 closed — Windows Phase 1 gate **PASSED** for Phase 2 planning)
 
 ## Roles
 
@@ -9,59 +9,61 @@
 
 ## Current phase
 
-Phase 1 — Windows. **M0–M8 closed.** Next: **M9** (Windows release gate evidence).
-
-Phase 2 — Android remains blocked until the Windows release gate passes and is explicitly approved.
+**Phase 1 Windows — gate PASSED** (with documented exceptions).  
+**Phase 2 Android — planning authorized only**; no implementation until the product owner explicitly approves after the Phase 2 plan review.
 
 ## Completed
 
 | Item | Notes |
 |---|---|
-| M0–M7 | Closed |
-| **M8 Accessibility / polish** | Closed by Cursor 2026-10-24 |
+| M0–M8 | Closed |
+| **M9 Windows release gate** | Closed by Cursor 2026-10-24 — gate **PASS** |
 
 ## In progress
 
-None until Claude Code commits M8 + close-out, pushes with `a332282` (M7), then starts [CLAUDE_CODE_BRIEF_M9.md](CLAUDE_CODE_BRIEF_M9.md).
+None until Claude Code commits M9 + close-out, then starts [CLAUDE_CODE_BRIEF_PHASE2_PLAN.md](CLAUDE_CODE_BRIEF_PHASE2_PLAN.md).
 
 ## Next
 
-1. **Authorized:** Commit M8 working tree + Cursor close-out (STATUS, M9 brief, README)
-2. **Authorized:** Push `a332282` + M8 commit(s) to `origin/master`
-3. Execute M9
+1. **Authorized:** Commit M9 evidence package + Cursor close-out (STATUS, Phase 2 plan brief, README)
+2. Push when asked
+3. Execute Phase 2 **planning** brief only
+4. Product owner decides whether to authorize Android implementation
 
 ## Milestones
 
 | ID | Status |
 |---|---|
-| M0–M7 | **Closed** |
-| M8 Accessibility | **Closed** |
-| M9 Windows release gate | **Authorized** — [CLAUDE_CODE_BRIEF_M9.md](CLAUDE_CODE_BRIEF_M9.md) |
+| M0–M8 | **Closed** |
+| M9 Windows release gate | **Closed — PASS** |
+| Phase 2 planning | **Authorized** — [CLAUDE_CODE_BRIEF_PHASE2_PLAN.md](CLAUDE_CODE_BRIEF_PHASE2_PLAN.md) |
+| Phase 2 Android implementation | **Blocked** pending product-owner approval |
 
-## M8 close-out (Cursor)
+## M9 close-out (Cursor) — Windows Phase 1 gate
 
-**Verdict:** Pass with documented limitation.
+**Verdict: PASS** for opening Phase 2 **planning**. Not a claim of store-ready / signed / Narrator-certified product.
 
-| Criterion | Result |
-|---|---|
-| Automation names / help text on controls | Pass (UIA inspection) |
-| Keyboard primary workflow | Pass (real keys + UIA focus) |
-| Esc cancels camera; focus after steps | Pass |
-| Export label polish | Pass |
-| `dotnet test` | **283 passed** (no new tests expected) |
-| Narrator heard announcements | **Not verified** — carry to M9 limitations; do not claim screen-reader certified |
+| # | Criterion | Cursor decision |
+|---|---|---|
+| 1–5, 7, 9–11 | Pass | Confirmed (`dotnet test` **283/283** re-run; Release build **0 errors**, 1 generated XAML IL2059 warning accepted) |
+| 8 Size limits | Pass (proxy) | Accepted — unit/fixture coverage; wall-clock 10 min / 256 MiB not required to open the gate |
+| 6 Denied/absent cam/mic | **Not verified** | **Does not block** the gate: messages + import-on-idle exist; exercising denial would change user privacy settings. Residual risk carried to Phase 2 / hardening backlog |
+| 12 Docs match behavior | **Pass** | USER_GUIDE + DEPENDENCIES + STATUS acceptance table confirmed |
+| 13 Approvals | Supervisor **yes**; product-owner production/public release still their call | |
 
-Deliberate omission of live region on the recording timer is **accepted** (avoids spam; focus on Stop recording).
+**Smoke / independent parse / invalid open:** Accepted as reported.
 
-### M8 evidence (implementer)
+**IL2059 trim warning:** Accepted (generated `XamlTypeInfo.g.cs`).
 
-See prior STATUS *M8 evidence* in working tree / git before this rewrite: MainPage automation properties, `FocusNextControl`, keyboard walk table.
+### Residual risks (accepted for this gate)
 
-## Known limitations carried forward
+- Narrator never run; high-contrast / scaling / touch untested
+- Unsigned app; Microsoft license texts need human read before public redistribution
+- Project license undeclared
+- Cam/mic deny unexercised; orphan partial rules; `winapp run` only
 
-- Plain `dotnet run` / use `winapp run`
-- Camera/mic deny paths unexercised on real denial
-- Narrator not run (names exist via UIA only)
-- High-contrast / text scaling / touch not tested
-- SECURITY.md license identifiers → M9
-- Orphan `.partial` cleanup only on next save to same name
+**Android:** Do **not** implement until PO approval after Phase 2 plan.
+
+## Known limitations (post-gate)
+
+See M9 evidence section in git history for the full implementer table; summary above stands.

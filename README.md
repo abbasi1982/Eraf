@@ -27,7 +27,7 @@ Cloud sync, accounts, and general media-management features are out of scope unl
 
 **Application features are not implemented yet.**
 
-**M0–M8 closed.** Next: **M9** — [docs/CLAUDE_CODE_BRIEF_M9.md](docs/CLAUDE_CODE_BRIEF_M9.md) (Windows release gate).
+**Windows Phase 1 gate: PASSED** (M0–M9). Next: Phase 2 **planning only** — [docs/CLAUDE_CODE_BRIEF_PHASE2_PLAN.md](docs/CLAUDE_CODE_BRIEF_PHASE2_PLAN.md). Android implementation stays blocked until the product owner approves.
 
 Live progress: [docs/STATUS.md](docs/STATUS.md)
 
@@ -79,6 +79,8 @@ The normative specification is [docs/ERAF_FORMAT_SPEC.md](docs/ERAF_FORMAT_SPEC.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module boundaries and workflow design |
 | [docs/TESTING.md](docs/TESTING.md) | Test strategy and fixture policy |
 | [docs/SECURITY.md](docs/SECURITY.md) | Threat model, untrusted-input rules, dependency inventory |
+| [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) | Packages, versions and licenses |
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | Short guide for making, opening and exporting ERAF files |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Decision log (ADRs) |
 | [fixtures/eraf/README.md](fixtures/eraf/README.md) | Golden fixtures: naming and use; byte recipes in `RECIPES.md` |
 | [docs/STATUS.md](docs/STATUS.md) | Milestone status and evidence log |
@@ -93,9 +95,12 @@ The normative specification is [docs/ERAF_FORMAT_SPEC.md](docs/ERAF_FORMAT_SPEC.
 | [docs/CLAUDE_CODE_BRIEF_M6.md](docs/CLAUDE_CODE_BRIEF_M6.md) | M6 brief (closed) |
 | [docs/CLAUDE_CODE_BRIEF_M7.md](docs/CLAUDE_CODE_BRIEF_M7.md) | M7 brief (closed) |
 | [docs/CLAUDE_CODE_BRIEF_M8.md](docs/CLAUDE_CODE_BRIEF_M8.md) | M8 brief (closed) |
-| [docs/CLAUDE_CODE_BRIEF_M9.md](docs/CLAUDE_CODE_BRIEF_M9.md) | Current implementer brief for M9 |
+| [docs/CLAUDE_CODE_BRIEF_M9.md](docs/CLAUDE_CODE_BRIEF_M9.md) | M9 brief (closed — gate pass) |
+| [docs/CLAUDE_CODE_BRIEF_PHASE2_PLAN.md](docs/CLAUDE_CODE_BRIEF_PHASE2_PLAN.md) | Phase 2 planning brief (no Android code yet) |
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | End-user guide (Windows) |
+| [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) | Dependency and license inventory |
 
-A user guide is planned for late Phase 1.
+Windows milestones M0–M9 are complete for the Phase 1 gate.
 
 ## Delivery model
 
@@ -104,7 +109,7 @@ A user guide is planned for late Phase 1.
 | **Cursor** | Architecture, reviews, security/quality gates, milestone briefs |
 | **Claude Code** | Implementation of the currently authorized milestone only |
 
-Windows milestones run M0 → M9. Android does not start until Cursor and the product owner approve the Windows release gate.
+Android implementation does not start until the product owner approves Phase 2 after the planning review.
 
 ## Building and running (Windows, development machine)
 
