@@ -25,6 +25,14 @@ Select several photos (Ctrl or Shift while clicking, or Ctrl+A), or select one o
 
 Drag photos, folders or an ERAF file from File Explorer onto the app window while you are looking at the file list. One photo starts a new ERAF, several photos or any folder start the "one voice note for many photos" flow, and an ERAF file opens. Other files in the drop are left out, and the app tells you how many.
 
+## Messages and the status bar
+
+The strip along the bottom of the window is the status bar. Messages (saved, errors, how many photos were found, and so on) appear on its left with a symbol that shows what kind they are; press the small X to clear one. On the right it counts the items in the folder and how many are ticked.
+
+## Choosing how files are shown
+
+On the **View** tab, **Layout** lets you show the list as **Details** (columns you can click to sort), **Tiles**, **Small icons**, **Medium icons**, **Large icons** or a plain **List**. Your choice is remembered. Shortcuts (click in the list first): Ctrl+Shift+2 Large icons, 3 Medium icons, 4 Small icons, 5 List, 6 Details, 7 Tiles. Sorting uses the column headers in Details and stays the same in the other layouts.
+
 ## Checkboxes and selecting
 
 Every file and folder has a checkbox. Tick the ones you want, or tick the box at the top of the list to select everything (**Select all** and **Select none** are on the Home tab). Double-click, or press Enter, to open the item you are on. You can turn the checkboxes off in the View tab or in Settings; the list then works like Explorer, where Ctrl and Shift select several.

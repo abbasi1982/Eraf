@@ -171,6 +171,18 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-019 — Status bar for messages; file list layouts (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review.
+
+**Status bar.** WinUI 3 has no status bar control, so the page has a bar along the bottom of the window. The latest message appears on its left with a symbol for its kind (error, warning, done, information) so colour is not the only signal, a "clear message" button, and a polite live region for screen readers; long messages wrap to two lines and show in full in a tooltip. On the right it shows the item counts of the file list ("7 items | 2 selected"). It replaces the message bar (`InfoBar`) that sat above the list. Callers did not change: `ShowError`, `ShowInfo`, `ShowMessage` and `ClearMessage` now write to the bar. Messages stay until the next action clears them or the user presses the clear button; there is no timer.
+
+**Layouts.** The file list can be shown as Details (columns, sortable), Tiles, Small icons, Medium icons, Large icons or List (`ViewMode`, `ViewModes`, pure). One `ListView` swaps its item template and its panel (stack panel for Details and List, wrap grid for the others); photo thumbnails are requested from Windows at a size that fits the layout (48 to 256 px) and loaded again when the layout changes; selection, filter and sort are kept. The choice is in the View tab ("Layout") and stored in the options. Shortcuts follow File Explorer's numbers: Ctrl+Shift+2 Large, 3 Medium, 4 Small, 5 List, 6 Details, 7 Tiles. Sorting is by the column headers, which exist only in Details; the sort chosen there stays in force in the other layouts.
+
+**Consequences.** There is no sort control outside Details. The shortcuts do nothing while a text box has the focus (the box keeps the keys), which is normal for text fields.
+
+---
+
 ## ADR-018 — Colour themes and opening .eraf files by double-click (requested 2026-10-24)
 
 **Status:** Implemented at the product owner's request; awaiting Cursor review.

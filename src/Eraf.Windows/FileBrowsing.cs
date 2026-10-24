@@ -343,3 +343,46 @@ public static class Places
         return result;
     }
 }
+
+/// <summary>How the file list is laid out, like the View choices in File Explorer.</summary>
+public enum ViewMode
+{
+    /// <summary>One row per item with Name, Date modified, Size and Type columns (sortable).</summary>
+    Details,
+
+    /// <summary>One compact row per item: a small icon and the name.</summary>
+    List,
+
+    /// <summary>Items flow across the window as a small icon and a name.</summary>
+    SmallIcons,
+
+    /// <summary>Items flow across the window with a medium thumbnail above the name.</summary>
+    MediumIcons,
+
+    /// <summary>Items flow across the window with a large thumbnail above the name.</summary>
+    LargeIcons,
+
+    /// <summary>Items flow across the window as a thumbnail with the name and a line about the item beside it.</summary>
+    Tiles,
+}
+
+/// <summary>What each <see cref="ViewMode"/> is called, whether it flows like a grid, and how big its thumbnails are.</summary>
+public sealed record ViewModeInfo(ViewMode Mode, string Label, bool IsGrid, int ThumbnailPixels);
+
+public static class ViewModes
+{
+    /// <summary>In the order they are offered.</summary>
+    public static IReadOnlyList<ViewModeInfo> All { get; } = new ViewModeInfo[]
+    {
+        new(ViewMode.Details, "Details", false, 72),
+        new(ViewMode.Tiles, "Tiles", true, 112),
+        new(ViewMode.SmallIcons, "Small icons", true, 48),
+        new(ViewMode.MediumIcons, "Medium icons", true, 160),
+        new(ViewMode.LargeIcons, "Large icons", true, 256),
+        new(ViewMode.List, "List", false, 48),
+    };
+
+    public static ViewModeInfo For(ViewMode mode) => All.First(m => m.Mode == mode);
+
+    public static int IndexOf(ViewMode mode) => Math.Max(0, All.ToList().FindIndex(m => m.Mode == mode));
+}

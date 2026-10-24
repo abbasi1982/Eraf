@@ -64,6 +64,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Ribbon: tabs on top, the commands of the chosen tab below. -->
@@ -237,6 +238,18 @@
                     <!-- View: checkboxes, subfolder search, theme. -->
                     <StackPanel x:Name="ViewTab" Orientation="Horizontal" Visibility="Collapsed">
                         <StackPanel>
+                            <ComboBox
+                                x:Name="ViewModeBox"
+                                Width="170"
+                                Margin="4,22,4,0"
+                                SelectionChanged="OnViewModeBoxChanged"
+                                AutomationProperties.AutomationId="ViewModeBox"
+                                AutomationProperties.Name="Layout"
+                                AutomationProperties.HelpText="Show files as Details, Tiles, Small, Medium or Large icons, or a List. Shortcuts Ctrl+Shift+2 to 7." />
+                            <TextBlock Text="Layout" Style="{StaticResource RibbonGroupLabel}" Margin="0,22,0,0" />
+                        </StackPanel>
+                        <Rectangle Style="{StaticResource RibbonDivider}" />
+                        <StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <ToggleButton
                                     x:Name="CheckboxToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnCheckboxToggleClick"
@@ -396,7 +409,6 @@
             <Grid Grid.Column="1" Padding="16,8,16,16" RowSpacing="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -409,19 +421,11 @@
                     AutomationProperties.AutomationId="FolderLoading"
                     AutomationProperties.Name="Reading the folder" />
 
-                <InfoBar
-                    x:Name="MessageBar"
-                    Grid.Row="1"
-                    IsOpen="False"
-                    IsClosable="True"
-                    AutomationProperties.AutomationId="MessageBar"
-                    AutomationProperties.Name="Message"
-                    Severity="Error" />
 
-                <local:FileListPane x:Name="FileList" x:FieldModifier="private" Grid.Row="2" />
+                <local:FileListPane x:Name="FileList" x:FieldModifier="private" Grid.Row="1" />
 
                 <!-- Live camera preview. -->
-                <Grid x:Name="CameraPanel" Grid.Row="2" Visibility="Collapsed" RowSpacing="12">
+                <Grid x:Name="CameraPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
@@ -461,7 +465,7 @@
                 </Grid>
 
                 <!-- Photo preview of exactly the bytes held in the session. The commands live in the ribbon. -->
-                <Grid x:Name="PhotoPanel" Grid.Row="2" Visibility="Collapsed" RowSpacing="8">
+                <Grid x:Name="PhotoPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
@@ -505,8 +509,65 @@
                 </Grid>
 
                 <!-- Settings page: covers the file list and the editor while it is open. -->
-                <local:SettingsPane x:Name="SettingsView" Grid.Row="1" Grid.RowSpan="2" Visibility="Collapsed" />
+                <local:SettingsPane x:Name="SettingsView" Grid.Row="0" Grid.RowSpan="2" Visibility="Collapsed" />
             </Grid>
+        </Grid>
+
+        <!-- Status bar: the latest message on the left (with a symbol, so colour is never the only hint), item counts on the right. -->
+        <Grid
+            x:Name="StatusBar"
+            Grid.Row="3"
+            Padding="12,4"
+            ColumnSpacing="10"
+            MinHeight="30"
+            Background="{ThemeResource LayerFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0"
+            AutomationProperties.AutomationId="StatusBar"
+            AutomationProperties.Name="Status bar">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <FontIcon
+                x:Name="StatusIcon"
+                Grid.Column="0"
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                FontSize="14"
+                VerticalAlignment="Center"
+                Visibility="Collapsed" />
+            <TextBlock
+                x:Name="StatusMessage"
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                TextWrapping="Wrap"
+                MaxLines="2"
+                TextTrimming="CharacterEllipsis"
+                AutomationProperties.AutomationId="StatusMessage"
+                AutomationProperties.LiveSetting="Polite" />
+            <Button
+                x:Name="StatusDismissButton"
+                Grid.Column="2"
+                Width="28"
+                Height="24"
+                Padding="0"
+                Background="Transparent"
+                BorderThickness="0"
+                Visibility="Collapsed"
+                Click="OnStatusDismissClick"
+                ToolTipService.ToolTip="Clear this message"
+                AutomationProperties.AutomationId="StatusDismissButton"
+                AutomationProperties.Name="Clear message">
+                <FontIcon Glyph="&#xE711;" FontSize="10" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            </Button>
+            <TextBlock
+                x:Name="StatusCounts"
+                Grid.Column="3"
+                VerticalAlignment="Center"
+                Opacity="0.8"
+                AutomationProperties.AutomationId="StatusCounts" />
         </Grid>
     </Grid>
 </Page>

@@ -144,6 +144,7 @@ public sealed partial class MainPage : Page
         ExportPhotoButton.IsEnabled = !busy && !recording && _session is not null && _batch is null;
         ExportAudioButton.IsEnabled = !busy && !recording && _workflow.HasAudio;
         RenderRibbon(state, recording, busy);
+        RenderStatusCounts();
 
         SaveStatus.Text = state switch
         {
@@ -809,7 +810,11 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void OnFilterChanged(object sender, TextChangedEventArgs e) => FileList.SetFilter(FilterBox.Text);
+    private void OnFilterChanged(object sender, TextChangedEventArgs e)
+    {
+        FileList.SetFilter(FilterBox.Text);
+        RenderStatusCounts();
+    }
 
     /// <summary>The photo's own name makes the best default for the ERAF file next to it.</summary>
     private string SuggestedErafName()
@@ -1126,14 +1131,53 @@ public sealed partial class MainPage : Page
 
     private void ShowInfo(string message) => ShowMessage(message, InfoBarSeverity.Informational);
 
+    /// <summary>Puts a message in the status bar. A symbol shows how serious it is (a colour alone would not help everyone).</summary>
     private void ShowMessage(string message, InfoBarSeverity severity)
     {
-        MessageBar.Severity = severity;
-        MessageBar.Message = message;
-        MessageBar.IsOpen = true;
+        (string glyph, string name, uint? dark, uint? light) = severity switch
+        {
+            InfoBarSeverity.Error => ("\uEA39", "Error", 0xFF99A4u, 0xC42B1Cu),
+            InfoBarSeverity.Warning => ("\uE7BA", "Warning", 0xFCE100u, 0x9D5D00u),
+            InfoBarSeverity.Success => ("\uE73E", "Done", 0x6CCB5Fu, 0x0F7B0Fu),
+            _ => ("\uE946", "Information", (uint?)null, (uint?)null),
+        };
+        bool isDark = ActualTheme == ElementTheme.Dark;
+        uint? colour = isDark ? dark : light;
+        StatusIcon.Glyph = glyph;
+        StatusIcon.Foreground = colour is { } c
+            ? new Microsoft.UI.Xaml.Media.SolidColorBrush(global::Windows.UI.Color.FromArgb(0xFF, (byte)(c >> 16), (byte)(c >> 8), (byte)c))
+            : StatusMessage.Foreground;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(StatusIcon, name);
+        StatusIcon.Visibility = Visibility.Visible;
+        StatusMessage.Text = message;
+        ToolTipService.SetToolTip(StatusMessage, message);
+        StatusDismissButton.Visibility = Visibility.Visible;
     }
 
-    private void ClearMessage() => MessageBar.IsOpen = false;
+    private void ClearMessage()
+    {
+        StatusMessage.Text = string.Empty;
+        ToolTipService.SetToolTip(StatusMessage, null);
+        StatusIcon.Visibility = Visibility.Collapsed;
+        StatusDismissButton.Visibility = Visibility.Collapsed;
+    }
+
+    private void OnStatusDismissClick(object sender, RoutedEventArgs e) => ClearMessage();
+
+    /// <summary>The counts at the right of the status bar: what the list shows and how much of it is selected.</summary>
+    private void RenderStatusCounts()
+    {
+        if (_workflow.State != SessionState.Idle || _showingSettings)
+        {
+            StatusCounts.Text = string.Empty;
+            return;
+        }
+
+        int shown = FileList.Count;
+        int ticked = _selection.Count;
+        StatusCounts.Text = $"{shown} item{(shown == 1 ? string.Empty : "s")}"
+            + (ticked > 0 ? $"  |  {ticked} selected" : string.Empty);
+    }
 
     private bool _importBusy;
 

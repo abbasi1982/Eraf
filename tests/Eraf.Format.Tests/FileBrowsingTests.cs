@@ -52,6 +52,27 @@ public sealed class FileBrowsingTests : IDisposable
         Assert.Null(FileKinds.ClassifyFile(name));
 
     [Fact]
+    public void EveryViewModeIsOfferedOnceWithAName()
+    {
+        Assert.Equal(Enum.GetValues<ViewMode>().Length, ViewModes.All.Count);
+        Assert.Equal(ViewModes.All.Count, ViewModes.All.Select(m => m.Mode).Distinct().Count());
+        Assert.Equal(ViewModes.All.Count, ViewModes.All.Select(m => m.Label).Distinct().Count());
+        Assert.Equal(ViewMode.Details, ViewModes.All[0].Mode);
+        Assert.All(ViewModes.All, m => Assert.False(string.IsNullOrWhiteSpace(m.Label)));
+        Assert.All(Enum.GetValues<ViewMode>(), m => Assert.Equal(m, ViewModes.All[ViewModes.IndexOf(m)].Mode));
+    }
+
+    [Fact]
+    public void ThumbnailsGrowFromListToLargeIconsAndOnlyDetailsAndListAreNotGrids()
+    {
+        Assert.True(ViewModes.For(ViewMode.SmallIcons).ThumbnailPixels < ViewModes.For(ViewMode.MediumIcons).ThumbnailPixels);
+        Assert.True(ViewModes.For(ViewMode.MediumIcons).ThumbnailPixels < ViewModes.For(ViewMode.LargeIcons).ThumbnailPixels);
+        Assert.Equal(
+            new[] { ViewMode.Details, ViewMode.List },
+            ViewModes.All.Where(m => !m.IsGrid).Select(m => m.Mode).OrderBy(m => m));
+    }
+
+    [Fact]
     public void EveryKindHasALabel()
     {
         foreach (EntryKind kind in Enum.GetValues<EntryKind>())

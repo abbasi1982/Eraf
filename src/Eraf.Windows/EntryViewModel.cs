@@ -23,6 +23,9 @@ public sealed class EntryViewModel : INotifyPropertyChanged
 
     public string TypeText => FileKinds.TypeLabel(Entry.Kind);
 
+    /// <summary>The line under the name in the Tiles layout: the type, and the size for files.</summary>
+    public string TileDetail => Entry.Kind == EntryKind.Folder ? TypeText : $"{TypeText} · {SizeText}";
+
     /// <summary>Segoe Fluent Icons glyph shown when there is no thumbnail.</summary>
     public string Glyph => Entry.Kind switch
     {

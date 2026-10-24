@@ -48,13 +48,14 @@ public sealed class BatchPlanningTests : IDisposable
         Assert.Equal(OutputMode.NextToPhoto, d.Output);
         Assert.Null(d.OutputFolder);
         Assert.True(d.ShowCheckboxes);
+        Assert.Equal(ViewMode.Details, d.ListMode);
     }
 
     [Fact]
     public void OptionsSurviveASaveAndLoad()
     {
         var store = new Dictionary<string, string?>();
-        var chosen = new AppOptions(ThemeChoice.Midnight, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out", ShowCheckboxes: false);
+        var chosen = new AppOptions(ThemeChoice.Midnight, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out", ShowCheckboxes: false, ListMode: ViewMode.Tiles);
 
         chosen.Save((k, v) => store[k] = v);
         AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
@@ -73,6 +74,7 @@ public sealed class BatchPlanningTests : IDisposable
             ["ScanSubfolders"] = "maybe",
             ["OutputFolder"] = "  ",
             ["ShowCheckboxes"] = "0",
+            ["ListMode"] = "Huge",
         };
 
         AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
@@ -83,6 +85,7 @@ public sealed class BatchPlanningTests : IDisposable
         Assert.False(loaded.ScanSubfolders);
         Assert.Null(loaded.OutputFolder);
         Assert.False(loaded.ShowCheckboxes);
+        Assert.Equal(ViewMode.Details, loaded.ListMode);
         Assert.Equal(AppOptions.Default, AppOptions.Load(_ => null));
     }
 

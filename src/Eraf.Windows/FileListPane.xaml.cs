@@ -29,6 +29,7 @@ public sealed partial class FileListPane : UserControl
         InitializeComponent();
         List.ItemsSource = _items;
         UpdateHeaders();
+        SetViewMode(ViewMode.Details);
     }
 
     /// <summary>The user opened an item (double-click or Enter).</summary>
@@ -47,6 +48,31 @@ public sealed partial class FileListPane : UserControl
     public void SelectAll() => List.SelectAll();
 
     public void SelectNone() => List.SelectedItems.Clear();
+
+    /// <summary>How many items the list shows right now (after the name filter).</summary>
+    public int Count => _items.Count;
+
+    private ViewMode _mode = ViewMode.Details;
+
+    /// <summary>Switches the layout (Details, Tiles, icons, List). Selection and sort stay; thumbnails are loaded again at the new size.</summary>
+    public void SetViewMode(ViewMode mode)
+    {
+        _mode = mode;
+        ViewModeInfo info = ViewModes.For(mode);
+        string template = mode switch
+        {
+            ViewMode.List => "ListTemplate",
+            ViewMode.SmallIcons => "SmallTemplate",
+            ViewMode.MediumIcons => "MediumTemplate",
+            ViewMode.LargeIcons => "LargeTemplate",
+            ViewMode.Tiles => "TilesTemplate",
+            _ => "DetailsTemplate",
+        };
+        List.ItemTemplate = (DataTemplate)Resources[template];
+        List.ItemsPanel = (ItemsPanelTemplate)Resources[info.IsGrid ? "GridPanel" : "RowsPanel"];
+        HeaderGrid.Visibility = mode == ViewMode.Details ? Visibility.Visible : Visibility.Collapsed;
+        Rebuild();
+    }
 
     /// <summary>
     /// With checkboxes on, every row has a tick box and a click ticks or unticks it (several can be ticked). Without them
@@ -232,15 +258,15 @@ public sealed partial class FileListPane : UserControl
         }
 
         vm.ThumbnailRequested = true;
-        _ = LoadThumbnailAsync(vm);
+        _ = LoadThumbnailAsync(vm, ViewModes.For(_mode).ThumbnailPixels);
     }
 
-    private static async Task LoadThumbnailAsync(EntryViewModel vm)
+    private static async Task LoadThumbnailAsync(EntryViewModel vm, int pixels)
     {
         try
         {
             StorageFile file = await StorageFile.GetFileFromPathAsync(vm.Entry.FullPath);
-            using StorageItemThumbnail? thumbnail = await file.GetThumbnailAsync(ThumbnailMode.PicturesView, 72, ThumbnailOptions.UseCurrentScale);
+            using StorageItemThumbnail? thumbnail = await file.GetThumbnailAsync(ThumbnailMode.PicturesView, (uint)pixels, ThumbnailOptions.UseCurrentScale);
             if (thumbnail is null || thumbnail.Size == 0)
             {
                 return;

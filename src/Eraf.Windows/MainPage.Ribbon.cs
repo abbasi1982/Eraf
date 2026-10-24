@@ -68,15 +68,41 @@ public sealed partial class MainPage
             }
         }
 
+        if (ViewModeBox.Items.Count == 0)
+        {
+            foreach (ViewModeInfo mode in ViewModes.All)
+            {
+                ViewModeBox.Items.Add(mode.Label);
+            }
+        }
+
         _applyingOptions = true;
         ThemeBox.SelectedIndex = ThemePalettes.IndexOf(options.Theme);
+        ViewModeBox.SelectedIndex = ViewModes.IndexOf(options.ListMode);
         _applyingOptions = false;
+        FileList.SetViewMode(options.ListMode);
         CheckboxToggle.IsChecked = options.ShowCheckboxes;
         SubfoldersToggle.IsChecked = options.ScanSubfolders;
         FileList.SetCheckboxes(options.ShowCheckboxes);
     }
 
     private bool _applyingOptions;
+
+    private void OnViewModeBoxChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_applyingOptions && ViewModeBox.SelectedIndex >= 0)
+        {
+            SetViewMode(ViewModes.All[ViewModeBox.SelectedIndex].Mode);
+        }
+    }
+
+    private void SetViewMode(ViewMode mode)
+    {
+        if (mode != AppSettings.Options.ListMode)
+        {
+            AppSettings.Options = AppSettings.Options with { ListMode = mode };
+        }
+    }
 
     private void OnThemeBoxChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -130,6 +156,15 @@ public sealed partial class MainPage
         Add(VirtualKey.R, VirtualKeyModifiers.Control, OnRecordClick);
         Add(VirtualKey.T, VirtualKeyModifiers.Control, OnTrimClick);
         Add(VirtualKey.F5, VirtualKeyModifiers.None, OnRefreshNavClick);
+
+        // The same numbers File Explorer uses for its layouts.
+        const VirtualKeyModifiers ctrlShift = VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift;
+        Add(VirtualKey.Number2, ctrlShift, (_, _) => SetViewMode(ViewMode.LargeIcons));
+        Add(VirtualKey.Number3, ctrlShift, (_, _) => SetViewMode(ViewMode.MediumIcons));
+        Add(VirtualKey.Number4, ctrlShift, (_, _) => SetViewMode(ViewMode.SmallIcons));
+        Add(VirtualKey.Number5, ctrlShift, (_, _) => SetViewMode(ViewMode.List));
+        Add(VirtualKey.Number6, ctrlShift, (_, _) => SetViewMode(ViewMode.Details));
+        Add(VirtualKey.Number7, ctrlShift, (_, _) => SetViewMode(ViewMode.Tiles));
         Add(VirtualKey.Left, VirtualKeyModifiers.Menu, OnBackNavClick);
         Add(VirtualKey.Right, VirtualKeyModifiers.Menu, OnForwardNavClick);
         Add(VirtualKey.Up, VirtualKeyModifiers.Menu, OnUpNavClick);

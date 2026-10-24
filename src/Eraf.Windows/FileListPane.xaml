@@ -5,6 +5,96 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Eraf.Windows">
 
+    <UserControl.Resources>
+        <!-- One template per layout. The list swaps the template and the panel when the layout changes. -->
+        <DataTemplate x:Key="DetailsTemplate" x:DataType="local:EntryViewModel">
+                    <Grid ColumnSpacing="8" Height="48" AutomationProperties.Name="{x:Bind SpokenName}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="170" />
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="110" />
+                        </Grid.ColumnDefinitions>
+                        <Grid Width="36" Height="36">
+                            <FontIcon
+                                Glyph="{x:Bind Glyph}"
+                                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                FontSize="20"
+                                Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
+                            <Image
+                                Source="{x:Bind Thumbnail, Mode=OneWay}"
+                                Stretch="UniformToFill"
+                                Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+                        </Grid>
+                        <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="2" Text="{x:Bind ModifiedText}" VerticalAlignment="Center" Opacity="0.8" />
+                        <TextBlock Grid.Column="3" Text="{x:Bind SizeText}" VerticalAlignment="Center" Opacity="0.8" />
+                        <TextBlock Grid.Column="4" Text="{x:Bind TypeText}" VerticalAlignment="Center" Opacity="0.8" />
+                    </Grid>
+                </DataTemplate>
+
+        <DataTemplate x:Key="ListTemplate" x:DataType="local:EntryViewModel">
+            <Grid ColumnSpacing="10" Height="32" AutomationProperties.Name="{x:Bind SpokenName}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <Grid Width="24" Height="24">
+                <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="16" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
+                <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+            </Grid>
+                <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SmallTemplate" x:DataType="local:EntryViewModel">
+            <Grid ColumnSpacing="8" Width="230" Height="36" AutomationProperties.Name="{x:Bind SpokenName}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <Grid Width="24" Height="24">
+                <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="16" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
+                <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+            </Grid>
+                <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="MediumTemplate" x:DataType="local:EntryViewModel">
+            <StackPanel Width="128" Spacing="4" Padding="0,4" AutomationProperties.Name="{x:Bind SpokenName}">
+                <Grid Width="96" Height="96">
+                <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="48" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
+                <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+            </Grid>
+                <TextBlock Text="{x:Bind Name}" TextAlignment="Center" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="LargeTemplate" x:DataType="local:EntryViewModel">
+            <StackPanel Width="196" Spacing="6" Padding="0,6" AutomationProperties.Name="{x:Bind SpokenName}">
+                <Grid Width="168" Height="168">
+                <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="80" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
+                <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+            </Grid>
+                <TextBlock Text="{x:Bind Name}" TextAlignment="Center" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TilesTemplate" x:DataType="local:EntryViewModel">
+            <Grid ColumnSpacing="12" Width="300" Height="80" AutomationProperties.Name="{x:Bind SpokenName}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="64" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <Grid Width="64" Height="64">
+                <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="32" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
+                <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+            </Grid>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{x:Bind TileDetail}" Opacity="0.7" FontSize="12" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{x:Bind ModifiedText}" Opacity="0.7" FontSize="12" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <ItemsPanelTemplate x:Key="RowsPanel"><ItemsStackPanel Orientation="Vertical" /></ItemsPanelTemplate>
+        <ItemsPanelTemplate x:Key="GridPanel"><ItemsWrapGrid Orientation="Horizontal" /></ItemsPanelTemplate>
+    </UserControl.Resources>
+
     <!-- Details view of the current folder: folders plus .eraf and photo files, with sortable columns. -->
     <Grid>
         <Grid.RowDefinitions>
@@ -62,34 +152,6 @@
             AutomationProperties.AutomationId="FileList"
             AutomationProperties.Name="Files in this folder"
             AutomationProperties.HelpText="Press Enter to open a folder, an ERAF file, or to add a voice note to a photo.">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:EntryViewModel">
-                    <Grid ColumnSpacing="8" Height="48" AutomationProperties.Name="{x:Bind SpokenName}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="40" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="170" />
-                            <ColumnDefinition Width="90" />
-                            <ColumnDefinition Width="110" />
-                        </Grid.ColumnDefinitions>
-                        <Grid Width="36" Height="36">
-                            <FontIcon
-                                Glyph="{x:Bind Glyph}"
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                FontSize="20"
-                                Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
-                            <Image
-                                Source="{x:Bind Thumbnail, Mode=OneWay}"
-                                Stretch="UniformToFill"
-                                Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
-                        </Grid>
-                        <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Grid.Column="2" Text="{x:Bind ModifiedText}" VerticalAlignment="Center" Opacity="0.8" />
-                        <TextBlock Grid.Column="3" Text="{x:Bind SizeText}" VerticalAlignment="Center" Opacity="0.8" />
-                        <TextBlock Grid.Column="4" Text="{x:Bind TypeText}" VerticalAlignment="Center" Opacity="0.8" />
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
         </ListView>
 
         <TextBlock

@@ -116,9 +116,10 @@ public sealed record AppOptions(
     ExistingFilePolicy ExistingFiles,
     OutputMode Output,
     string? OutputFolder,
-    bool ShowCheckboxes = true)
+    bool ShowCheckboxes = true,
+    ViewMode ListMode = ViewMode.Details)
 {
-    public static AppOptions Default { get; } = new(ThemeChoice.System, false, ExistingFilePolicy.Skip, OutputMode.NextToPhoto, null, true);
+    public static AppOptions Default { get; } = new(ThemeChoice.System, false, ExistingFilePolicy.Skip, OutputMode.NextToPhoto, null, true, ViewMode.Details);
 
     public static AppOptions Load(Func<string, string?> get)
     {
@@ -129,7 +130,8 @@ public sealed record AppOptions(
             ParseEnum(get("ExistingFiles"), d.ExistingFiles),
             ParseEnum(get("Output"), d.Output),
             string.IsNullOrWhiteSpace(get("OutputFolder")) ? null : get("OutputFolder"),
-            get("ShowCheckboxes") is { } c ? c != "0" : d.ShowCheckboxes);
+            get("ShowCheckboxes") is { } c ? c != "0" : d.ShowCheckboxes,
+            ParseEnum(get("ListMode"), d.ListMode));
     }
 
     public void Save(Action<string, string?> set)
@@ -140,6 +142,7 @@ public sealed record AppOptions(
         set("Output", Output.ToString());
         set("OutputFolder", string.IsNullOrWhiteSpace(OutputFolder) ? null : OutputFolder);
         set("ShowCheckboxes", ShowCheckboxes ? "1" : "0");
+        set("ListMode", ListMode.ToString());
     }
 
     /// <summary>Earlier versions stored "Light" and "Dark"; they become the nearest colour themes.</summary>
