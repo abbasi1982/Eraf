@@ -1,6 +1,6 @@
 # ERAF Project Status
 
-**Last updated:** 2026-10-23 (M3 closed by Cursor)
+**Last updated:** 2026-10-24 (M4 closed by Cursor)
 
 ## Roles
 
@@ -9,7 +9,7 @@
 
 ## Current phase
 
-Phase 1 — Windows. **M0–M3 closed.** Next: **M4** (audio).
+Phase 1 — Windows. **M0–M4 closed.** Next: **M5** (session state machine).
 
 Phase 2 — Android remains blocked until the Windows release gate.
 
@@ -17,56 +17,55 @@ Phase 2 — Android remains blocked until the Windows release gate.
 
 | Item | Notes |
 |---|---|
-| M0–M2 | Closed |
-| **M3 Image import/capture** | Closed by Cursor 2026-10-23 — ADR-007, ADR-008 |
+| M0–M3 | Closed |
+| **M4 Audio record/playback** | Closed by Cursor 2026-10-24 — ADR-009 accepted |
 
 ## In progress
 
-None until Claude Code starts [CLAUDE_CODE_BRIEF_M4.md](CLAUDE_CODE_BRIEF_M4.md). Include this close-out (ADR-008, M4 brief, STATUS) in the next commit.
+None until Claude Code commits/pushes M4 (+ unpushed `ee60ded` M3 close-out), then starts [CLAUDE_CODE_BRIEF_M5.md](CLAUDE_CODE_BRIEF_M5.md).
 
 ## Next
 
-1. Commit Cursor M3 close-out docs if not already on remote
-2. Execute M4
-3. Cursor reviews M4 → M5 brief
+1. **Authorized:** Commit M4 working tree (include this close-out, ADR-009 acceptance, M5 brief, README)
+2. **Authorized:** Push `ee60ded` + M4 commit(s) to `origin/master`
+3. Execute M5
 
 ## Milestones
 
 | ID | Status |
 |---|---|
-| M0–M2 | **Closed** |
-| M3 Image import/capture | **Closed** |
-| M4 Audio record/playback | **Authorized** — [CLAUDE_CODE_BRIEF_M4.md](CLAUDE_CODE_BRIEF_M4.md) |
-| M5–M9 | Pending |
+| M0–M3 | **Closed** |
+| M4 Audio record/playback | **Closed** |
+| M5 Session workflow | **Authorized** — [CLAUDE_CODE_BRIEF_M5.md](CLAUDE_CODE_BRIEF_M5.md) |
+| M6–M9 | Pending |
 
-## M3 close-out (Cursor)
+## M4 close-out (Cursor)
 
 **Verdict:** Pass with documented limitations.
 
 | Criterion | Result |
 |---|---|
-| Import JPEG keep / non-JPEG convert | Pass (manual + `ErafMedia` tests) |
-| Size check before full read | Pass |
-| Camera preview + JPEG capture + release | Pass (manual) |
-| In-memory `ImageSession` | Pass |
-| Webcam capability; no mic yet | Pass |
-| `dotnet test` | **56 passed** (re-verified by Cursor) |
-| ADR-007 WASDK picker | **Accepted** |
+| AAC-LC M4A record via `CreateM4a` | Pass (box parse evidence in STATUS) |
+| Play / retry / discard; failed re-record keeps prior clip | Pass (manual) |
+| Duration/size enforcement | Pass (unit tests + 5 s auto-stop proxy; full 10 min not waited) |
+| Empty/failed never success | Pass (code + too-short manual) |
+| Mic capability declared | Pass |
+| `ErafMedia.CheckAudio` / `IsM4a` | Pass |
+| `dotnet test` re-run by Cursor | **64 passed, 0 failed** |
+| ADR-009 no pause/resume | **Accepted** |
 
-**Truncated JPEG (ADR-008):** Accept for v1 (signature-only, matches C1). Soft warning at save deferred to M6/M7 — no format change.
+**Not verified (carry forward):** denied/missing mic; subjective audibility; full 10-minute wall-clock recording.
 
-**Not verified (carry forward):** denied camera permission; no-camera hardware path; GIF/TIFF/HEIC; EXIF orientation; mouse/keyboard a11y (M8).
+**Privacy:** Microphone Allow stored for the dev package; revoke via Settings > Privacy & security > Microphone if undesired.
 
-**Privacy note:** Camera consent Allow was stored for the dev package; revoke via Settings > Privacy & security > Camera if undesired. Screenshots with faces correctly kept out of the repo.
+### M4 evidence (implementer)
 
-### M3 evidence (implementer)
-
-See git history / prior STATUS body: `ErafMedia`, `ImageImportService`, `CameraService`, MainPage panels, WASDK picker fix, UI Automation-driven checks.
+See prior STATUS body / working tree: `AudioRecorder`, `ClipPlayer`, `CaptureSession`, MainPage voice UI, 8 new `ErafMedia` tests.
 
 ## Known limitations carried forward
 
 - Plain `dotnet run` / use `winapp run`
-- Piped restore hangs in agent shell
-- SECURITY.md licenses unverified until nearer M9
 - Truncated JPEG can enter session (ADR-008)
-- Camera deny / no-camera paths unexercised on this machine
+- Camera/mic deny paths largely unexercised
+- Soft incomplete-JPEG warning deferred to M6/M7
+- SECURITY.md licenses unverified until nearer M9

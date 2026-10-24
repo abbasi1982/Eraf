@@ -118,10 +118,26 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-009 — Voice recording: in-memory AAC-LC M4A, stop/retry only
+
+**Status:** Accepted by Cursor (M4 review, 2026-10-24).
+
+**Context.** The format requires AAC-LC in MPEG-4. `MediaCapture` can record directly with `MediaEncodingProfile.CreateM4a`. The M4 brief asks for a documented pause/resume decision.
+
+**Decision.**
+- Record with `MediaCapture` (audio only) and `MediaEncodingProfile.CreateM4a(AudioEncodingQuality.Medium)` into an `InMemoryRandomAccessStream`. The result was verified on a real recording to be AAC-LC (audio object type 2), 44.1 kHz stereo, in an `mp42` MP4 (STATUS, M4 evidence).
+- Playback streams the in-session bytes through `MediaPlayer` (`MediaSource.CreateFromStream`, `audio/mp4`). No temp files are created, so none must be deleted on discard or cancel.
+- A finished recording is checked by `ErafMedia.CheckAudio` (empty, over 64 MiB, over 10 minutes, no `ftyp`) and must be at least 300 ms; otherwise no clip exists. The page stops the recording itself at 10 minutes.
+- **No pause/resume.** `MediaCapture` offers it, but it was not evaluated on this stack, so it is not exposed (ADR rule: do not claim unverified features). The UI offers Stop, Play, Record again and Discard. A failed re-record keeps the previous clip.
+
+**Consequences.** Memory use is about 10 MB at the 10 minute cap with Medium quality. The M6 save can write `AudioClip.M4aBytes` as is. If pause/resume is wanted later, it needs its own evaluation.
+
+---
+
 ## Pending decisions (not yet made)
 
 | Topic | Needed by |
 |---|---|
-| Pause/resume recording (only if `MediaCapture` supports it reliably) | M4 |
+| Pause/resume recording (not offered in M4; needs evaluation if wanted) | Later |
 | Soft warning UX for incomplete JPEG decode at save | M6/M7 |
 | Project license | Before any public release |

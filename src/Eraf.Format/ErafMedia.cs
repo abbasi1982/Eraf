@@ -16,11 +16,57 @@ public enum ImageImportAction
     RejectTooLarge,
 }
 
+/// <summary>Result of checking a finished voice recording against the v1 limits and signature.</summary>
+public enum AudioCheck
+{
+    Ok,
+
+    /// <summary>No bytes: a failed or empty recording must never be treated as success.</summary>
+    Empty,
+
+    /// <summary>Larger than <see cref="ErafLimits.MaxAudioBytes"/>.</summary>
+    TooLarge,
+
+    /// <summary>Longer than <see cref="ErafLimits.MaxAudioDurationMs"/>.</summary>
+    TooLong,
+
+    /// <summary>Does not look like an MPEG-4 audio file (no "ftyp" box type at bytes 4-7).</summary>
+    NotM4a,
+}
+
 /// <summary>UI-free media rules shared by applications, so they match the format spec.</summary>
 public static class ErafMedia
 {
     /// <summary>Spec §8.1: the first three bytes are FF D8 FF.</summary>
     public static bool IsJpeg(ReadOnlySpan<byte> image) => ErafValidator.HasJpegSignature(image);
+
+    /// <summary>Spec §8.1: bytes 4-7 of the audio payload are ASCII "ftyp".</summary>
+    public static bool IsM4a(ReadOnlySpan<byte> audio) => ErafValidator.HasFtypSignature(audio);
+
+    /// <summary>
+    /// Checks a finished recording before it is kept. <paramref name="durationMs"/> is the recorded length
+    /// (0 if unknown). Only checks what the format enforces; whether the stream really is AAC-LC and
+    /// decodes is up to the media stack.
+    /// </summary>
+    public static AudioCheck CheckAudio(long length, ulong durationMs, ReadOnlySpan<byte> bytes)
+    {
+        if (length <= 0)
+        {
+            return AudioCheck.Empty;
+        }
+
+        if (length > ErafLimits.MaxAudioBytes)
+        {
+            return AudioCheck.TooLarge;
+        }
+
+        if (durationMs > ErafLimits.MaxAudioDurationMs)
+        {
+            return AudioCheck.TooLong;
+        }
+
+        return IsM4a(bytes) ? AudioCheck.Ok : AudioCheck.NotM4a;
+    }
 
     /// <summary>
     /// Decides how to treat an image about to be imported. <paramref name="length"/> is the full size in

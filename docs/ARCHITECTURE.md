@@ -39,8 +39,8 @@ Services (UI-adjacent, each behind an interface so the workflow can be tested wi
 |---|---|
 | `CameraService` | `MediaCapture` preview and JPEG still capture |
 | `ImageImportService` | Windows App SDK `FileOpenPicker` import; JPEG kept as is, others converted once (ADR-007); rules from `ErafMedia` in `Eraf.Format` |
-| `AudioService` | AAC-LC M4A recording via `MediaEncodingProfile.CreateM4a`; enforces the 10-minute limit |
-| `PlaybackService` | `MediaPlayer` playback of the audio payload (extracted to an app-controlled temp file) |
+| `AudioRecorder` | AAC-LC M4A recording via `MediaEncodingProfile.CreateM4a` into memory; the page enforces the 10-minute cap; checks results with `ErafMedia.CheckAudio` (ADR-009) |
+| `ClipPlayer` | `MediaPlayer` playback of the in-session M4A straight from memory (no temp file) |
 | `FileService` | Pickers and **atomic save** (spec §11), export of original payloads |
 | `SessionWorkflow` | State machine, below |
 

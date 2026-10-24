@@ -81,10 +81,11 @@
             </StackPanel>
         </Grid>
 
-        <!-- Photo preview of exactly the bytes held in the session. -->
+        <!-- Photo preview of exactly the bytes held in the session, with the voice note controls. -->
         <Grid x:Name="PhotoPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -98,10 +99,62 @@
                 Grid.Row="1"
                 HorizontalAlignment="Center"
                 AutomationProperties.AutomationId="PhotoInfo" />
+
+            <StackPanel Grid.Row="2" Spacing="8" HorizontalAlignment="Center">
+                <!-- No voice note yet. -->
+                <Button
+                    x:Name="RecordButton"
+                    Content="Record voice note"
+                    HorizontalAlignment="Center"
+                    AutomationProperties.AutomationId="RecordButton"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Click="OnRecordClick" />
+
+                <!-- Recording in progress. -->
+                <StackPanel x:Name="RecordingPanel" Spacing="8" Visibility="Collapsed" HorizontalAlignment="Center">
+                    <TextBlock
+                        x:Name="RecordingStatus"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AutomationId="RecordingStatus" />
+                    <Button
+                        x:Name="StopRecordButton"
+                        Content="Stop recording"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AutomationId="StopRecordButton"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="OnStopRecordClick" />
+                </StackPanel>
+
+                <!-- A voice note is held in the session. -->
+                <StackPanel x:Name="VoicePanel" Spacing="8" Visibility="Collapsed" HorizontalAlignment="Center">
+                    <TextBlock
+                        x:Name="VoiceInfo"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AutomationId="VoiceInfo" />
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                        <Button
+                            x:Name="PlayButton"
+                            Content="Play"
+                            AutomationProperties.AutomationId="PlayButton"
+                            Click="OnPlayClick" />
+                        <Button
+                            x:Name="RerecordButton"
+                            Content="Record again"
+                            AutomationProperties.AutomationId="RerecordButton"
+                            Click="OnRecordClick" />
+                        <Button
+                            x:Name="DeleteVoiceButton"
+                            Content="Discard voice note"
+                            AutomationProperties.AutomationId="DeleteVoiceButton"
+                            Click="OnDeleteVoiceClick" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
             <Button
                 x:Name="DiscardButton"
-                Grid.Row="2"
-                Content="Discard photo"
+                Grid.Row="3"
+                Content="Start over"
                 HorizontalAlignment="Center"
                 AutomationProperties.AutomationId="DiscardButton"
                 Click="OnDiscardClick" />

@@ -41,6 +41,54 @@ public class ErafMediaTests
         Assert.Equal(ImageImportAction.RejectTooLarge, ErafMedia.PlanImageImport(ErafLimits.MaxImageBytes + 1, Png));
     }
 
+    private static readonly byte[] M4a = { 0, 0, 0, 0x14, 0x66, 0x74, 0x79, 0x70, 0x4D, 0x34, 0x41, 0x20 };
+
+    [Fact]
+    public void IsM4aMatchesTheSpecSignature()
+    {
+        Assert.True(ErafMedia.IsM4a(M4a));
+        Assert.False(ErafMedia.IsM4a(new byte[] { 0, 0, 0, 0, 0x66, 0x74, 0x79 })); // 7 bytes
+        Assert.False(ErafMedia.IsM4a(new byte[] { 0, 0, 0, 0, 0x66, 0x74, 0x79, 0x78 })); // "ftyx"
+        Assert.False(ErafMedia.IsM4a(ReadOnlySpan<byte>.Empty));
+    }
+
+    [Fact]
+    public void GoodRecordingIsOk() =>
+        Assert.Equal(AudioCheck.Ok, ErafMedia.CheckAudio(5000, 12_000, M4a));
+
+    [Theory]
+    [InlineData(0L)]
+    [InlineData(-1L)]
+    public void EmptyRecordingIsNeverOk(long length) =>
+        Assert.Equal(AudioCheck.Empty, ErafMedia.CheckAudio(length, 1000, M4a));
+
+    [Fact]
+    public void DurationLimitIsInclusive()
+    {
+        Assert.Equal(AudioCheck.Ok, ErafMedia.CheckAudio(5000, ErafLimits.MaxAudioDurationMs, M4a));
+        Assert.Equal(AudioCheck.TooLong, ErafMedia.CheckAudio(5000, ErafLimits.MaxAudioDurationMs + 1, M4a));
+    }
+
+    [Fact]
+    public void SizeLimitIsInclusive()
+    {
+        Assert.Equal(AudioCheck.Ok, ErafMedia.CheckAudio(ErafLimits.MaxAudioBytes, 1000, M4a));
+        Assert.Equal(AudioCheck.TooLarge, ErafMedia.CheckAudio(ErafLimits.MaxAudioBytes + 1, 1000, M4a));
+    }
+
+    [Fact]
+    public void NonM4aIsRejected() =>
+        Assert.Equal(AudioCheck.NotM4a, ErafMedia.CheckAudio(12, 1000, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }));
+
+    [Fact]
+    public void CheckAudioAgreesWithTheWriter()
+    {
+        // A recording CheckAudio accepts must be acceptable to the writer as an audio payload.
+        Assert.Equal(AudioCheck.Ok, ErafMedia.CheckAudio(M4a.Length, 600_000, M4a));
+        byte[] file = ErafWriter.Write(Jpeg, M4a, new ErafWriteOptions { AudioDurationMs = 600_000 });
+        Assert.Null(ErafReader.Validate(file));
+    }
+
     [Fact]
     public void AgreesWithTheWriterSignatureRule()
     {
