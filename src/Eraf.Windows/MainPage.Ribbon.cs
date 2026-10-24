@@ -33,6 +33,7 @@ public sealed partial class MainPage
         TrimButton.IsEnabled = free && hasAudio;
         DeleteVoiceButton.IsEnabled = free && hasAudio;
         MicrophoneCombo.IsEnabled = !recording && !busy;
+        VoiceHint.Visibility = Show(!inEditor && !recording);
 
         DiscardButton.IsEnabled = state != SessionState.Idle && !busy;
         DismissErrorButton.IsEnabled = state == SessionState.Error;

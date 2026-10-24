@@ -255,6 +255,17 @@
                                 SelectionChanged="OnMicrophoneSelectionChanged" />
                             <TextBlock Text="Microphone" Style="{StaticResource RibbonGroupLabel}" Margin="0,22,0,0" />
                         </StackPanel>
+                        <!-- Shown while no photo is open, to say why the buttons are grey and what to do. -->
+                        <TextBlock
+                            x:Name="VoiceHint"
+                            Margin="16,0,0,0"
+                            MaxWidth="360"
+                            VerticalAlignment="Center"
+                            TextWrapping="Wrap"
+                            Opacity="0.85"
+                            Text="These buttons need a photo. Tick a photo (or an ERAF file) in the list and press Make ERAF on the Home tab; then record, attach or trim the voice note here."
+                            AutomationProperties.AutomationId="VoiceHint"
+                            AutomationProperties.LiveSetting="Polite" />
                     </StackPanel>
 
                     <!-- View: checkboxes, subfolder search, theme. -->
