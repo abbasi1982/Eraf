@@ -48,8 +48,12 @@ public sealed class EntryViewModel : INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Thumbnail)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThumbnailVisibility)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GlyphVisibility)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BadgeVisibility)));
         }
     }
+
+    /// <summary>A saved ERAF file shows its photo with a small microphone badge, so it is not mistaken for a plain photo.</summary>
+    public Visibility BadgeVisibility => _thumbnail is not null && Entry.Kind == EntryKind.Eraf ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility ThumbnailVisibility => _thumbnail is null ? Visibility.Collapsed : Visibility.Visible;
 

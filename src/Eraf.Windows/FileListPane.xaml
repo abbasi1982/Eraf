@@ -26,6 +26,7 @@
                                 Source="{x:Bind Thumbnail, Mode=OneWay}"
                                 Stretch="UniformToFill"
                                 Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3" Padding="3" CornerRadius="9" Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="{x:Bind BadgeVisibility, Mode=OneWay}"><FontIcon Glyph="&#xE720;" FontSize="10" FontFamily="{StaticResource SymbolThemeFontFamily}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" /></Border>
                         </Grid>
                         <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         <TextBlock Grid.Column="2" Text="{x:Bind ModifiedText}" VerticalAlignment="Center" Opacity="0.8" />
@@ -40,6 +41,7 @@
                 <Grid Width="24" Height="24">
                 <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="16" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
                 <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3" Padding="3" CornerRadius="9" Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="{x:Bind BadgeVisibility, Mode=OneWay}"><FontIcon Glyph="&#xE720;" FontSize="10" FontFamily="{StaticResource SymbolThemeFontFamily}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" /></Border>
             </Grid>
                 <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </Grid>
@@ -51,6 +53,7 @@
                 <Grid Width="24" Height="24">
                 <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="16" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
                 <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3" Padding="3" CornerRadius="9" Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="{x:Bind BadgeVisibility, Mode=OneWay}"><FontIcon Glyph="&#xE720;" FontSize="10" FontFamily="{StaticResource SymbolThemeFontFamily}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" /></Border>
             </Grid>
                 <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </Grid>
@@ -61,6 +64,7 @@
                 <Grid Width="96" Height="96">
                 <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="48" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
                 <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3" Padding="3" CornerRadius="9" Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="{x:Bind BadgeVisibility, Mode=OneWay}"><FontIcon Glyph="&#xE720;" FontSize="10" FontFamily="{StaticResource SymbolThemeFontFamily}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" /></Border>
             </Grid>
                 <TextBlock Text="{x:Bind Name}" TextAlignment="Center" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
             </StackPanel>
@@ -71,6 +75,7 @@
                 <Grid Width="168" Height="168">
                 <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="80" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
                 <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3" Padding="3" CornerRadius="9" Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="{x:Bind BadgeVisibility, Mode=OneWay}"><FontIcon Glyph="&#xE720;" FontSize="10" FontFamily="{StaticResource SymbolThemeFontFamily}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" /></Border>
             </Grid>
                 <TextBlock Text="{x:Bind Name}" TextAlignment="Center" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
             </StackPanel>
@@ -82,6 +87,7 @@
                 <Grid Width="64" Height="64">
                 <FontIcon Glyph="{x:Bind Glyph}" FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="32" Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
                 <Image Source="{x:Bind Thumbnail, Mode=OneWay}" Stretch="UniformToFill" Visibility="{x:Bind ThumbnailVisibility, Mode=OneWay}" />
+                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3" Padding="3" CornerRadius="9" Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="{x:Bind BadgeVisibility, Mode=OneWay}"><FontIcon Glyph="&#xE720;" FontSize="10" FontFamily="{StaticResource SymbolThemeFontFamily}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" /></Border>
             </Grid>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                     <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />

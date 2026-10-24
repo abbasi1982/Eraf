@@ -40,6 +40,10 @@ The app registers itself as a handler for `.eraf` through its package manifest; 
 
 Screenshots and clipboard pictures are held in memory and encoded to a JPEG in memory; nothing is written until the user saves. The "picture copied" offer looks only at which formats are on the clipboard (not at their contents) and only while the app is at the file list; the picture is read when the user presses Make ERAF or Paste. It can be turned off in Settings. The global shortcut Ctrl+Shift+F9 is registered only while the app runs and can be turned off. Window and screen capture use plain GDI calls and add no permission or package. Right-click Delete moves items to the Recycle Bin and never deletes for good except where Windows itself does not use the bin, and the dialog says so first.
 
+## Thumbnails of ERAF files
+
+The photo shown as an ERAF file's icon is taken only after the whole file passed every check of spec section 9 (including the hashes), so a damaged or hostile file never reaches the image decoder. Files over 48 MiB are not read for a thumbnail, at most three are read at a time, and nothing is written to disk.
+
 ## Network and telemetry
 
 None. The app does not use the network, send telemetry, check for updates, or embed code that runs from file contents. Adding any of these is a scope change needing explicit approval.

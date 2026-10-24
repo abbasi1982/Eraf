@@ -73,6 +73,12 @@ Not part of the passed gate; outside the M0–M9 briefs, so Cursor should review
 - **Evidence.** `dotnet test`: **291 passed, 0 failed** (283 + 8 in `MicrophoneChoiceTests`). Build: 0 warnings, 0 errors. Real app (UI Automation + keyboard): the list showed Default microphone, Microphone Array (Realtek) and CABLE Output (VB-Audio Virtual Cable); the Down key picked the Realtek array and a recording with it started and stopped; the combo was hidden during recording and back after; End picked the virtual cable and a recording with it started and stopped; after an app restart the virtual-cable choice was remembered (then reset to Default).
 - **Not verified:** that the recorded audio really came from the chosen device (no sound was played into each input), unplugging a chosen microphone while the app runs, Narrator reading of the new control, a Start menu visual check, and a Release/package build with the new assets.
 
+### Photo as the icon of a saved ERAF file (requested 2026-10-24; ADR-022)
+
+- **What:** saved `.eraf` files show their own photo as the list icon with a microphone badge, in every layout; invalid, damaged, locked or over-48-MiB files keep the plain icon. `ErafPreview.ReadPhoto` validates the whole file (spec 9) before returning the photo.
+- **Evidence:** `dotnet test` **513 passed, 0 failed** (+29: `ErafPreviewTests`, including every golden invalid fixture returning no photo, a flipped photo byte and a flipped voice-note byte returning none, a truncated file, an oversize sparse file, a locked file, and both golden valid fixtures returning their photo); build 0 warnings, 0 errors. Real app: two ERAF files made by the app from `sunny.jpg` and `blocks.png` showed their photos with the badge in Details, Tiles and Large icons; a copy with one flipped photo byte (`damaged.eraf`) and the golden `invalid-N03-bad-magic.eraf` kept the plain document icon; the plain photos had no badge.
+- **Not verified:** a folder with hundreds of large ERAF files (the 3-at-a-time reads and the 400-entry cache were not timed), ERAF files on a slow network drive, the thumbnails with Narrator (rows keep their spoken description, "ERAF file"), and high contrast.
+
 ### Right-click menu and screenshots (requested 2026-10-24; ADR-020, ADR-021)
 
 - **Right-click menu (ADR-020):** Open, Make ERAF, Rename, Delete, Show in File Explorer, Copy path, New folder, Refresh, Select all/none, Layout and Sort by submenus; F2, Delete and Ctrl+Shift+N shortcuts.

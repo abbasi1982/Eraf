@@ -33,6 +33,7 @@
     <Compile Include="..\..\src\Eraf.Windows\BatchPlanning.cs" Link="Linked\BatchPlanning.cs" />
     <Compile Include="..\..\src\Eraf.Windows\FileEditing.cs" Link="Linked\FileEditing.cs" />
     <Compile Include="..\..\src\Eraf.Windows\ScreenshotRules.cs" Link="Linked\ScreenshotRules.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\ErafPreview.cs" Link="Linked\ErafPreview.cs" />
   </ItemGroup>
 
   <ItemGroup>

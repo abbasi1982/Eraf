@@ -171,6 +171,16 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-022 — The photo as the icon of a saved ERAF file (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review.
+
+**Decision.** In the file list every `.eraf` file shows its own photo as its icon, with a small microphone badge so it cannot be taken for a plain photo; this works in every layout. The thumbnail is made by `ErafPreview.ReadPhoto` (pure, tested): it runs the **complete** validation of spec section 9 (hashes included) and only then returns the JPEG, so the photo is never handed to an image decoder from a file that failed any check (spec 9: no decoding before all 15 checks pass). Files that fail, are in use, or are larger than 48 MiB keep the plain document icon. The list loads thumbnails only for rows that appear, reads at most three files at a time off the UI thread, decodes small (`DecodePixelWidth`) and caches the result per file by modified time and size, so scrolling and switching layouts do not read files again.
+
+**Consequences.** A listed folder of many large ERAF files costs a read per visible file (validation includes hashing the voice note too). A damaged file shows no photo, which doubles as a hint that it is damaged; no message is shown for it. A file changed on disk gets a new thumbnail after Refresh.
+
+---
+
 ## ADR-021 — Screenshots and the clipboard as photo sources (requested 2026-10-24)
 
 **Status:** Implemented at the product owner's request; awaiting Cursor review.

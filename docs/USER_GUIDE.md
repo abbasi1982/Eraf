@@ -25,6 +25,10 @@ Select several photos (Ctrl or Shift while clicking, or Ctrl+A), or select one o
 
 Drag photos, folders or an ERAF file from File Explorer onto the app window while you are looking at the file list. One photo starts a new ERAF, several photos or any folder start the "one voice note for many photos" flow, and an ERAF file opens. Other files in the drop are left out, and the app tells you how many.
 
+## Saved ERAF files show their photo
+
+In the file list each ERAF file shows its photo as its icon, with a small microphone badge. A file that shows only a plain document icon could not be read as a valid ERAF file (it may be damaged or not an ERAF file at all). Very large files and files another program is using also keep the plain icon.
+
 ## Right-click menu
 
 Right-click a file or folder (or press the Menu key) for: **Open**, **Make ERAF**, **Rename** (F2; only the name before the extension is edited), **Delete** (Del; goes to the Recycle Bin, and the question says clearly when Windows cannot use it, for example on a USB stick, a network drive or the Temp folder), **Show in File Explorer**, **Copy path**. Right-click the empty part of the list for **New folder** (Ctrl+Shift+N), **Refresh**, **Select all**, and the **Layout** and **Sort by** lists.

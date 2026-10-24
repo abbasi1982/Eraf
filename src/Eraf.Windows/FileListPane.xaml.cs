@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
+using Windows.Storage.Streams;
 using Windows.System;
 
 namespace Eraf.Windows;
@@ -305,14 +306,77 @@ public sealed partial class FileListPane : UserControl
     /// <summary>Photo thumbnails load when their row first appears, so a folder of thousands never loads them all.</summary>
     private void OnContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
     {
-        if (args.InRecycleQueue || args.Item is not EntryViewModel vm || vm.Entry.Kind != EntryKind.Photo || vm.ThumbnailRequested)
+        if (args.InRecycleQueue || args.Item is not EntryViewModel vm || vm.Entry.Kind == EntryKind.Folder || vm.ThumbnailRequested)
         {
             return;
         }
 
         vm.ThumbnailRequested = true;
-        _ = LoadThumbnailAsync(vm, ViewModes.For(_mode).ThumbnailPixels);
+        int pixels = ViewModes.For(_mode).ThumbnailPixels;
+        _ = vm.Entry.Kind == EntryKind.Eraf ? LoadErafThumbnailAsync(vm, pixels) : LoadThumbnailAsync(vm, pixels);
     }
+
+    /// <summary>
+    /// The photo inside a saved ERAF file, shown as its icon. The file is fully validated before the photo is decoded (see
+    /// <see cref="ErafPreview"/>); a file that fails keeps the plain icon. Reads run a few at a time and results are cached by
+    /// file time, so scrolling and switching layouts do not read the same file again.
+    /// </summary>
+    private static async Task LoadErafThumbnailAsync(EntryViewModel vm, int pixels)
+    {
+        string path = vm.Entry.FullPath;
+        long stamp = vm.Entry.ModifiedLocal.Ticks;
+        if (ErafThumbnailCache.TryGetValue(path, out (long Stamp, int Pixels, BitmapImage Image) cached) && cached.Stamp == stamp && cached.Pixels >= pixels)
+        {
+            vm.Thumbnail = cached.Image;
+            return;
+        }
+
+        await ErafReadGate.WaitAsync();
+        byte[]? jpeg;
+        try
+        {
+            jpeg = await Task.Run(() => ErafPreview.ReadPhoto(path));
+        }
+        finally
+        {
+            ErafReadGate.Release();
+        }
+
+        if (jpeg is null)
+        {
+            return;
+        }
+
+        try
+        {
+            using var stream = new InMemoryRandomAccessStream();
+            using (var writer = new DataWriter(stream.GetOutputStreamAt(0)))
+            {
+                writer.WriteBytes(jpeg);
+                await writer.StoreAsync();
+                writer.DetachStream();
+            }
+
+            stream.Seek(0);
+            var bitmap = new BitmapImage { DecodePixelWidth = pixels }; // decoded small: a large photo costs little memory
+            await bitmap.SetSourceAsync(stream);
+            if (ErafThumbnailCache.Count >= 400)
+            {
+                ErafThumbnailCache.Clear();
+            }
+
+            ErafThumbnailCache[path] = (stamp, pixels, bitmap);
+            vm.Thumbnail = bitmap;
+        }
+        catch (Exception)
+        {
+            // Undecodable photo inside a valid file: keep the plain icon.
+        }
+    }
+
+    private static readonly Dictionary<string, (long Stamp, int Pixels, BitmapImage Image)> ErafThumbnailCache = new(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly SemaphoreSlim ErafReadGate = new(3);
 
     private static async Task LoadThumbnailAsync(EntryViewModel vm, int pixels)
     {
