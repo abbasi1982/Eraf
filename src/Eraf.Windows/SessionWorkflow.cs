@@ -21,16 +21,16 @@ public enum SessionState
     /// <summary>The voice note is playing back.</summary>
     AudioPreview,
 
-    /// <summary>A photo and a valid voice note are held: everything a v1 ERAF file needs.</summary>
+    /// <summary>A photo and a valid voice note are held and not yet saved: everything a v1 ERAF file needs.</summary>
     ReadyToSave,
 
-    /// <summary>A save is running (driven by M6).</summary>
+    /// <summary>A save is running.</summary>
     Saving,
 
-    /// <summary>The last save succeeded (driven by M6).</summary>
+    /// <summary>What is held is exactly what is on disk: a file was just saved or just opened.</summary>
     Saved,
 
-    /// <summary>A save failed; the media is still held (driven by M6/M7).</summary>
+    /// <summary>A save failed; the media is still held and nothing on disk was damaged.</summary>
     Error,
 }
 
@@ -45,6 +45,9 @@ public enum SessionEvent
 
     /// <summary>A usable photo was obtained (imported or captured).</summary>
     PhotoReady,
+
+    /// <summary>An .eraf file was opened and validated: photo and voice note are held and already on disk.</summary>
+    FileOpened,
 
     /// <summary>The microphone started recording.</summary>
     StartRecording,
@@ -67,10 +70,10 @@ public enum SessionEvent
     /// <summary>Everything (photo and voice note) is thrown away and the session returns to idle.</summary>
     StartOver,
 
-    /// <summary>A save began.</summary>
+    /// <summary>A save began (a target path was chosen).</summary>
     BeginSave,
 
-    /// <summary>The save finished.</summary>
+    /// <summary>The save finished and the file is on disk.</summary>
     SaveSucceeded,
 
     /// <summary>The save failed.</summary>
@@ -82,24 +85,29 @@ public enum SessionEvent
 
 /// <summary>
 /// One session's state machine: pure logic, no UI, no I/O. It tracks whether a photo and a voice note
-/// are held and refuses events that are illegal in the current state, leaving state and flags untouched.
+/// are held and refuses events that are illegal in the current state, leaving everything untouched.
 /// Owned by the page (one per session), not a process-wide singleton.
 ///
 /// Transitions (event: from → to):
 ///   StartCamera        Idle → CapturingPhoto
 ///   CancelCamera       CapturingPhoto → Idle
 ///   PhotoReady         Idle, CapturingPhoto → PhotoPreview
-///   StartRecording     PhotoPreview, ReadyToSave, AudioPreview → RecordingAudio
+///   FileOpened         Idle → Saved
+///   StartRecording     PhotoPreview, ReadyToSave, Saved, AudioPreview → RecordingAudio
 ///   RecordingSucceeded RecordingAudio → ReadyToSave
-///   RecordingFailed    RecordingAudio → ReadyToSave if a voice note is still held, else PhotoPreview
-///   PlaybackStarted    ReadyToSave → AudioPreview
-///   PlaybackStopped    AudioPreview → ReadyToSave
-///   DiscardAudio       ReadyToSave, AudioPreview → PhotoPreview
+///   RecordingFailed    RecordingAudio → the state recording started from (PhotoPreview, ReadyToSave or Saved)
+///   PlaybackStarted    ReadyToSave, Saved → AudioPreview
+///   PlaybackStopped    AudioPreview → the state playback started from (ReadyToSave or Saved)
+///   DiscardAudio       ReadyToSave, Saved, AudioPreview → PhotoPreview
 ///   StartOver          every state except Saving → Idle
 ///   BeginSave          ReadyToSave → Saving
 ///   SaveSucceeded      Saving → Saved
 ///   SaveFailed         Saving → Error
 ///   AcknowledgeError   Error → ReadyToSave
+///
+/// Playing a voice note or a failed re-record never changes whether the held media is saved: both return
+/// to the state they started from. Making new media (a photo, a successful recording) or discarding the
+/// voice note makes the session unsaved.
 /// </summary>
 public sealed class SessionWorkflow
 {
@@ -111,19 +119,33 @@ public sealed class SessionWorkflow
     /// <summary>True while a valid voice note is held (it survives a failed re-record).</summary>
     public bool HasAudio { get; private set; }
 
-    /// <summary>True only when a v1 ERAF file could be saved from what is held.</summary>
+    /// <summary>
+    /// While in <see cref="SessionState.AudioPreview"/> or <see cref="SessionState.RecordingAudio"/>: the state
+    /// to return to when that activity ends without making new media.
+    /// </summary>
+    public SessionState Resume { get; private set; } = SessionState.Idle;
+
+    /// <summary>True only when a v1 ERAF file could be saved from what is held, right now.</summary>
     public bool CanSave => State == SessionState.ReadyToSave && HasPhoto && HasAudio;
+
+    /// <summary>True when what is held is exactly what is on disk (also while previewing or re-recording from that state).</summary>
+    public bool IsSaved =>
+        State == SessionState.Saved
+        || (State is SessionState.AudioPreview or SessionState.RecordingAudio && Resume == SessionState.Saved);
+
+    /// <summary>True when closing or starting over would lose something: held media (or a take in progress) that is not on disk.</summary>
+    public bool HasUnsavedWork => (HasPhoto || State == SessionState.RecordingAudio) && !IsSaved;
 
     /// <summary>Raised after every accepted transition with (from, to). A same-state event still raises it.</summary>
     public event Action<SessionState, SessionState>? Changed;
 
     /// <summary>Whether <paramref name="sessionEvent"/> would be accepted right now.</summary>
-    public bool CanApply(SessionEvent sessionEvent) => Evaluate(State, HasPhoto, HasAudio, sessionEvent) is not null;
+    public bool CanApply(SessionEvent sessionEvent) => Evaluate(Snapshot, sessionEvent) is not null;
 
     /// <summary>Applies the event if legal. Returns false (and changes nothing) if it is illegal here.</summary>
     public bool TryApply(SessionEvent sessionEvent)
     {
-        Outcome? outcome = Evaluate(State, HasPhoto, HasAudio, sessionEvent);
+        Outcome? outcome = Evaluate(Snapshot, sessionEvent);
         if (outcome is not { } next)
         {
             return false;
@@ -133,71 +155,91 @@ public sealed class SessionWorkflow
         State = next.State;
         HasPhoto = next.HasPhoto;
         HasAudio = next.HasAudio;
+        Resume = next.Resume;
         Changed?.Invoke(from, State);
         return true;
     }
 
-    /// <summary>The result of a legal transition.</summary>
-    internal readonly record struct Outcome(SessionState State, bool HasPhoto, bool HasAudio);
+    private Outcome Snapshot => new(State, HasPhoto, HasAudio, Resume);
+
+    /// <summary>A session's complete state: used as both the input and the result of a transition.</summary>
+    internal readonly record struct Outcome(SessionState State, bool HasPhoto, bool HasAudio, SessionState Resume);
 
     /// <summary>The whole transition table in one place. Null means the event is illegal in that state.</summary>
-    internal static Outcome? Evaluate(SessionState state, bool hasPhoto, bool hasAudio, SessionEvent sessionEvent)
+    internal static Outcome? Evaluate(Outcome current, SessionEvent sessionEvent)
     {
-        Outcome Same(SessionState to) => new(to, hasPhoto, hasAudio);
+        SessionState state = current.State;
+        Outcome To(SessionState next) => current with { State = next, Resume = SessionState.Idle };
+        Outcome ToWithResume(SessionState next, SessionState resume) => current with { State = next, Resume = resume };
 
         switch (sessionEvent)
         {
             case SessionEvent.StartCamera:
-                return state == SessionState.Idle ? Same(SessionState.CapturingPhoto) : null;
+                return state == SessionState.Idle ? To(SessionState.CapturingPhoto) : null;
 
             case SessionEvent.CancelCamera:
-                return state == SessionState.CapturingPhoto ? Same(SessionState.Idle) : null;
+                return state == SessionState.CapturingPhoto ? To(SessionState.Idle) : null;
 
             case SessionEvent.PhotoReady:
                 // A new photo only starts a session: from idle or a live camera, never over an existing one.
                 return state is SessionState.Idle or SessionState.CapturingPhoto
-                    ? new Outcome(SessionState.PhotoPreview, true, false)
+                    ? new Outcome(SessionState.PhotoPreview, true, false, SessionState.Idle)
+                    : null;
+
+            case SessionEvent.FileOpened:
+                return state == SessionState.Idle
+                    ? new Outcome(SessionState.Saved, true, true, SessionState.Idle)
                     : null;
 
             case SessionEvent.StartRecording:
-                return state is SessionState.PhotoPreview or SessionState.ReadyToSave or SessionState.AudioPreview
-                    ? Same(SessionState.RecordingAudio)
-                    : null;
+                return state switch
+                {
+                    SessionState.PhotoPreview or SessionState.ReadyToSave or SessionState.Saved
+                        => ToWithResume(SessionState.RecordingAudio, state),
+                    SessionState.AudioPreview => ToWithResume(SessionState.RecordingAudio, current.Resume),
+                    _ => null,
+                };
 
             case SessionEvent.RecordingSucceeded:
-                return state == SessionState.RecordingAudio ? new Outcome(SessionState.ReadyToSave, true, true) : null;
-
-            case SessionEvent.RecordingFailed:
                 return state == SessionState.RecordingAudio
-                    ? Same(hasAudio ? SessionState.ReadyToSave : SessionState.PhotoPreview)
+                    ? new Outcome(SessionState.ReadyToSave, true, true, SessionState.Idle)
                     : null;
 
+            case SessionEvent.RecordingFailed:
+                return state == SessionState.RecordingAudio ? To(current.Resume) : null;
+
             case SessionEvent.PlaybackStarted:
-                return state == SessionState.ReadyToSave ? Same(SessionState.AudioPreview) : null;
+                return state is SessionState.ReadyToSave or SessionState.Saved
+                    ? ToWithResume(SessionState.AudioPreview, state)
+                    : null;
 
             case SessionEvent.PlaybackStopped:
-                return state == SessionState.AudioPreview ? Same(SessionState.ReadyToSave) : null;
+                return state == SessionState.AudioPreview ? To(current.Resume) : null;
 
             case SessionEvent.DiscardAudio:
-                return state is SessionState.ReadyToSave or SessionState.AudioPreview
-                    ? new Outcome(SessionState.PhotoPreview, true, false)
+                return state is SessionState.ReadyToSave or SessionState.Saved or SessionState.AudioPreview
+                    ? new Outcome(SessionState.PhotoPreview, true, false, SessionState.Idle)
                     : null;
 
             case SessionEvent.StartOver:
                 // Never while a save is running: that could throw away media mid-write.
-                return state == SessionState.Saving ? null : new Outcome(SessionState.Idle, false, false);
+                return state == SessionState.Saving
+                    ? null
+                    : new Outcome(SessionState.Idle, false, false, SessionState.Idle);
 
             case SessionEvent.BeginSave:
-                return state == SessionState.ReadyToSave && hasPhoto && hasAudio ? Same(SessionState.Saving) : null;
+                return state == SessionState.ReadyToSave && current.HasPhoto && current.HasAudio
+                    ? To(SessionState.Saving)
+                    : null;
 
             case SessionEvent.SaveSucceeded:
-                return state == SessionState.Saving ? Same(SessionState.Saved) : null;
+                return state == SessionState.Saving ? To(SessionState.Saved) : null;
 
             case SessionEvent.SaveFailed:
-                return state == SessionState.Saving ? Same(SessionState.Error) : null;
+                return state == SessionState.Saving ? To(SessionState.Error) : null;
 
             case SessionEvent.AcknowledgeError:
-                return state == SessionState.Error ? Same(SessionState.ReadyToSave) : null;
+                return state == SessionState.Error ? To(SessionState.ReadyToSave) : null;
 
             default:
                 return null;

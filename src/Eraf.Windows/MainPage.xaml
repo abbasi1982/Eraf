@@ -33,7 +33,7 @@
                 Style="{StaticResource TitleTextBlockStyle}"
                 HorizontalAlignment="Center" />
             <TextBlock
-                Text="Import an existing image, or take one with the camera."
+                Text="Import an existing image, take one with the camera, or open an ERAF file."
                 HorizontalAlignment="Center" />
             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
                 <Button
@@ -47,6 +47,11 @@
                     Content="Use camera"
                     AutomationProperties.AutomationId="CameraButton"
                     Click="OnCameraClick" />
+                <Button
+                    x:Name="OpenFileButton"
+                    Content="Open ERAF file"
+                    AutomationProperties.AutomationId="OpenFileButton"
+                    Click="OnOpenFileClick" />
             </StackPanel>
         </StackPanel>
 
@@ -85,6 +90,8 @@
         <Grid x:Name="PhotoPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -151,12 +158,19 @@
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel
+            <!-- Whether what is held is on disk: "Not saved yet", "Saving...", "Saved: name", or the error state. -->
+            <TextBlock
+                x:Name="SaveStatus"
                 Grid.Row="3"
+                HorizontalAlignment="Center"
+                AutomationProperties.AutomationId="SaveStatus" />
+
+            <StackPanel
+                Grid.Row="4"
                 Orientation="Horizontal"
                 Spacing="12"
                 HorizontalAlignment="Center">
-                <!-- Enabled only in ReadyToSave (photo + valid voice note). Saving itself arrives in M6. -->
+                <!-- Enabled only in ReadyToSave (photo + valid voice note). -->
                 <Button
                     x:Name="SaveButton"
                     Content="Save ERAF file"
@@ -164,6 +178,30 @@
                     AutomationProperties.AutomationId="SaveButton"
                     Style="{StaticResource AccentButtonStyle}"
                     Click="OnSaveClick" />
+                <!-- Shown only after a failed save. The photo and voice note are still held. -->
+                <Button
+                    x:Name="DismissErrorButton"
+                    Content="OK"
+                    Visibility="Collapsed"
+                    AutomationProperties.AutomationId="DismissErrorButton"
+                    Click="OnDismissErrorClick" />
+            </StackPanel>
+
+            <StackPanel
+                Grid.Row="5"
+                Orientation="Horizontal"
+                Spacing="12"
+                HorizontalAlignment="Center">
+                <Button
+                    x:Name="ExportPhotoButton"
+                    Content="Export photo..."
+                    AutomationProperties.AutomationId="ExportPhotoButton"
+                    Click="OnExportPhotoClick" />
+                <Button
+                    x:Name="ExportAudioButton"
+                    Content="Export voice note..."
+                    AutomationProperties.AutomationId="ExportAudioButton"
+                    Click="OnExportAudioClick" />
                 <Button
                     x:Name="DiscardButton"
                     Content="Start over"

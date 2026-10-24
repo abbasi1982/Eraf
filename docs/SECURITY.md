@@ -20,6 +20,9 @@ CRC-32 and SHA-256 in the format detect **accidental** corruption only. Anyone w
 - Unsupported version: fail immediately without interpreting the rest.
 - The format library does not decode media. The signature check (spec §8.1) is a plausibility check, not a defense against a crafted JPEG or M4A. JPEG and AAC decoding is done by the operating system's media stack, which is the real attack surface; keep Windows updated and do not add third-party decoders without review.
 - Never execute, load or interpret anything from a payload other than as image or audio data.
+- Opening a file reads straight from a `FileStream`: the reader sees the real length and allocates only after the claimed lengths are checked, so there is no separate size pre-check that could change which error is reported. A valid container whose photo cannot be decoded is reported, not shown.
+- Saving and exporting write a unique temp file next to the target, flush it, verify it, and swap it in (`AtomicFile`); a failure leaves any existing file unchanged. A temp `.partial` can remain only if the process is killed mid-write.
+- New files store the **save time (UTC)** as `CreatedUtcUnixMs`; this is the only metadata the app writes (see ADR-011).
 
 ## Temp files and privacy
 

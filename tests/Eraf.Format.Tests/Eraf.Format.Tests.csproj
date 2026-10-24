@@ -23,6 +23,10 @@
     <!-- The session state machine is pure C# inside the WinUI project; compile it here so it can be
          unit-tested without referencing Eraf.Windows (ADR-010). It must stay free of WinUI types. -->
     <Compile Include="..\..\src\Eraf.Windows\SessionWorkflow.cs" Link="Linked\SessionWorkflow.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\ImageSession.cs" Link="Linked\ImageSession.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\CaptureSession.cs" Link="Linked\CaptureSession.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\AtomicFile.cs" Link="Linked\AtomicFile.cs" />
+    <Compile Include="..\..\src\Eraf.Windows\SessionFile.cs" Link="Linked\SessionFile.cs" />
   </ItemGroup>
 
   <ItemGroup>

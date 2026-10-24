@@ -41,14 +41,15 @@ Services (UI-adjacent, each behind an interface so the workflow can be tested wi
 | `ImageImportService` | Windows App SDK `FileOpenPicker` import; JPEG kept as is, others converted once (ADR-007); rules from `ErafMedia` in `Eraf.Format` |
 | `AudioRecorder` | AAC-LC M4A recording via `MediaEncodingProfile.CreateM4a` into memory; the page enforces the 10-minute cap; checks results with `ErafMedia.CheckAudio` (ADR-009) |
 | `ClipPlayer` | `MediaPlayer` playback of the in-session M4A straight from memory (no temp file) |
-| `FileService` | Pickers and **atomic save** (spec §11), export of original payloads |
+| `FilePickers`, `AtomicFile`, `SessionFile` | Windows App SDK pickers; **atomic save** (spec §11) and export of original payloads; session to/from `.eraf` bytes via `Eraf.Format` (ADR-011). The last two are pure and unit-tested |
 | `SessionWorkflow` | Pure state machine in `SessionWorkflow.cs` (ADR-010); the page renders from it |
 
 Session state machine (one session object, not a global singleton):
 
 ```
 Idle → CapturingPhoto → PhotoPreview → RecordingAudio → ReadyToSave → Saving → Saved | Error
-                                         AudioPreview (while the note plays) ⇄ ReadyToSave
+Idle → Saved (an .eraf file was opened)
+                                         AudioPreview (while the note plays) ⇄ ReadyToSave / Saved
 ```
 
 The legal transitions are tabled in [STATUS.md](STATUS.md) (M5 evidence) and in the `SessionWorkflow` source; every other (state, event) pair is rejected. `StartOver` and `DiscardAudio` clear the held media, `StartOver` is refused while `Saving`, and incomplete audio is never reported as saved. Camera preview and microphone recording are not required to run at the same time: after the photo is taken the session holds the JPEG bytes and records audio afterward.

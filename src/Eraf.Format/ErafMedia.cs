@@ -40,6 +40,28 @@ public static class ErafMedia
     /// <summary>Spec §8.1: the first three bytes are FF D8 FF.</summary>
     public static bool IsJpeg(ReadOnlySpan<byte> image) => ErafValidator.HasJpegSignature(image);
 
+    /// <summary>
+    /// Whether a JPEG ends the way a complete one does: an end-of-image marker (FF D9) within its last
+    /// <see cref="EndMarkerWindow"/> bytes (some encoders pad the end). This is a hint for a non-blocking
+    /// warning (ADR-008), never a validity rule: the format accepts any payload that passes the spec's checks.
+    /// </summary>
+    public static bool JpegHasEndMarker(ReadOnlySpan<byte> jpeg)
+    {
+        ReadOnlySpan<byte> tail = jpeg.Length > EndMarkerWindow ? jpeg[^EndMarkerWindow..] : jpeg;
+        for (int i = 0; i + 1 < tail.Length; i++)
+        {
+            if (tail[i] == 0xFF && tail[i + 1] == 0xD9)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>How many trailing bytes <see cref="JpegHasEndMarker"/> searches.</summary>
+    public const int EndMarkerWindow = 64;
+
     /// <summary>Spec §8.1: bytes 4-7 of the audio payload are ASCII "ftyp".</summary>
     public static bool IsM4a(ReadOnlySpan<byte> audio) => ErafValidator.HasFtypSignature(audio);
 

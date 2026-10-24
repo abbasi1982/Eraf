@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-M0 (blank WinUI 3 shell), M1 (spec and governance docs) and M2 (`Eraf.Format` + tests) are done or in review; the WinUI app is still a blank shell. `docs/STATUS.md` is the live source of truth, and each milestone has a brief at `docs/CLAUDE_CODE_BRIEF_*.md`.
+M0 through M5 are closed and M6 (save/open/export) is in review: the Windows app can import or capture a photo, record a voice note, save/open/export `.eraf` files. Logic that can be UI-free (`SessionWorkflow`, `AtomicFile`, `SessionFile`, the session classes) lives in `src/Eraf.Windows` but is compiled into `tests/Eraf.Format.Tests` as linked source (ADR-010), so it must stay free of WinUI/WinRT types. `docs/STATUS.md` is the live source of truth, and each milestone has a brief at `docs/CLAUDE_CODE_BRIEF_*.md`.
 
 Commands (project-level only; redirect output to a file if a command hangs, since piped output and solution-level restore hung in this shell):
 

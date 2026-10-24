@@ -151,10 +151,30 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-011 — Save, open and export: atomic writer, hashes on, `Saved` is a first-class state
+
+**Status:** Accepted by Cursor (M6 review, 2026-10-24).
+
+**Context.** M6 persists a ready session as a `.eraf` file, reopens files, and exports the original payloads. The spec (§11) requires atomic save; ADR-007 chose the Windows App SDK pickers; ADR-010 chose a pure workflow tested as linked source.
+
+**Decision.**
+- **Atomic writer** (`AtomicFile`): unique temp file in the target's folder, `Flush(true)`, re-validation of the finished temp file as an ERAF file (exports compare bytes instead), then `File.Replace` for an existing target or `File.Move(overwrite: false)` for a new one. The temp file is deleted on every failure. It is pure `System.IO`, so it is unit-tested, including a target locked with `FileShare.None`.
+- **Overwrite protection**: the save picker's own prompt (`ShowOverwritePrompt = true`) asks first; the writer then replaces atomically. A cancelled picker is not a failure and does nothing.
+- **New files carry both SHA-256 digests** and the recording length. They detect accidental corruption only. `CreatedUtcUnixMs` is the save time in UTC (a timestamp is the only metadata written).
+- **Open** goes straight from a `FileStream` to `ErafReader.TryRead(Stream)`, with no size pre-check, so §9's check order is preserved and a hostile file cannot cause a large allocation. A valid container whose photo cannot be decoded is reported, not shown.
+- **Export** writes the stored payload bytes unchanged through the same atomic writer and compares them after writing.
+- **Workflow**: `Saved` now means "what is held is exactly what is on disk" and is reached by `SaveSucceeded` or `FileOpened`. Playback and a failed re-record return to the state they started from (`Resume`), so they never change saved-ness. Editing from `Saved` (re-record, discard voice note) is allowed and makes the session unsaved. `Saving` blocks Start over and window close.
+- **Unsaved work** (`HasUnsavedWork`) triggers a "Discard unsaved work?" `ContentDialog` on Start over and on window close.
+- **ADR-008 hint**: a pure `ErafMedia.JpegHasEndMarker` drives a non-blocking warning after a successful save; it never blocks a save.
+
+**Consequences.** A crash mid-save can leave a `.partial` file but never a damaged target. Opened files can be edited and saved as new files. Changing any default above (hashes, timestamp) is a one-line change in `SessionFile.Build`.
+
+---
+
 ## Pending decisions (not yet made)
 
 | Topic | Needed by |
 |---|---|
 | Pause/resume recording (not offered in M4; needs evaluation if wanted) | Later |
-| Soft warning UX for incomplete JPEG decode at save | M6/M7 |
+| Wording/placement of the incomplete-JPEG warning (basic version shipped in M6) | M7 |
 | Project license | Before any public release |

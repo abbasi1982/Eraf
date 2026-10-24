@@ -11,6 +11,9 @@ public enum ImageOrigin
 
     /// <summary>A still captured from the camera.</summary>
     Captured,
+
+    /// <summary>The photo inside an opened .eraf file.</summary>
+    OpenedFile,
 }
 
 /// <summary>

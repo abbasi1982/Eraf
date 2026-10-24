@@ -8,9 +8,9 @@ using Windows.Storage.Streams;
 namespace Eraf.Windows;
 
 /// <summary>
-/// Capture screen. What is shown always follows <see cref="SessionWorkflow.State"/>, and every action first
-/// asks the workflow whether it is legal. The photo and voice note live in a <see cref="CaptureSession"/>
-/// owned by this page. Saving is wired in M6.
+/// Capture, save, open and export screen. What is shown always follows <see cref="SessionWorkflow.State"/>,
+/// and every action first asks the workflow whether it is legal. The photo and voice note live in a
+/// <see cref="CaptureSession"/> owned by this page.
 /// </summary>
 public sealed partial class MainPage : Page
 {
@@ -19,6 +19,8 @@ public sealed partial class MainPage : Page
     private CameraService? _camera;
     private AudioRecorder? _recorder;
     private ClipPlayer? _player;
+    private string? _savedLabel;
+    private bool _dialogOpen;
     private readonly DispatcherTimer _recordTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
 
     public MainPage()
@@ -30,6 +32,43 @@ public sealed partial class MainPage : Page
         Render();
     }
 
+    /// <summary>True when closing the window or starting over would lose a photo or voice note that is not on disk.</summary>
+    public bool HasUnsavedWork => _workflow.HasUnsavedWork;
+
+    /// <summary>True while a save is writing; the window must not close and nothing may be discarded.</summary>
+    public bool IsSaving => _workflow.State == SessionState.Saving;
+
+    public void NotifySavingInProgress() =>
+        ShowInfo("A save is in progress. Please wait for it to finish.");
+
+    /// <summary>Asks whether to throw away unsaved work. Never stacks two dialogs.</summary>
+    public async Task<bool> ConfirmDiscardAsync()
+    {
+        if (_dialogOpen)
+        {
+            return false;
+        }
+
+        _dialogOpen = true;
+        try
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = "Discard unsaved work?",
+                Content = "Your photo and voice note have not been saved to an ERAF file. If you continue they will be lost.",
+                PrimaryButtonText = "Discard",
+                CloseButtonText = "Keep working",
+                DefaultButton = ContentDialogButton.Close,
+            };
+            return await dialog.ShowAsync() == ContentDialogResult.Primary;
+        }
+        finally
+        {
+            _dialogOpen = false;
+        }
+    }
+
     // ---------------------------------------------------------------- rendering
 
     /// <summary>Maps the workflow state onto the panels and buttons. No decisions are made here.</summary>
@@ -37,6 +76,7 @@ public sealed partial class MainPage : Page
     {
         SessionState state = _workflow.State;
         bool recording = state == SessionState.RecordingAudio;
+        bool busy = state == SessionState.Saving;
 
         IdlePanel.Visibility = Show(state == SessionState.Idle);
         CameraPanel.Visibility = Show(state == SessionState.CapturingPhoto);
@@ -46,7 +86,24 @@ public sealed partial class MainPage : Page
         RecordingPanel.Visibility = Show(recording);
         VoicePanel.Visibility = Show(!recording && _workflow.HasAudio);
         PlayButton.Content = state == SessionState.AudioPreview ? "Stop" : "Play";
+
         SaveButton.IsEnabled = _workflow.CanSave;
+        DismissErrorButton.Visibility = Show(state == SessionState.Error);
+        ExportPhotoButton.IsEnabled = !busy && !recording && _session is not null;
+        ExportAudioButton.IsEnabled = !busy && !recording && _workflow.HasAudio;
+        foreach (Button b in new[] { RecordButton, RerecordButton, PlayButton, DeleteVoiceButton, DiscardButton })
+        {
+            b.IsEnabled = !busy;
+        }
+
+        SaveStatus.Text = state switch
+        {
+            SessionState.Saving => "Saving...",
+            SessionState.Error => "Save failed. Nothing on disk was changed, and your photo and voice note are still here.",
+            _ when _workflow.IsSaved => _savedLabel ?? "Saved",
+            _ when _workflow.HasPhoto => "Not saved yet",
+            _ => string.Empty,
+        };
 
         if (recording)
         {
@@ -55,7 +112,8 @@ public sealed partial class MainPage : Page
 
         if (_session?.Audio is { } clip)
         {
-            VoiceInfo.Text = $"Voice note {Format(clip.DurationMs)} (AAC M4A, {clip.M4aBytes.Length / 1024.0:N0} KB)";
+            string length = clip.DurationMs == 0 ? "length not recorded" : Format(clip.DurationMs);
+            VoiceInfo.Text = $"Voice note ({length}, AAC M4A, {clip.M4aBytes.Length / 1024.0:N0} KB)";
         }
     }
 
@@ -151,9 +209,20 @@ public sealed partial class MainPage : Page
         _workflow.TryApply(SessionEvent.CancelCamera);
     }
 
-    /// <summary>Start over: drops the photo and voice note and returns to idle (refused while a save is running).</summary>
-    private void OnDiscardClick(object sender, RoutedEventArgs e)
+    /// <summary>Start over: drops the photo and voice note and returns to idle. Asks first if something would be lost.</summary>
+    private async void OnDiscardClick(object sender, RoutedEventArgs e)
     {
+        if (!_workflow.CanApply(SessionEvent.StartOver))
+        {
+            return;
+        }
+
+        if (_workflow.HasUnsavedWork && !await ConfirmDiscardAsync())
+        {
+            return;
+        }
+
+        // The state may have moved while the dialog was open (for example a recording auto-stopped).
         if (!_workflow.CanApply(SessionEvent.StartOver))
         {
             return;
@@ -161,11 +230,12 @@ public sealed partial class MainPage : Page
 
         ClearMessage();
         ReleaseEverything();
+        _savedLabel = null;
         _workflow.TryApply(SessionEvent.StartOver);
     }
 
-    /// <summary>Previews the session's own bytes, so what is shown is what a later save would store.</summary>
-    private async Task ShowPhotoAsync(ImageSession photo)
+    /// <summary>Decodes the session's own bytes into the preview, so what is shown is what would be saved.</summary>
+    private async Task<bool> TryPreviewAsync(ImageSession photo)
     {
         try
         {
@@ -180,8 +250,19 @@ public sealed partial class MainPage : Page
             var bitmap = new BitmapImage();
             await bitmap.SetSourceAsync(stream);
             PhotoImage.Source = bitmap;
+            return true;
         }
         catch (Exception)
+        {
+            PhotoImage.Source = null;
+            return false;
+        }
+    }
+
+    /// <summary>Shows a newly imported or captured photo and starts a session with it.</summary>
+    private async Task ShowPhotoAsync(ImageSession photo)
+    {
+        if (!await TryPreviewAsync(photo))
         {
             // The bytes looked like a JPEG but could not be displayed, so they are not kept.
             photo.Clear();
@@ -210,8 +291,183 @@ public sealed partial class MainPage : Page
         {
             ImageOrigin.ImportedJpeg => $"{session.SourceName} (JPEG, {size}, kept as is)",
             ImageOrigin.ConvertedToJpeg => $"{session.SourceName} (converted to JPEG, {size})",
+            ImageOrigin.OpenedFile => $"Photo from {session.SourceName} (JPEG, {size})",
             _ => $"Camera photo (JPEG, {size})",
         };
+    }
+
+    // ---------------------------------------------------------------- open / save / export
+
+    private async void OnOpenFileClick(object sender, RoutedEventArgs e)
+    {
+        if (!_workflow.CanApply(SessionEvent.FileOpened))
+        {
+            return;
+        }
+
+        ClearMessage();
+        SetBusy(true);
+        try
+        {
+            (string? path, string? pickError) = await FilePickers.PickOpenAsync(App.MainWindow!, new[] { ".eraf" });
+            if (pickError is not null)
+            {
+                ShowError(pickError);
+                return;
+            }
+
+            if (path is null)
+            {
+                return; // cancelled
+            }
+
+            // Full validation (spec §9) happens off the UI thread; a bad file comes back as a message, never an exception.
+            OpenResult result = await Task.Run(() => SessionFile.Open(path));
+            if (result.Session is null)
+            {
+                ShowError(result.Error ?? "The file could not be opened.");
+                return;
+            }
+
+            string name = Path.GetFileName(path);
+            if (!await TryPreviewAsync(result.Session.Photo))
+            {
+                result.Session.Clear();
+                ShowError($"The photo inside \"{name}\" could not be displayed. The file may be damaged.");
+                return;
+            }
+
+            _session = result.Session;
+            PhotoInfo.Text = Describe(_session.Photo);
+            _savedLabel = $"Opened: {name}";
+            if (!_workflow.TryApply(SessionEvent.FileOpened))
+            {
+                _session.Clear();
+                _session = null;
+                PhotoImage.Source = null;
+                _savedLabel = null;
+            }
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private async void OnSaveClick(object sender, RoutedEventArgs e)
+    {
+        if (!_workflow.CanSave || _session is null)
+        {
+            return;
+        }
+
+        ClearMessage();
+
+        // Choose the target first, while still in ReadyToSave: cancelling the dialog is not a failure.
+        (string? path, string? pickError) = await FilePickers.PickSaveAsync(
+            App.MainWindow!, $"ERAF {DateTime.Now:yyyy-MM-dd HHmm}", "ERAF file", ".eraf");
+        if (pickError is not null)
+        {
+            ShowError(pickError);
+            return;
+        }
+
+        if (path is null || !_workflow.CanSave || _session is null)
+        {
+            return;
+        }
+
+        CaptureSession session = _session;
+        byte[] bytes;
+        try
+        {
+            bytes = SessionFile.Build(session, DateTimeOffset.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"The file could not be built ({ex.Message}). Nothing was saved.");
+            return;
+        }
+
+        if (!_workflow.TryApply(SessionEvent.BeginSave))
+        {
+            return;
+        }
+
+        try
+        {
+            // Temp file beside the target, flushed, re-validated as an ERAF file, then swapped in (spec §11).
+            // The save dialog has already asked about overwriting, so replacing is intended.
+            await Task.Run(() => AtomicFile.WriteAllBytes(
+                path, bytes, replaceExisting: true,
+                verify: temp => ErafReader.Validate(File.ReadAllBytes(temp)) is null));
+        }
+        catch (Exception ex)
+        {
+            _workflow.TryApply(SessionEvent.SaveFailed);
+            ShowError($"The file could not be saved ({ex.Message}). Nothing on disk was changed, and your photo and voice note are still here.");
+            return;
+        }
+
+        _savedLabel = $"Saved: {Path.GetFileName(path)}";
+        _workflow.TryApply(SessionEvent.SaveSucceeded);
+
+        // ADR-008: a hint, never a reason to refuse the save.
+        if (!ErafMedia.JpegHasEndMarker(session.Photo.JpegBytes))
+        {
+            ShowMessage($"Saved to {path}. Note: the photo looks incomplete (it ends earlier than a complete JPEG normally does), so it may be damaged.", InfoBarSeverity.Warning);
+        }
+        else
+        {
+            ShowMessage($"Saved to {path}.", InfoBarSeverity.Success);
+        }
+    }
+
+    private void OnDismissErrorClick(object sender, RoutedEventArgs e)
+    {
+        ClearMessage();
+        _workflow.TryApply(SessionEvent.AcknowledgeError);
+    }
+
+    private async void OnExportPhotoClick(object sender, RoutedEventArgs e) =>
+        await ExportAsync(_session?.Photo.JpegBytes, "Photo", ".jpg", "JPEG image");
+
+    private async void OnExportAudioClick(object sender, RoutedEventArgs e) =>
+        await ExportAsync(_session?.Audio?.M4aBytes, "Voice note", ".m4a", "AAC voice note");
+
+    /// <summary>Writes the original payload bytes, unchanged, to a file the user chooses. Not a save: the workflow state is untouched.</summary>
+    private async Task ExportAsync(byte[]? bytes, string baseName, string extension, string typeLabel)
+    {
+        if (bytes is null || bytes.Length == 0
+            || _workflow.State is SessionState.Saving or SessionState.RecordingAudio)
+        {
+            return;
+        }
+
+        ClearMessage();
+        (string? path, string? pickError) = await FilePickers.PickSaveAsync(App.MainWindow!, baseName, typeLabel, extension);
+        if (pickError is not null)
+        {
+            ShowError(pickError);
+            return;
+        }
+
+        if (path is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Task.Run(() => AtomicFile.WriteAllBytes(
+                path, bytes, replaceExisting: true,
+                verify: temp => File.ReadAllBytes(temp).AsSpan().SequenceEqual(bytes)));
+            ShowMessage($"Exported to {path}.", InfoBarSeverity.Success);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"The file could not be exported ({ex.Message}). Nothing on disk was changed.");
+        }
     }
 
     // ---------------------------------------------------------------- voice note
@@ -388,14 +644,6 @@ public sealed partial class MainPage : Page
         return $"{(int)t.TotalMinutes}:{t.Seconds:00}";
     }
 
-    // ---------------------------------------------------------------- save (M6)
-
-    private void OnSaveClick(object sender, RoutedEventArgs e)
-    {
-        // Only reachable in ReadyToSave. The actual write, and the Saving/Saved/Error states, come in M6.
-        ShowInfo("Saving .eraf files arrives in a later update. Your photo and voice note are ready.");
-    }
-
     // ---------------------------------------------------------------- shared
 
     /// <summary>Releases every device and drops all media. Does not touch the workflow state.</summary>
@@ -437,5 +685,6 @@ public sealed partial class MainPage : Page
     {
         ImportButton.IsEnabled = !busy;
         CaptureButton.IsEnabled = !busy;
+        OpenFileButton.IsEnabled = !busy;
     }
 }

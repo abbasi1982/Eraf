@@ -1,17 +1,16 @@
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace Eraf.Windows;
 
 /// <summary>
-/// The application window. This hosts a Frame that displays pages. Add your
-/// UI and logic to MainPage.xaml / MainPage.xaml.cs instead of here so you
-/// can use Page features such as navigation events and the Loaded lifecycle.
+/// The application window. It hosts a Frame that shows <see cref="MainPage"/> and guards closing:
+/// the window never closes mid-save, and asks before closing with a photo or voice note that is not on disk.
 /// </summary>
 public sealed partial class MainWindow : Window
 {
+    private bool _closeConfirmed;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -20,8 +19,36 @@ public sealed partial class MainWindow : Window
         SetTitleBar(AppTitleBar);
 
         AppWindow.SetIcon("Assets/AppIcon.ico");
+        AppWindow.Closing += OnAppWindowClosing;
 
-        // Navigate the root frame to the main page on startup.
         RootFrame.Navigate(typeof(MainPage));
+    }
+
+    private async void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (_closeConfirmed || RootFrame.Content is not MainPage page)
+        {
+            return;
+        }
+
+        if (page.IsSaving)
+        {
+            args.Cancel = true;
+            page.NotifySavingInProgress();
+            return;
+        }
+
+        if (!page.HasUnsavedWork)
+        {
+            return;
+        }
+
+        // Hold the close, ask, and close again once the user has agreed (the flag stops a second prompt).
+        args.Cancel = true;
+        if (await page.ConfirmDiscardAsync())
+        {
+            _closeConfirmed = true;
+            Close();
+        }
     }
 }

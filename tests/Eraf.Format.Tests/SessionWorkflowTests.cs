@@ -28,16 +28,20 @@ public class SessionWorkflowTests
         [(Camera, SessionEvent.CancelCamera)] = Idle,
         [(Idle, SessionEvent.PhotoReady)] = Photo,
         [(Camera, SessionEvent.PhotoReady)] = Photo,
+        [(Idle, SessionEvent.FileOpened)] = Saved,
 
         [(Photo, SessionEvent.StartRecording)] = Rec,
         [(Ready, SessionEvent.StartRecording)] = Rec,
         [(Play, SessionEvent.StartRecording)] = Rec,
+        [(Saved, SessionEvent.StartRecording)] = Rec,
         [(Rec, SessionEvent.RecordingSucceeded)] = Ready,
 
         [(Ready, SessionEvent.PlaybackStarted)] = Play,
+        [(Saved, SessionEvent.PlaybackStarted)] = Play,
         [(Play, SessionEvent.PlaybackStopped)] = Ready,
         [(Ready, SessionEvent.DiscardAudio)] = Photo,
         [(Play, SessionEvent.DiscardAudio)] = Photo,
+        [(Saved, SessionEvent.DiscardAudio)] = Photo,
 
         [(Idle, SessionEvent.StartOver)] = Idle,
         [(Camera, SessionEvent.StartOver)] = Idle,
@@ -78,6 +82,14 @@ public class SessionWorkflowTests
         }
 
         Assert.Equal(target, workflow.State);
+        return workflow;
+    }
+
+    /// <summary>A session that came from opening a file (clean, photo and audio held).</summary>
+    private static SessionWorkflow Opened()
+    {
+        var workflow = new SessionWorkflow();
+        Assert.True(workflow.TryApply(SessionEvent.FileOpened));
         return workflow;
     }
 
@@ -122,8 +134,8 @@ public class SessionWorkflowTests
     {
         // Guards the test itself: adding a state or event without updating the table should fail here.
         Assert.Equal(9, Enum.GetValues<SessionState>().Length);
-        Assert.Equal(14, Enum.GetValues<SessionEvent>().Length);
-        Assert.Equal(24, Legal.Count);
+        Assert.Equal(15, Enum.GetValues<SessionEvent>().Length);
+        Assert.Equal(28, Legal.Count);
     }
 
     [Fact]
@@ -228,6 +240,127 @@ public class SessionWorkflowTests
     }
 
     [Fact]
+    public void OpeningAFileGivesACleanSessionWithBothParts()
+    {
+        SessionWorkflow w = Opened();
+        Assert.Equal(Saved, w.State);
+        Assert.True(w.HasPhoto && w.HasAudio);
+        Assert.True(w.IsSaved);
+        Assert.False(w.HasUnsavedWork);
+        Assert.False(w.CanSave); // nothing new to save
+    }
+
+    [Fact]
+    public void FileCanOnlyBeOpenedFromIdle()
+    {
+        foreach (SessionState state in Enum.GetValues<SessionState>().Where(s => s != Idle))
+        {
+            SessionWorkflow w = Reach(state);
+            Assert.False(w.TryApply(SessionEvent.FileOpened), $"FileOpened must be rejected in {state}");
+            Assert.Equal(state, w.State);
+        }
+    }
+
+    [Fact]
+    public void PlayingASavedSessionKeepsItSaved()
+    {
+        foreach (SessionWorkflow w in new[] { Opened(), Reach(Saved) })
+        {
+            Assert.True(w.TryApply(SessionEvent.PlaybackStarted));
+            Assert.Equal(Play, w.State);
+            Assert.True(w.IsSaved);
+            Assert.False(w.HasUnsavedWork);
+
+            Assert.True(w.TryApply(SessionEvent.PlaybackStopped));
+            Assert.Equal(Saved, w.State); // back where it started, not ReadyToSave
+            Assert.True(w.IsSaved);
+        }
+    }
+
+    [Fact]
+    public void PlayingAnUnsavedSessionKeepsItUnsaved()
+    {
+        SessionWorkflow w = Reach(Ready);
+        Assert.True(w.TryApply(SessionEvent.PlaybackStarted));
+        Assert.False(w.IsSaved);
+        Assert.True(w.HasUnsavedWork);
+        Assert.True(w.TryApply(SessionEvent.PlaybackStopped));
+        Assert.Equal(Ready, w.State);
+    }
+
+    [Fact]
+    public void FailedReRecordingFromASavedSessionReturnsToSaved()
+    {
+        SessionWorkflow w = Opened();
+        Assert.True(w.TryApply(SessionEvent.StartRecording));
+        Assert.Equal(Rec, w.State);
+        Assert.True(w.TryApply(SessionEvent.RecordingFailed));
+        Assert.Equal(Saved, w.State);
+        Assert.True(w.IsSaved);
+        Assert.True(w.HasAudio);
+    }
+
+    [Fact]
+    public void FailedReRecordingStartedWhilePlayingReturnsToWhereItStarted()
+    {
+        SessionWorkflow w = Opened();
+        Assert.True(w.TryApply(SessionEvent.PlaybackStarted));
+        Assert.True(w.TryApply(SessionEvent.StartRecording)); // legal from AudioPreview
+        Assert.True(w.TryApply(SessionEvent.RecordingFailed));
+        Assert.Equal(Saved, w.State);
+    }
+
+    [Fact]
+    public void EditingASavedSessionMakesItUnsaved()
+    {
+        SessionWorkflow rerecorded = Opened();
+        Assert.True(rerecorded.TryApply(SessionEvent.StartRecording));
+        Assert.True(rerecorded.TryApply(SessionEvent.RecordingSucceeded));
+        Assert.Equal(Ready, rerecorded.State);
+        Assert.False(rerecorded.IsSaved);
+        Assert.True(rerecorded.HasUnsavedWork);
+        Assert.True(rerecorded.CanSave);
+
+        SessionWorkflow discarded = Opened();
+        Assert.True(discarded.TryApply(SessionEvent.DiscardAudio));
+        Assert.Equal(Photo, discarded.State);
+        Assert.True(discarded.HasUnsavedWork);
+    }
+
+    [Fact]
+    public void SavedStateCanBeEditedAndSavedAgain()
+    {
+        SessionWorkflow w = Reach(Saved);
+        Assert.True(w.IsSaved);
+        Assert.False(w.HasUnsavedWork);
+        Assert.True(w.TryApply(SessionEvent.StartRecording));
+        Assert.True(w.TryApply(SessionEvent.RecordingSucceeded));
+        Assert.True(w.CanSave); // can be saved again (as a new file)
+    }
+
+    [Theory]
+    [InlineData(SessionState.Idle, false)]
+    [InlineData(SessionState.CapturingPhoto, false)]
+    [InlineData(SessionState.PhotoPreview, true)]
+    [InlineData(SessionState.RecordingAudio, true)] // reached from PhotoPreview: the photo is unsaved
+    [InlineData(SessionState.AudioPreview, true)]
+    [InlineData(SessionState.ReadyToSave, true)]
+    [InlineData(SessionState.Saving, true)]
+    [InlineData(SessionState.Saved, false)]
+    [InlineData(SessionState.Error, true)]
+    public void UnsavedWorkIsReportedOnlyWhereSomethingCouldBeLost(SessionState state, bool expected) =>
+        Assert.Equal(expected, Reach(state).HasUnsavedWork);
+
+    [Fact]
+    public void AbandoningARetakeOfASavedSessionLosesNothingThatWasSaved()
+    {
+        SessionWorkflow w = Opened();
+        Assert.True(w.TryApply(SessionEvent.StartRecording));
+        Assert.True(w.IsSaved);            // the held media is still exactly what is on disk
+        Assert.False(w.HasUnsavedWork);
+    }
+
+    [Fact]
     public void ChangedReportsFromAndToOnlyForAcceptedEvents()
     {
         var workflow = new SessionWorkflow();
@@ -253,6 +386,7 @@ public class SessionWorkflowTests
         {
             SessionEvent e = events[rng.Next(events.Length)];
             SessionState before = workflow.State;
+            bool savedBefore = workflow.IsSaved;
             bool legal = workflow.CanApply(e);
             bool applied = workflow.TryApply(e);
             Assert.Equal(legal, applied);
@@ -284,6 +418,41 @@ public class SessionWorkflowTests
 
             // Save is only ever possible from ReadyToSave with both parts, and never otherwise.
             Assert.Equal(workflow.State == SessionState.ReadyToSave, workflow.CanSave);
+
+            // Saved-ness: playing or a failed take never changes it; new media or a discard always clears it;
+            // only a finished save or an opened file sets it.
+            if (applied)
+            {
+                switch (e)
+                {
+                    case SessionEvent.PlaybackStarted:
+                    case SessionEvent.PlaybackStopped:
+                    case SessionEvent.RecordingFailed:
+                        Assert.Equal(savedBefore, workflow.IsSaved);
+                        break;
+                    case SessionEvent.RecordingSucceeded:
+                    case SessionEvent.DiscardAudio:
+                    case SessionEvent.PhotoReady:
+                    case SessionEvent.AcknowledgeError:
+                        Assert.False(workflow.IsSaved);
+                        break;
+                    case SessionEvent.SaveSucceeded:
+                    case SessionEvent.FileOpened:
+                        Assert.True(workflow.IsSaved);
+                        break;
+                }
+            }
+
+            if (workflow.IsSaved)
+            {
+                Assert.True(workflow.HasPhoto && workflow.HasAudio);
+            }
+
+            // Nothing is flagged unsaved in a state that holds nothing.
+            if (!workflow.HasPhoto && workflow.State != SessionState.RecordingAudio)
+            {
+                Assert.False(workflow.HasUnsavedWork);
+            }
         }
 
         Assert.True(accepted > 5_000, $"only {accepted} events were accepted; the walk is not exploring");
