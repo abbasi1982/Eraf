@@ -257,27 +257,15 @@
                         </StackPanel>
                         <Rectangle Style="{StaticResource RibbonDivider}" />
                         <StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <ToggleButton
-                                    x:Name="ThemeSystemToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnThemeToggleClick" Tag="System"
-                                    ToolTipService.ToolTip="Use my Windows light or dark setting"
-                                    AutomationProperties.AutomationId="ThemeSystemToggle" AutomationProperties.Name="Theme: Windows setting">
-                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE7F4;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Windows" Style="{StaticResource RibbonLabel}" /></StackPanel>
-                                </ToggleButton>
-                                <ToggleButton
-                                    x:Name="ThemeLightToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnThemeToggleClick" Tag="Light"
-                                    ToolTipService.ToolTip="Light theme"
-                                    AutomationProperties.AutomationId="ThemeLightToggle" AutomationProperties.Name="Theme: Light">
-                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE706;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Light" Style="{StaticResource RibbonLabel}" /></StackPanel>
-                                </ToggleButton>
-                                <ToggleButton
-                                    x:Name="ThemeDarkToggle" Style="{StaticResource RibbonToggleStyle}" Click="OnThemeToggleClick" Tag="Dark"
-                                    ToolTipService.ToolTip="Dark theme"
-                                    AutomationProperties.AutomationId="ThemeDarkToggle" AutomationProperties.Name="Theme: Dark">
-                                    <StackPanel Spacing="4"><FontIcon Glyph="&#xE708;" Style="{StaticResource RibbonIcon}" /><TextBlock Text="Dark" Style="{StaticResource RibbonLabel}" /></StackPanel>
-                                </ToggleButton>
-                            </StackPanel>
-                            <TextBlock Text="Theme" Style="{StaticResource RibbonGroupLabel}" />
+                            <ComboBox
+                                x:Name="ThemeBox"
+                                Width="230"
+                                Margin="4,22,4,0"
+                                SelectionChanged="OnThemeBoxChanged"
+                                AutomationProperties.AutomationId="ThemeBox"
+                                AutomationProperties.Name="Theme"
+                                AutomationProperties.HelpText="Choose the colours of the app, or follow Windows." />
+                            <TextBlock Text="Theme" Style="{StaticResource RibbonGroupLabel}" Margin="0,22,0,0" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>

@@ -171,6 +171,18 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-018 — Colour themes and opening .eraf files by double-click (requested 2026-10-24)
+
+**Status:** Implemented at the product owner's request; awaiting Cursor review.
+
+**Themes.** The Light/Dark choice is replaced by the product owner's list: System (follow Windows), Teal console, Office blue, Slate, Forest green, Violet, Amber, Midnight (`ThemeChoice`, `ThemePalettes`, pure and tested). Each colour theme is a light or dark base, an accent colour and a window background; System adds nothing. Applying one (`MainWindow.ApplyTheme`) sets the base (`RequestedTheme`), the window background, and replaces the seven `SystemAccentColor*` resources in the application resources; Windows builds all accent brushes (buttons, ticks, selection, toggles) from those, dialogs included. The new value is applied on a later turn of the UI loop because setting the other theme and the wanted one back to back is merged into "no change" and nothing re-reads its brushes. The first attempts failed visibly (overriding the accent brushes directly, at top level or in the theme dictionaries, had no effect); screenshots showed it. The choice is a dropdown in the ribbon (View tab) and in Settings, kept in sync. Old stored "Light" and "Dark" become Office blue and Midnight. A unit test checks that every theme is readable: text on the button colour (the shade Windows really uses for the theme) at least 4.5:1, the button colour against the window at least 3:1, normal text against the window at least 7:1.
+
+**Opening by double-click.** The app manifest declares a file type association for `.eraf` (`windows.fileTypeAssociation`, display name "ERAF photo with voice note", the app's own icon). Registering the package makes Windows write the registry entries itself under the current user: `HKCU\Software\Classes\.eraf\OpenWithProgids` pointing to an `AppX...` ProgID that has `DefaultIcon` and `Shell\open\command` (activating this package). This is the supported way for a packaged app; a hand-written `shell\open\command` could not start a packaged app without its identity. At start the app takes the file from the file activation (or a `.eraf` path on the command line), shows that file's folder and opens the file. Windows does not let an app make itself the *default* for a type the user has already assigned (the `UserChoice` key is protected); for a type nobody else claims, as here, the app is the only handler. A second double-click while the app is running starts another window.
+
+**Consequences.** Text colours are not themed (Windows picks black or white from the base). Dark themes use the lighter accent shade Windows chooses for dark, so buttons look slightly lighter than the palette colour. Removing the package removes the association.
+
+---
+
 ## ADR-017 — Ribbon, checkboxes, scan progress (requested 2026-10-24)
 
 **Status:** Implemented at the product owner's request; awaiting Cursor review. Supersedes the menu bar of ADR-015.
@@ -207,7 +219,7 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 - **Running.** A confirmation box states the count and asks what to do when a name already exists (skip, replace, keep both with a number), defaulting to the Settings choice. `BatchTargets.Plan` (pure) works out every output name; two photos wanting the same name in one batch always get numbers. `BatchRunner` reads one photo at a time, converts it with the usual import rules, builds the file with the same shared audio bytes, writes it with `AtomicFile` (verified, replace only when chosen) and carries on after a failure. A progress box has Stop (finishes the current photo). A summary lists made, replaced, skipped and failed photos with plain reasons. Output goes beside each photo, or into one chosen folder (Settings).
 - **Settings.** `AppOptions` (pure; unknown or damaged values fall back to defaults) stored in `LocalSettings`: theme, search subfolders (default off), default existing-file choice (default skip), output location. The Settings page (`SettingsPane`) is shown inside the main window over the content; changes apply and save at once; "Reset all settings".
 - **Menu bar.** `MenuBar` (replaced by the ribbon in ADR-017) with File, Voice note, View, Tools and Help, using the same handlers as the buttons, with keyboard shortcuts (Ctrl+O, I, S, R, T, M; Alt+Left/Right/Up; F5) and enabled states mirroring the buttons. A ribbon was not used.
-- **Theme.** System, Light or Dark through `RequestedTheme` on the window root; dialogs copy it (`BatchDialogs.Themed`). Changeable from View > Theme or Settings.
+- **Theme.** System, Light or Dark through `RequestedTheme` on the window root; dialogs copy it (`BatchDialogs.Themed`). Changeable from View > Theme or Settings. (The Light/Dark choice was later replaced by the colour theme list of ADR-018.)
 
 **Consequences.** Audio is attached once per batch; every file in a run carries identical audio bytes. A re-run with "Replace" re-makes the files. Photos that are not readable are reported, not skipped silently. Ctrl+A is not a menu shortcut (it would clash with text boxes); the list handles it itself.
 

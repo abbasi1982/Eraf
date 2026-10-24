@@ -60,23 +60,34 @@ public sealed partial class MainPage
     private void ApplyOptions(AppOptions options)
     {
         (App.MainWindow as MainWindow)?.ApplyTheme(options.Theme);
-        ThemeSystemToggle.IsChecked = options.Theme == ThemeChoice.System;
-        ThemeLightToggle.IsChecked = options.Theme == ThemeChoice.Light;
-        ThemeDarkToggle.IsChecked = options.Theme == ThemeChoice.Dark;
+        if (ThemeBox.Items.Count == 0)
+        {
+            foreach (ThemePalette palette in ThemePalettes.All)
+            {
+                ThemeBox.Items.Add(palette.Label);
+            }
+        }
+
+        _applyingOptions = true;
+        ThemeBox.SelectedIndex = ThemePalettes.IndexOf(options.Theme);
+        _applyingOptions = false;
         CheckboxToggle.IsChecked = options.ShowCheckboxes;
         SubfoldersToggle.IsChecked = options.ScanSubfolders;
         FileList.SetCheckboxes(options.ShowCheckboxes);
     }
 
-    private void OnThemeToggleClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Tag: string tag } && Enum.TryParse(tag, out ThemeChoice theme))
-        {
-            AppSettings.Options = AppSettings.Options with { Theme = theme };
-        }
+    private bool _applyingOptions;
 
-        // A click on the one already chosen would untick it; the options change (or not) re-draws all three.
-        ApplyOptions(AppSettings.Options);
+    private void OnThemeBoxChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_applyingOptions && ThemeBox.SelectedIndex >= 0)
+        {
+            ThemeChoice theme = ThemePalettes.All[ThemeBox.SelectedIndex].Choice;
+            if (theme != AppSettings.Options.Theme)
+            {
+                AppSettings.Options = AppSettings.Options with { Theme = theme };
+            }
+        }
     }
 
     private void OnCheckboxToggleClick(object sender, RoutedEventArgs e) =>

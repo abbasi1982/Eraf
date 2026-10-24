@@ -23,16 +23,14 @@
 
             <StackPanel Spacing="10">
                 <TextBlock Text="Appearance" Style="{StaticResource SubtitleTextBlockStyle}" />
-                <RadioButtons
-                    x:Name="ThemeChoices"
+                <ComboBox
+                    x:Name="ThemeCombo"
                     Header="Theme"
+                    Width="280"
                     SelectionChanged="OnThemeChanged"
-                    AutomationProperties.AutomationId="ThemeChoices"
-                    AutomationProperties.Name="Theme">
-                    <x:String>Use my Windows setting</x:String>
-                    <x:String>Light</x:String>
-                    <x:String>Dark</x:String>
-                </RadioButtons>
+                    AutomationProperties.AutomationId="ThemeCombo"
+                    AutomationProperties.Name="Theme"
+                    AutomationProperties.HelpText="Choose the colours of the app, or follow Windows." />
             </StackPanel>
 
             <StackPanel Spacing="10">

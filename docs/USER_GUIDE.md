@@ -33,9 +33,13 @@ Every file and folder has a checkbox. Tick the ones you want, or tick the box at
 
 When a folder takes a moment to read, a thin moving bar appears above the list. When photos are being searched for in a large folder, a box shows how many folders have been looked at and how many photos found so far, with a **Stop** button.
 
+## Opening ERAF files from Explorer
+
+Double-click any `.eraf` file in File Explorer and ERAF starts and opens it, showing the folder it is in. (If Windows asks which app to use the first time, choose ERAF and tick "Always".) Right-click > Open with > ERAF also works.
+
 ## Settings, ribbon and themes
 
-Use the ribbon at the top. **Settings** on the Home tab opens the Settings page: theme (Windows setting, Light or Dark), whether folders are searched with their subfolders, what to do when a file already exists, and where batch files are saved. Changes take effect immediately. The theme, checkboxes and subfolder search can also be switched on the **View** tab. Keyboard shortcuts: Ctrl+O open, Ctrl+I import, Ctrl+S save, Ctrl+M Make ERAF, Ctrl+R record, Ctrl+T trim, F5 refresh, Alt+Left/Right/Up for Back, Forward and Up.
+Use the ribbon at the top. **Settings** on the Home tab opens the Settings page: theme, whether folders are searched with their subfolders, what to do when a file already exists, and where batch files are saved. Changes take effect immediately. The **Theme** list offers: System (follow Windows), Teal console, Office blue, Slate, Forest green, Violet, Amber and Midnight. It, the checkboxes and subfolder search can also be changed on the **View** tab. Keyboard shortcuts: Ctrl+O open, Ctrl+I import, Ctrl+S save, Ctrl+M Make ERAF, Ctrl+R record, Ctrl+T trim, F5 refresh, Alt+Left/Right/Up for Back, Forward and Up.
 
 ## Open an ERAF file
 

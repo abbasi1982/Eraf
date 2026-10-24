@@ -25,11 +25,88 @@ public enum OutputMode
     OneFolder,
 }
 
+/// <summary>The look of the app. <see cref="System"/> follows Windows; the others are colour themes (see <see cref="ThemePalettes"/>).</summary>
 public enum ThemeChoice
 {
     System,
-    Light,
-    Dark,
+    TealConsole,
+    OfficeBlue,
+    Slate,
+    ForestGreen,
+    Violet,
+    Amber,
+    Midnight,
+}
+
+/// <summary>
+/// How a theme looks: the light or dark base, the accent colour of buttons and ticks, and an optional window background
+/// (colours are 0xRRGGBB). <see cref="ThemeChoice.System"/> has none of these: Windows decides.
+/// </summary>
+public sealed record ThemePalette(ThemeChoice Choice, string Label, bool Dark, uint? Accent, uint? Background)
+{
+    /// <summary>Text on an accent-coloured button: white on the darker accents of light themes, black on the lighter accents of dark ones.</summary>
+    public uint TextOnAccent => Dark ? 0x000000u : 0xFFFFFFu;
+}
+
+/// <summary>The theme list, in the order it is shown.</summary>
+public static class ThemePalettes
+{
+    public static IReadOnlyList<ThemePalette> All { get; } = new ThemePalette[]
+    {
+        new(ThemeChoice.System, "System (follow Windows)", false, null, null),
+        new(ThemeChoice.TealConsole, "Teal console", true, 0x2DD4BF, 0x0B1D1F),
+        new(ThemeChoice.OfficeBlue, "Office blue", false, 0x2B579A, 0xEEF3FA),
+        new(ThemeChoice.Slate, "Slate", true, 0x8FA8C8, 0x232B36),
+        new(ThemeChoice.ForestGreen, "Forest green", false, 0x2E7D32, 0xEEF5EE),
+        new(ThemeChoice.Violet, "Violet", false, 0x6B46C1, 0xF3EFFA),
+        new(ThemeChoice.Amber, "Amber", false, 0xB45309, 0xFFF6E5),
+        new(ThemeChoice.Midnight, "Midnight", true, 0x6C8CFF, 0x0A1024),
+    };
+
+    public static ThemePalette For(ThemeChoice choice) => All.First(p => p.Choice == choice);
+
+    public static int IndexOf(ThemeChoice choice) => Math.Max(0, All.ToList().FindIndex(p => p.Choice == choice));
+
+    /// <summary>
+    /// The accent in the six shades Windows keeps for it (three lighter, three darker). Light themes colour buttons with the
+    /// first darker shade and dark themes with the second lighter one, so those are the shades the readability checks use.
+    /// </summary>
+    public static (uint Light1, uint Light2, uint Light3, uint Dark1, uint Dark2, uint Dark3) AccentShades(uint accent) => (
+        Mix(accent, 0xFFFFFF, 0.15), Mix(accent, 0xFFFFFF, 0.30), Mix(accent, 0xFFFFFF, 0.45),
+        Mix(accent, 0x000000, 0.15), Mix(accent, 0x000000, 0.30), Mix(accent, 0x000000, 0.45));
+
+    /// <summary>The colour buttons are really filled with in this theme.</summary>
+    public static uint ButtonFill(ThemePalette palette)
+    {
+        var shades = AccentShades(palette.Accent ?? 0);
+        return palette.Dark ? shades.Light2 : shades.Dark1;
+    }
+
+    private static uint Mix(uint from, uint to, double amount)
+    {
+        static uint Channel(uint a, uint b, double t, int shift) =>
+            (uint)Math.Round(((a >> shift) & 0xFF) * (1 - t) + ((b >> shift) & 0xFF) * t);
+
+        return (Channel(from, to, amount, 16) << 16) | (Channel(from, to, amount, 8) << 8) | Channel(from, to, amount, 0);
+    }
+
+    /// <summary>WCAG contrast ratio between two colours (1 to 21); 4.5 or more is comfortable for text.</summary>
+    public static double Contrast(uint a, uint b)
+    {
+        double la = Luminance(a), lb = Luminance(b);
+        return (Math.Max(la, lb) + 0.05) / (Math.Min(la, lb) + 0.05);
+    }
+
+    private static double Luminance(uint rgb)
+    {
+        static double Channel(uint v)
+        {
+            double c = v / 255.0;
+            return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+        }
+
+        return 0.2126 * Channel((rgb >> 16) & 0xFF) + 0.7152 * Channel((rgb >> 8) & 0xFF) + 0.0722 * Channel(rgb & 0xFF);
+    }
 }
 
 /// <summary>The user's options. Anything unreadable or unknown falls back to the default, so a damaged setting never breaks the app.</summary>
@@ -47,7 +124,7 @@ public sealed record AppOptions(
     {
         AppOptions d = Default;
         return new AppOptions(
-            ParseEnum(get("Theme"), d.Theme),
+            ParseTheme(get("Theme"), d.Theme),
             get("ScanSubfolders") is { } s ? s == "1" : d.ScanSubfolders,
             ParseEnum(get("ExistingFiles"), d.ExistingFiles),
             ParseEnum(get("Output"), d.Output),
@@ -64,6 +141,14 @@ public sealed record AppOptions(
         set("OutputFolder", string.IsNullOrWhiteSpace(OutputFolder) ? null : OutputFolder);
         set("ShowCheckboxes", ShowCheckboxes ? "1" : "0");
     }
+
+    /// <summary>Earlier versions stored "Light" and "Dark"; they become the nearest colour themes.</summary>
+    private static ThemeChoice ParseTheme(string? text, ThemeChoice fallback) => text switch
+    {
+        "Light" => ThemeChoice.OfficeBlue,
+        "Dark" => ThemeChoice.Midnight,
+        _ => ParseEnum(text, fallback),
+    };
 
     private static T ParseEnum<T>(string? text, T fallback) where T : struct, Enum =>
         Enum.TryParse(text, ignoreCase: false, out T value) && Enum.IsDefined(value) ? value : fallback;

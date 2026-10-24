@@ -47,6 +47,19 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+        <!-- Double-clicking a .eraf file in Explorer opens it in this app. Windows records the association in the registry when the package is registered. -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="eraf">
+            <uap:DisplayName>ERAF photo with voice note</uap:DisplayName>
+            <uap:InfoTip>One photo and one voice note in a single file</uap:InfoTip>
+            <uap:Logo>Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png</uap:Logo>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.eraf</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

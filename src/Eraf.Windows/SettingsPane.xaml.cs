@@ -11,6 +11,11 @@ public sealed partial class SettingsPane : UserControl
     public SettingsPane()
     {
         InitializeComponent();
+        foreach (ThemePalette palette in ThemePalettes.All)
+        {
+            ThemeCombo.Items.Add(palette.Label);
+        }
+
         Show(AppSettings.Options);
         AppSettings.OptionsChanged += options => DispatcherQueue.TryEnqueue(() => Show(options));
     }
@@ -24,7 +29,7 @@ public sealed partial class SettingsPane : UserControl
         _loading = true;
         try
         {
-            ThemeChoices.SelectedIndex = (int)options.Theme;
+            ThemeCombo.SelectedIndex = ThemePalettes.IndexOf(options.Theme);
             SubfoldersSwitch.IsOn = options.ScanSubfolders;
             CheckboxesSwitch.IsOn = options.ShowCheckboxes;
             ExistingChoices.SelectedIndex = (int)options.ExistingFiles;
@@ -47,7 +52,7 @@ public sealed partial class SettingsPane : UserControl
     }
 
     private void OnThemeChanged(object sender, SelectionChangedEventArgs e) =>
-        Change(o => o with { Theme = (ThemeChoice)Math.Max(0, ThemeChoices.SelectedIndex) });
+        Change(o => o with { Theme = ThemePalettes.All[Math.Max(0, ThemeCombo.SelectedIndex)].Choice });
 
     private void OnSubfoldersToggled(object sender, RoutedEventArgs e) =>
         Change(o => o with { ScanSubfolders = SubfoldersSwitch.IsOn });

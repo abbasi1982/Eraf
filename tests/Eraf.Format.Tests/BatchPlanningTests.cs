@@ -54,7 +54,7 @@ public sealed class BatchPlanningTests : IDisposable
     public void OptionsSurviveASaveAndLoad()
     {
         var store = new Dictionary<string, string?>();
-        var chosen = new AppOptions(ThemeChoice.Dark, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out", ShowCheckboxes: false);
+        var chosen = new AppOptions(ThemeChoice.Midnight, true, ExistingFilePolicy.KeepBoth, OutputMode.OneFolder, @"D:\Out", ShowCheckboxes: false);
 
         chosen.Save((k, v) => store[k] = v);
         AppOptions loaded = AppOptions.Load(k => store.GetValueOrDefault(k));
@@ -84,6 +84,76 @@ public sealed class BatchPlanningTests : IDisposable
         Assert.Null(loaded.OutputFolder);
         Assert.False(loaded.ShowCheckboxes);
         Assert.Equal(AppOptions.Default, AppOptions.Load(_ => null));
+    }
+
+    [Theory]
+    [InlineData("Light", ThemeChoice.OfficeBlue)]
+    [InlineData("Dark", ThemeChoice.Midnight)]
+    [InlineData("Amber", ThemeChoice.Amber)]
+    [InlineData("Purple", ThemeChoice.System)]
+    public void OldAndNewThemeNamesAreUnderstood(string stored, ThemeChoice expected)
+    {
+        var store = new Dictionary<string, string?> { ["Theme"] = stored };
+
+        Assert.Equal(expected, AppOptions.Load(k => store.GetValueOrDefault(k)).Theme);
+    }
+
+    [Fact]
+    public void TheThemeListIsTheAgreedOneInTheAgreedOrder()
+    {
+        Assert.Equal(
+            new[] { "System (follow Windows)", "Teal console", "Office blue", "Slate", "Forest green", "Violet", "Amber", "Midnight" },
+            ThemePalettes.All.Select(p => p.Label));
+        Assert.Equal(Enum.GetValues<ThemeChoice>().Length, ThemePalettes.All.Count);
+        Assert.Equal(ThemePalettes.All.Count, ThemePalettes.All.Select(p => p.Choice).Distinct().Count());
+        Assert.All(Enum.GetValues<ThemeChoice>(), c => Assert.Equal(c, ThemePalettes.For(c).Choice));
+        Assert.All(ThemePalettes.All, p => Assert.Equal(p.Choice, ThemePalettes.All[ThemePalettes.IndexOf(p.Choice)].Choice));
+    }
+
+    [Fact]
+    public void SystemFollowsWindowsAndAddsNoColours()
+    {
+        ThemePalette system = ThemePalettes.For(ThemeChoice.System);
+
+        Assert.Null(system.Accent);
+        Assert.Null(system.Background);
+    }
+
+    [Fact]
+    public void EveryColourThemeIsComfortablyReadable()
+    {
+        foreach (ThemePalette p in ThemePalettes.All.Where(p => p.Choice != ThemeChoice.System))
+        {
+            Assert.NotNull(p.Accent);
+            Assert.NotNull(p.Background);
+            // The colour buttons really get (a shade of the accent), the text on it, that colour against the window, and
+            // the normal text of the light or dark base against the window.
+            uint fill = ThemePalettes.ButtonFill(p);
+            Assert.True(ThemePalettes.Contrast(fill, p.TextOnAccent) >= 4.5, p.Label + " text on buttons");
+            Assert.True(ThemePalettes.Contrast(fill, p.Background!.Value) >= 3.0, p.Label + " buttons against the window");
+            uint text = p.Dark ? 0xFFFFFFu : 0x1B1B1Bu;
+            Assert.True(ThemePalettes.Contrast(text, p.Background!.Value) >= 7.0, p.Label + " text");
+        }
+    }
+
+    [Fact]
+    public void AccentShadesGetLighterAndDarkerInSteps()
+    {
+        var s = ThemePalettes.AccentShades(0x336699);
+
+        Assert.True(ThemePalettes.Contrast(s.Light1, 0xFFFFFF) < ThemePalettes.Contrast(0x336699, 0xFFFFFF));
+        Assert.True(ThemePalettes.Contrast(s.Light3, 0xFFFFFF) < ThemePalettes.Contrast(s.Light2, 0xFFFFFF));
+        Assert.True(ThemePalettes.Contrast(s.Dark1, 0xFFFFFF) > ThemePalettes.Contrast(0x336699, 0xFFFFFF));
+        Assert.True(ThemePalettes.Contrast(s.Dark3, 0xFFFFFF) > ThemePalettes.Contrast(s.Dark2, 0xFFFFFF));
+        Assert.Equal(0xFFFFFFu, ThemePalettes.AccentShades(0xFFFFFF).Light3);
+        Assert.Equal(0x000000u, ThemePalettes.AccentShades(0x000000).Dark3);
+    }
+
+    [Fact]
+    public void ContrastMatchesKnownValues()
+    {
+        Assert.Equal(21.0, ThemePalettes.Contrast(0x000000, 0xFFFFFF), 1);
+        Assert.Equal(1.0, ThemePalettes.Contrast(0x777777, 0x777777), 3);
     }
 
     [Fact]

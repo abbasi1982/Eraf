@@ -50,9 +50,18 @@ public sealed partial class MainPage : Page
         Loaded += async (_, _) =>
         {
             await RefreshMicrophonesAsync();
+            string? startup = App.StartupFile;
+            App.StartupFile = null;
             if (_history.Current is null)
             {
-                await ShowFolderAsync(StartFolder(), addToHistory: true);
+                // Started by double-clicking a file: show the folder it is in behind it.
+                string? home = startup is not null ? Path.GetDirectoryName(startup) : null;
+                await ShowFolderAsync(home is not null && Directory.Exists(home) ? home : StartFolder(), addToHistory: true);
+            }
+
+            if (startup is not null)
+            {
+                await OpenErafPathAsync(startup);
             }
 
             FocusNextControl();

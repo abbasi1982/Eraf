@@ -32,6 +32,10 @@ CRC-32 and SHA-256 in the format detect **accidental** corruption only. Anyone w
 - The container adds no GPS, device IDs, contacts or paths. A JPEG's own Exif (which can include location) is preserved as imported; surface this to the user before any sharing feature exists, and treat stripping as a product decision.
 - Do not log photo or audio contents, file paths of user files, or bytes from `.eraf` files. M7 audit: the source contains no logging or console/trace output at all; failed save/export messages (`SaveErrorText`) contain neither paths nor raw system messages. The success message names the chosen path on screen only.
 
+## File association
+
+The app registers itself as a handler for `.eraf` through its package manifest; Windows writes the keys under the current user (`HKCU\Software\Classes`) when the package is registered, and removes them with the package. Nothing in the app writes to the registry itself. A file opened this way goes through the same validation as any other (spec 9), and its path is used only to read it.
+
 ## Network and telemetry
 
 None. The app does not use the network, send telemetry, check for updates, or embed code that runs from file contents. Adding any of these is a scope change needing explicit approval.
