@@ -10,7 +10,7 @@
 ## Current phase
 
 **Phase 1 Windows — gate PASSED** (with documented exceptions).  
-**Phase 2 Android — planning authorized only**; no implementation until the product owner explicitly approves after the Phase 2 plan review.
+**Phase 2 Android — planning only.** [PHASE2_ANDROID_PLAN.md](PHASE2_ANDROID_PLAN.md) is written and awaits Cursor and product-owner review (ADR-012 *Proposed*). **Implementation is blocked**: no Android project, Kotlin source, Gradle file or download exists, and none may be created until the product owner explicitly authorizes it. M9 is committed (`ebee8ea`); the plan docs are not committed. Pushed through `6ef2fe5`; `ebee8ea` is local.
 
 ## Completed
 

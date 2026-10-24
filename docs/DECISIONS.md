@@ -171,6 +171,18 @@ ADR-style records. Newest decisions are appended; a superseded decision stays an
 
 ---
 
+## ADR-012 — Start Android implementation (Phase 2)
+
+**Status:** **Proposed — blocked on product-owner approval.** Nothing in this entry is decided.
+
+**Context.** The Windows Phase 1 gate passed (STATUS). [PHASE2_ANDROID_PLAN.md](PHASE2_ANDROID_PLAN.md) proposes a Kotlin `eraf-format` JVM library plus a Compose app under `android/`, validated against the same `fixtures/eraf`.
+
+**Decision (to be made by the PO).** Whether to start Phase 2 implementation, and the answers to plan section 10: minimum API level, save policy (new documents only vs overwrite), recording when backgrounded, process-death handling, test device, shared state-machine table.
+
+**Consequences if accepted.** An A0 tooling brief is written; `android/` may be created; dependencies are pinned and inventoried. Until then no Android source, Gradle project or download is created.
+
+---
+
 ## Pending decisions (not yet made)
 
 | Topic | Needed by |
